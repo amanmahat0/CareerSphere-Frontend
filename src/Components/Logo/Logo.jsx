@@ -17,4 +17,3 @@ const Logo = (props) => (
 );
 
 export default Logo;
-// ...existing code...
