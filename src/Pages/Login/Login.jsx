@@ -49,7 +49,7 @@ const Login = () => {
       localStorage.setItem("userType", "applicant");
       
       // Navigate to applicant dashboard
-      navigate("/applicant-dashboard", { replace: true });
+      navigate("/applicant/dashboard", { replace: true });
     } catch (error) {
       setError(error.message || "Login failed. Please try again.");
     } finally {
@@ -90,7 +90,7 @@ const Login = () => {
         localStorage.setItem("userType", "applicant");
 
         // Navigate to applicant dashboard
-        navigate("/applicant-dashboard", { replace: true });
+        navigate("/applicant/dashboard", { replace: true });
       } catch (error) {
         setError(error.message || "Google login failed. Please try again.");
       } finally {
@@ -184,7 +184,7 @@ const Login = () => {
               </label>
               <button
                 type="button"
-                onClick={() => navigate("/applicant-forgot-password")}
+                onClick={() => navigate("/applicant/forgot-password")}
                 className="text-blue-600 hover:underline"
               >
                 Forgot password?
@@ -227,7 +227,7 @@ const Login = () => {
           <p className="text-center text-sm text-gray-600 mt-6">
             Don't have an account?{" "}
             <button
-              onClick={() => navigate("/applicant-signup")}
+              onClick={() => navigate("/applicant/signup")}
               className="text-blue-600 hover:underline"
             >
               Sign up
@@ -236,7 +236,7 @@ const Login = () => {
 
           {/* Institution Box */}
           <button
-            onClick={() => navigate("/institution-login")}
+            onClick={() => navigate("/company/login")}
             className="mt-6 w-full bg-blue-50 p-4 rounded-lg flex items-center justify-between hover:bg-blue-100 transition-colors cursor-pointer"
           >
             <Building2 className="w-5 h-5 text-blue-600" />

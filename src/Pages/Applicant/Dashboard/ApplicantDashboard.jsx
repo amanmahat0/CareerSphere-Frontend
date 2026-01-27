@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LogOut, Briefcase, Heart, FileText, User, Award } from "lucide-react";
-import Header from "../../Components/Header";
+import Header from "../../../Components/Header";
 
 const ApplicantDashboard = () => {
   const navigate = useNavigate();
@@ -98,66 +98,35 @@ const ApplicantDashboard = () => {
                 <p className="text-gray-600 text-sm">Profile Strength</p>
                 <p className="text-sm text-gray-500 mt-2">Complete your profile</p>
               </div>
-              <User className="w-10 h-10 text-orange-600 opacity-20" />
+              <User className="w-10 h-10 text-purple-600 opacity-20" />
             </div>
           </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Quick Actions */}
-          <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button className="p-4 border-2 border-blue-600 rounded-lg text-blue-600 font-medium hover:bg-blue-50 transition-colors flex items-center justify-center gap-2">
-                <Briefcase className="w-5 h-5" />
-                Browse Jobs
-              </button>
-              <button className="p-4 border-2 border-green-600 rounded-lg text-green-600 font-medium hover:bg-green-50 transition-colors flex items-center justify-center gap-2">
-                <Award className="w-5 h-5" />
-                View Internships
-              </button>
-              <button className="p-4 border-2 border-purple-600 rounded-lg text-purple-600 font-medium hover:bg-purple-50 transition-colors flex items-center justify-center gap-2">
-                <User className="w-5 h-5" />
-                Update Profile
-              </button>
-              <button className="p-4 border-2 border-gray-600 rounded-lg text-gray-600 font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
-                <FileText className="w-5 h-5" />
-                Manage Resume
-              </button>
+        {/* Action Buttons */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Browse Jobs */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Briefcase className="w-5 h-5 text-blue-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Browse Jobs</h2>
             </div>
+            <p className="text-gray-600 text-sm mb-4">Explore job opportunities</p>
+            <button className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              View Jobs
+            </button>
           </div>
 
-          {/* Profile Summary */}
-          <div className="bg-white rounded-xl shadow-sm p-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Profile Summary</h2>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-600">Full Name</p>
-                <p className="font-medium text-gray-900">{user.fullname}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Email</p>
-                <p className="font-medium text-gray-900 break-all">{user.email}</p>
-              </div>
-              {user.phonenumber && (
-                <div>
-                  <p className="text-sm text-gray-600">Phone</p>
-                  <p className="font-medium text-gray-900">{user.phonenumber}</p>
-                </div>
-              )}
-              <button className="w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                Edit Profile
-              </button>
+          {/* My Applications */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <FileText className="w-5 h-5 text-green-600" />
+              <h2 className="text-lg font-semibold text-gray-900">My Applications</h2>
             </div>
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="bg-white rounded-xl shadow-sm p-8 mt-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Recent Activity</h2>
-          <div className="text-center py-8">
-            <p className="text-gray-600">No recent activity. Start by browsing jobs!</p>
+            <p className="text-gray-600 text-sm mb-4">Track your applications</p>
+            <button className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors">
+              View All
+            </button>
           </div>
         </div>
       </div>

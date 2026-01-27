@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LogOut, Building2, Users, FileText, Settings } from "lucide-react";
-import Header from "../../Components/Header";
+import Header from "../../../Components/Header";
 
-const InstitutionDashboard = () => {
+const CompanyDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
 
@@ -13,7 +13,7 @@ const InstitutionDashboard = () => {
     const userType = localStorage.getItem("userType");
 
     if (!storedUser || userType !== "institution") {
-      navigate("/institution-login", { replace: true });
+      navigate("/company/login", { replace: true });
       return;
     }
 
@@ -24,7 +24,7 @@ const InstitutionDashboard = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("userType");
-    navigate("/institution-login", { replace: true });
+    navigate("/company/login", { replace: true });
   };
 
   if (!user) {
@@ -44,7 +44,7 @@ const InstitutionDashboard = () => {
               <h1 className="text-3xl font-bold text-gray-900">
                 Welcome, {user.fullname}!
               </h1>
-              <p className="text-gray-600 mt-2">Institution Dashboard</p>
+              <p className="text-gray-600 mt-2">Company Dashboard</p>
             </div>
             <button
               onClick={handleLogout}
@@ -103,21 +103,29 @@ const InstitutionDashboard = () => {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white rounded-xl shadow-sm p-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button className="p-4 border-2 border-blue-600 rounded-lg text-blue-600 font-medium hover:bg-blue-50 transition-colors">
-              Post a New Job
+        {/* Action Buttons */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Post New Job */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <FileText className="w-5 h-5 text-blue-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Post New Job</h2>
+            </div>
+            <p className="text-gray-600 text-sm mb-4">Create a new job posting for your company</p>
+            <button className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              Post Job
             </button>
-            <button className="p-4 border-2 border-green-600 rounded-lg text-green-600 font-medium hover:bg-green-50 transition-colors">
-              Post an Internship
-            </button>
-            <button className="p-4 border-2 border-purple-600 rounded-lg text-purple-600 font-medium hover:bg-purple-50 transition-colors">
-              View Applications
-            </button>
-            <button className="p-4 border-2 border-gray-600 rounded-lg text-gray-600 font-medium hover:bg-gray-50 transition-colors">
-              View Profile
+          </div>
+
+          {/* View Applications */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Users className="w-5 h-5 text-green-600" />
+              <h2 className="text-lg font-semibold text-gray-900">View Applications</h2>
+            </div>
+            <p className="text-gray-600 text-sm mb-4">Review and manage job applications</p>
+            <button className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors">
+              View All
             </button>
           </div>
         </div>
@@ -126,4 +134,4 @@ const InstitutionDashboard = () => {
   );
 };
 
-export default InstitutionDashboard;
+export default CompanyDashboard;
