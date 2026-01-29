@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Briefcase, FileText, Calendar, 
   Settings, Bell, Search, GraduationCap, BarChart3, 
   ShieldCheck, CheckSquare, Megaphone, FileCheck, LogOut, Menu, X,
-  Download, Plus, Eye, Edit2, Trash2, ChevronDown, Filter
+  Download, Plus, Edit2, Trash2
 } from 'lucide-react';
 
 const UserManagement = () => {
@@ -12,19 +12,44 @@ const UserManagement = () => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterDept, setFilterDept] = useState('all');
-  const [filterYear, setFilterYear] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [formData, setFormData] = useState({ name: '', email: '', college: '', phone: '' });
+  const [applicants, setApplicants] = useState([
+    { id: 1, name: 'Suman Sharma', email: 'suman.sharma@example.com', college: 'Pulchowk Engineering Campus', phone: '9841234567', resume: true },
+    { id: 2, name: 'Priya Shrestha', email: 'priya.shrestha@example.com', college: 'Kathmandu University', phone: '9842234567', resume: true },
+    { id: 3, name: 'Rajesh Gautam', email: 'rajesh.gautam@example.com', college: 'Tribhuvan University', phone: '9843234567', resume: true },
+    { id: 4, name: 'Anita Karki', email: 'anita.karki@example.com', college: 'Pulchowk Engineering Campus', phone: '9844234567', resume: false },
+    { id: 5, name: 'Bibek Thapa', email: 'bibek.thapa@example.com', college: 'Kathmandu University', phone: '9845234567', resume: true },
+    { id: 6, name: 'Sunita Rai', email: 'sunita.rai@example.com', college: 'Tribhuvan University', phone: '9846234567', resume: true },
+  ]);
 
-  // Mock Data from your screenshot
-  const applicants = [
-    { id: 1, name: 'Suman Sharma', email: 'suman.sharma@example.com', roll: '075BCE001', dept: 'Computer Engineering', year: '4th Year', cgpa: '3.65', status: 'Placed', resume: true },
-    { id: 2, name: 'Priya Shrestha', email: 'priya.shrestha@example.com', roll: '075BCE045', dept: 'Computer Science', year: '3rd Year', cgpa: '3.82', status: 'Active', resume: true },
-    { id: 3, name: 'Rajesh Gautam', email: 'rajesh.gautam@example.com', roll: '074BCE089', dept: 'Software Engineering', year: '4th Year', cgpa: '3.45', status: 'Active', resume: true },
-    { id: 4, name: 'Anita Karki', email: 'anita.karki@example.com', roll: '075BCE112', dept: 'Electronics Engineering', year: '3rd Year', cgpa: '3.71', status: 'Active', resume: false },
-    { id: 5, name: 'Bibek Thapa', email: 'bibek.thapa@example.com', roll: '073BCE156', dept: 'Computer Engineering', year: '4th Year', cgpa: '3.58', status: 'Placed', resume: true },
-    { id: 6, name: 'Sunita Rai', email: 'sunita.rai@example.com', roll: '075BCE203', dept: 'Information Technology', year: '2nd Year', cgpa: '3.92', status: 'Active', resume: true },
-  ];
+  const handleAddApplicant = () => {
+    if (!formData.name || !formData.email || !formData.college || !formData.phone) return;
+    const newApplicant = {
+      id: applicants.length + 1,
+      ...formData,
+      resume: false,
+    };
+    setApplicants((prev) => [...prev, newApplicant]);
+    setFormData({ name: '', email: '', college: '', phone: '' });
+    setShowAddModal(false);
+  };
+
+  const handleDeleteApplicant = (id) => {
+    setApplicants((prev) => prev.filter((app) => app.id !== id));
+  };
+
+  const handleEditApplicant = (id) => {
+    const applicant = applicants.find((app) => app.id === id);
+    if (!applicant) return;
+    setFormData({
+      name: applicant.name,
+      email: applicant.email,
+      college: applicant.college,
+      phone: applicant.phone,
+    });
+    setShowAddModal(true);
+  };
 
   const navigationItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin', id: 'dashboard' },
@@ -52,22 +77,19 @@ const UserManagement = () => {
     navigate('/login');
   };
 
-  // Filter applicants based on search and filters
-  const filteredApplicants = applicants.filter(app => {
-    const matchesSearch = app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         app.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         app.roll.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDept = filterDept === 'all' || app.dept === filterDept;
-    const matchesYear = filterYear === 'all' || app.year === filterYear;
-    const matchesStatus = filterStatus === 'all' || app.status === filterStatus;
-    
-    return matchesSearch && matchesDept && matchesYear && matchesStatus;
+  // Filter applicants based on search
+  const filteredApplicants = applicants.filter((app) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      app.name.toLowerCase().includes(term) ||
+      app.email.toLowerCase().includes(term) ||
+      app.college.toLowerCase().includes(term) ||
+      app.phone.toLowerCase().includes(term)
+    );
   });
 
   const stats = {
     total: applicants.length,
-    active: applicants.filter(a => a.status === 'Active').length,
-    placed: applicants.filter(a => a.status === 'Placed').length,
     resumed: applicants.filter(a => a.resume).length,
   };
 
@@ -138,7 +160,9 @@ const UserManagement = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input 
               type="text" 
-              placeholder="Search applicants, jobs, companies..." 
+              placeholder="Search applicants by name, email, college, or phone..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
           </div>
@@ -170,17 +194,15 @@ const UserManagement = () => {
                 <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">
                   <Download size={16} /> Export Data
                 </button>
-                <button className="flex items-center gap-2 px-4 py-2 bg-[#1e3a8a] text-white rounded-lg text-sm font-medium hover:bg-blue-900 transition-shadow shadow-md">
-                  <Plus size={16} /> Add User
+                <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 px-4 py-2 bg-[#1e3a8a] text-white rounded-lg text-sm font-medium hover:bg-blue-900 transition-shadow shadow-md">
+                  <Plus size={16} /> Add Applicant
                 </button>
               </div>
             </div>
 
             {/* STATS ROW */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
-              <MetricCard label="Total Users" value={stats.total} />
-              <MetricCard label="Active Users" value={stats.active} />
-              <MetricCard label="Placed Users" value={stats.placed} color="text-emerald-600" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6 mb-8">
+              <MetricCard label="Total Applicants" value={stats.total} />
               <MetricCard label="Resume Uploaded" value={stats.resumed} />
             </div>
 
@@ -192,30 +214,10 @@ const UserManagement = () => {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                   <input 
                     type="text" 
-                    placeholder="Search by name, roll number, or email..." 
+                    placeholder="Search by name, email, college, or phone..." 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </div>
-                <div className="flex gap-2 flex-wrap w-full lg:w-auto">
-                  <FilterDropdown 
-                    label="Department" 
-                    value={filterDept}
-                    onChange={setFilterDept}
-                    options={['all', 'Computer Engineering', 'Computer Science', 'Software Engineering', 'Electronics Engineering', 'Information Technology']}
-                  />
-                  <FilterDropdown 
-                    label="Year" 
-                    value={filterYear}
-                    onChange={setFilterYear}
-                    options={['all', '1st Year', '2nd Year', '3rd Year', '4th Year']}
-                  />
-                  <FilterDropdown 
-                    label="Status" 
-                    value={filterStatus}
-                    onChange={setFilterStatus}
-                    options={['all', 'Active', 'Placed', 'Inactive']}
                   />
                 </div>
               </div>
@@ -225,13 +227,11 @@ const UserManagement = () => {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50/50 text-[11px] uppercase tracking-wider text-slate-500 font-bold border-b border-slate-100">
-                      <th className="px-4 lg:px-6 py-4">Applicant</th>
-                      <th className="px-4 py-4 hidden sm:table-cell">Roll No</th>
-                      <th className="px-4 py-4 hidden md:table-cell">Department</th>
-                      <th className="px-4 py-4 hidden lg:table-cell">Year</th>
-                      <th className="px-4 py-4 hidden lg:table-cell">CGPA</th>
-                      <th className="px-4 py-4 text-center">Status</th>
-                      <th className="px-4 py-4 text-center hidden sm:table-cell">Resume</th>
+                      <th className="px-4 lg:px-6 py-4">Name</th>
+                      <th className="px-4 py-4">Email</th>
+                      <th className="px-4 py-4 hidden md:table-cell">College</th>
+                      <th className="px-4 py-4 hidden lg:table-cell">Phone</th>
+                      <th className="px-4 py-4 text-center">Resume</th>
                       <th className="px-4 lg:px-6 py-4 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -244,27 +244,16 @@ const UserManagement = () => {
                               <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
                                 <Users size={16} className="text-slate-400" />
                               </div>
-                              <div>
-                                <p className="font-semibold text-slate-700">{app.name}</p>
-                                <p className="text-[11px] text-slate-400 font-medium truncate">{app.email}</p>
-                              </div>
+                              <p className="font-semibold text-slate-700">{app.name}</p>
                             </div>
                           </td>
-                          <td className="px-4 py-4 text-slate-600 font-mono text-xs hidden sm:table-cell">{app.roll}</td>
-                          <td className="px-4 py-4 text-slate-600 hidden md:table-cell text-xs">{app.dept}</td>
-                          <td className="px-4 py-4 text-slate-600 hidden lg:table-cell text-xs">{app.year}</td>
-                          <td className="px-4 py-4 font-semibold text-slate-700 hidden lg:table-cell">{app.cgpa}</td>
+                          <td className="px-4 py-4 text-slate-600 text-xs">{app.email}</td>
+                          <td className="px-4 py-4 text-slate-600 hidden md:table-cell text-xs">{app.college}</td>
+                          <td className="px-4 py-4 text-slate-600 hidden lg:table-cell text-xs">{app.phone}</td>
                           <td className="px-4 py-4">
                             <div className="flex justify-center">
-                              <StatusBadge status={app.status} />
-                            </div>
-                          </td>
-                          <td className="px-4 py-4 hidden sm:table-cell">
-                            <div className="flex justify-center">
                               {app.resume ? (
-                                <button className="flex items-center gap-1.5 px-2 lg:px-3 py-1 bg-[#1e3a8a] text-white text-[10px] font-bold rounded hover:bg-blue-900 uppercase transition-colors">
-                                  <FileText size={10} /> Yes
-                                </button>
+                                <span className="px-2 lg:px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded border border-emerald-100 uppercase">Yes</span>
                               ) : (
                                 <span className="px-2 lg:px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded border border-orange-100 uppercase">No</span>
                               )}
@@ -272,16 +261,19 @@ const UserManagement = () => {
                           </td>
                           <td className="px-4 lg:px-6 py-4 text-right">
                             <div className="flex justify-end gap-2">
-                              <ActionBtn icon={<Eye size={14} />} color="text-slate-400 hover:text-blue-600" title="View" />
-                              <ActionBtn icon={<Edit2 size={14} />} color="text-slate-400 hover:text-emerald-600" title="Edit" />
-                              <ActionBtn icon={<Trash2 size={14} />} color="text-slate-400 hover:text-red-500" title="Delete" />
+                              <button onClick={() => handleEditApplicant(app.id)} className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded border border-slate-200 text-slate-600 hover:text-emerald-600 hover:border-emerald-200">
+                                <Edit2 size={12} /> Edit User
+                              </button>
+                              <button onClick={() => handleDeleteApplicant(app.id)} className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded border border-slate-200 text-slate-600 hover:text-red-600 hover:border-red-200">
+                                <Trash2 size={12} /> Delete User
+                              </button>
                             </div>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="8" className="px-6 py-12 text-center text-slate-500">
+                        <td colSpan="6" className="px-6 py-12 text-center text-slate-500">
                           <p className="font-medium">No users found matching your filters</p>
                         </td>
                       </tr>
@@ -293,6 +285,57 @@ const UserManagement = () => {
           </div>
         </div>
       </main>
+
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-800">Add Applicant</h3>
+              <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-slate-100 rounded">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <input
+                type="text"
+                placeholder="Full Name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-400"
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-400"
+              />
+              <input
+                type="text"
+                placeholder="College"
+                value={formData.college}
+                onChange={(e) => setFormData({ ...formData, college: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-400"
+              />
+              <input
+                type="tel"
+                placeholder="Phone Number"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-400"
+              />
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button onClick={() => setShowAddModal(false)} className="px-4 py-2 text-sm font-medium border border-slate-200 rounded hover:bg-slate-50">
+                Cancel
+              </button>
+              <button onClick={handleAddApplicant} className="px-4 py-2 text-sm font-medium bg-[#1e3a8a] text-white rounded hover:bg-blue-900">
+                Save Applicant
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Fab for help */}
       <button className="fixed bottom-6 right-6 w-12 h-12 bg-[#1e3a8a] text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform z-50" title="Help">
@@ -321,45 +364,6 @@ const MetricCard = ({ label, value, color = "text-slate-800" }) => (
     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 lg:mb-4">{label}</p>
     <p className={`text-2xl lg:text-3xl font-bold ${color}`}>{value}</p>
   </div>
-);
-
-const FilterDropdown = ({ label, value, onChange, options }) => (
-  <div className="relative">
-    <select 
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded text-[11px] lg:text-sm font-medium text-slate-600 hover:bg-slate-100 focus:outline-none focus:border-blue-400 cursor-pointer appearance-none pr-8"
-    >
-      {options.map(opt => (
-        <option key={opt} value={opt}>
-          {opt === 'all' ? `All ${label}s` : opt}
-        </option>
-      ))}
-    </select>
-    <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-  </div>
-);
-
-const StatusBadge = ({ status }) => {
-  const isPlaced = status === 'Placed';
-  return (
-    <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wide inline-block ${
-      isPlaced 
-        ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
-        : 'bg-white text-slate-600 border-slate-200'
-    }`}>
-      {status}
-    </span>
-  );
-};
-
-const ActionBtn = ({ icon, color, title }) => (
-  <button 
-    className={`p-1.5 rounded transition-colors ${color} hover:bg-slate-100`}
-    title={title}
-  >
-    {icon}
-  </button>
 );
 
 export default UserManagement;
