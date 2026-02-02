@@ -8,6 +8,7 @@ import ApplicantForgotPassword from './Pages/Applicant/ForgotPassword/ApplicantF
 import CompanyForgotPassword from './Pages/Company/ForgotPassword/CompanyForgotPassword.jsx';
 import ApplicantDashboard from './Pages/Applicant/Dashboard/ApplicantDashboard.jsx';
 import CompanyDashboard from './Pages/Company/Dashboard/CompanyDashboard.jsx';
+import JobManagement from './Pages/Company/Dashboard/JobManagement.jsx';
 import AdminDashboard from './Pages/Admin/Dashboard/AdminDashboard.jsx';
 import UserManagement from './Pages/Admin/Dashboard/UserManagement.jsx';
 
@@ -22,7 +23,10 @@ function App() {
       <Route path="/applicant/forgot-password" element={<ApplicantForgotPassword />} />
       <Route path="/company/forgot-password" element={<CompanyForgotPassword />} />
       <Route path="/applicant/dashboard" element={<ApplicantDashboard />} />
+      
+      {/* Company Routes */}
       <Route path="/company/dashboard" element={<CompanyDashboard />} />
+      <Route path="/company/jobs" element={<JobManagement />} />
       
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminDashboard />} />

@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, Briefcase, FileText, Calendar, 
-  Settings, Bell, Search, GraduationCap, BarChart3, Menu, X, LogOut
+  Settings, Bell, Search, GraduationCap, BarChart3, Menu, X, LogOut,
+  FileCheck, ShieldCheck, CheckSquare, Megaphone
 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -37,7 +38,13 @@ const Dashboard = () => {
     { icon: Briefcase, label: 'Institution Management', path: '/admin/institutions', id: 'institutions' },
     { icon: FileText, label: 'Applications', path: '/admin/applications', id: 'applications' },
     { icon: Calendar, label: 'Interviews', path: '/admin/interviews', id: 'interviews' },
+    { icon: FileCheck, label: 'Resumes & Certificates', path: '/admin/documents', id: 'documents' },
+    { icon: Bell, label: 'Notifications', path: '/admin/notifications', id: 'notifications' },
+    { icon: Users, label: 'User Directory', path: '/admin/directory', id: 'directory' },
     { icon: BarChart3, label: 'Reports & Analytics', path: '/admin/reports', id: 'reports' },
+    { icon: ShieldCheck, label: 'Institution Verification', path: '/admin/verification', id: 'verification' },
+    { icon: CheckSquare, label: 'Job Post Approval', path: '/admin/approvals', id: 'approvals' },
+    { icon: Megaphone, label: 'Announcements', path: '/admin/announcements', id: 'announcements' },
     { icon: Settings, label: 'System Settings', path: '/admin/settings', id: 'settings' },
   ];
 
