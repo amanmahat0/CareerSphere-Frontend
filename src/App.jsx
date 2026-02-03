@@ -1,5 +1,6 @@
 import './App.css'
 import { Routes, Route } from 'react-router-dom';
+import HomePage from './Pages/Home/home.jsx';
 import Login from './Pages/Login/Login.jsx';
 import CompanyLogin from './Pages/Company/Login/CompanyLogin.jsx';
 import ApplicantSignup from './Pages/Applicant/Signup/ApplicantSignup.jsx';
@@ -15,7 +16,7 @@ import UserManagement from './Pages/Admin/Dashboard/UserManagement.jsx';
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
+      <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/company/login" element={<CompanyLogin />} />
       <Route path="/applicant/signup" element={<ApplicantSignup />} />

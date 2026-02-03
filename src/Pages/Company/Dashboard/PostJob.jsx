@@ -1,30 +1,55 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
+import { api } from '../../../utils/api';
 
-const PostJob = ({ isOpen, onClose }) => {
+const PostJob = ({ isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     title: '',
     company: '',
     type: 'Internship',
     location: 'Kathmandu',
     duration: '',
-    deadline: '',
     description: '',
-    requirements: '',
+    salary: '',
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   if (!isOpen) return null;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Logic to save the job would go here
-    console.log("Job Posted!", formData);
-    onClose();
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const response = await api.createJob(formData);
+      console.log("Job Posted!", response);
+      
+      // Reset form
+      setFormData({
+        title: '',
+        company: '',
+        type: 'Internship',
+        location: 'Kathmandu',
+        duration: '',
+        description: '',
+        salary: '',
+      });
+      
+      if (onSuccess) onSuccess(response.job);
+      onClose();
+    } catch (err) {
+      setError(err.message || 'Failed to post job. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -40,6 +65,13 @@ const PostJob = ({ isOpen, onClose }) => {
             <X size={20} />
           </button>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mx-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
@@ -59,18 +91,15 @@ const PostJob = ({ isOpen, onClose }) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Company *</label>
-              <select 
+              <input 
+                type="text"
                 name="company"
                 value={formData.company}
                 onChange={handleChange}
-                className="w-full border border-slate-200 rounded-lg p-2.5 text-sm bg-slate-50 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
-              >
-                <option value="">Select company</option>
-                <option value="Leapfrog Technology">Leapfrog Technology</option>
-                <option value="F1Soft International">F1Soft International</option>
-                <option value="Verisk Nepal">Verisk Nepal</option>
-                <option value="Yomari">Yomari</option>
-              </select>
+                placeholder="Enter company name"
+                className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                required
+              />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Type *</label>
@@ -82,6 +111,7 @@ const PostJob = ({ isOpen, onClose }) => {
               >
                 <option value="Internship">Internship</option>
                 <option value="Job">Job</option>
+                <option value="Traineeship">Traineeship</option>
               </select>
             </div>
           </div>
@@ -95,6 +125,7 @@ const PostJob = ({ isOpen, onClose }) => {
                 value={formData.location}
                 onChange={handleChange}
                 className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" 
+                required
               />
             </div>
             <div>
@@ -106,17 +137,19 @@ const PostJob = ({ isOpen, onClose }) => {
                 onChange={handleChange}
                 placeholder="e.g., 3 months, Full-time" 
                 className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" 
+                required
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Application Deadline *</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Salary *</label>
             <input 
-              type="date" 
-              name="deadline"
-              value={formData.deadline}
+              type="text" 
+              name="salary"
+              value={formData.salary}
               onChange={handleChange}
+              placeholder="e.g., NPR 6-8 Lakhs/year or Negotiable"
               className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" 
               required
             />
@@ -135,33 +168,22 @@ const PostJob = ({ isOpen, onClose }) => {
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Requirements *</label>
-            <textarea 
-              name="requirements"
-              value={formData.requirements}
-              onChange={handleChange}
-              placeholder="List the skills, qualifications, and experience required..."
-              rows={3}
-              className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none" 
-              required
-            />
-          </div>
-
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
             <button 
               type="button" 
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+              disabled={isLoading}
+              className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button 
               type="submit"
-              className="flex-1 px-4 py-2.5 bg-blue-900 text-white rounded-lg text-sm font-semibold hover:bg-blue-950 transition-colors shadow-md"
+              disabled={isLoading}
+              className="flex-1 px-4 py-2.5 bg-blue-900 text-white rounded-lg text-sm font-semibold hover:bg-blue-950 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Post Opportunity
+              {isLoading ? 'Posting...' : 'Post Opportunity'}
             </button>
           </div>
         </form>

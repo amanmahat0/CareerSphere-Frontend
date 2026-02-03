@@ -70,5 +70,40 @@ export const api = {
       body: { googleId, email, fullname, profilePicture, userType },
     });
   },
+
+  // Job APIs
+  async createJob(jobData) {
+    return this.request("/jobs", {
+      method: "POST",
+      body: jobData,
+    });
+  },
+
+  async getAllJobs(filters = {}) {
+    const queryParams = new URLSearchParams(filters).toString();
+    const endpoint = queryParams ? `/jobs?${queryParams}` : "/jobs";
+    return this.request(endpoint, {
+      method: "GET",
+    });
+  },
+
+  async getJobById(id) {
+    return this.request(`/jobs/${id}`, {
+      method: "GET",
+    });
+  },
+
+  async updateJob(id, jobData) {
+    return this.request(`/jobs/${id}`, {
+      method: "PUT",
+      body: jobData,
+    });
+  },
+
+  async deleteJob(id) {
+    return this.request(`/jobs/${id}`, {
+      method: "DELETE",
+    });
+  },
 };
 

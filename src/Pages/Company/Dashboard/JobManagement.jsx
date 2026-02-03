@@ -1,15 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Plus, Search, Edit, Trash2, PauseCircle, 
   Briefcase, Users, FileText, Monitor,
-  LayoutGrid, Building2, Calendar, Award, Bell, Settings, LogOut
+  LayoutGrid, Building2, Calendar, Award, Bell, Settings, LogOut, Loader2
 } from 'lucide-react';
 import PostJob from './PostJob';
+import { api } from '../../../utils/api';
 
 const JobManagement = () => {
   const [activeTab, setActiveTab] = useState('All');
   const [isPostJobOpen, setIsPostJobOpen] = useState(false);
+  const [jobs, setJobs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -24,6 +29,59 @@ const JobManagement = () => {
     { icon: Settings, label: 'Settings', path: '/company/settings' },
   ];
 
+  // Fetch jobs from backend
+  const fetchJobs = async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      const response = await api.getAllJobs();
+      setJobs(response.jobs || []);
+    } catch (err) {
+      setError(err.message || 'Failed to fetch jobs');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  // Handle job deletion
+  const handleDeleteJob = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this job?')) return;
+    
+    try {
+      await api.deleteJob(id);
+      setJobs(jobs.filter(job => job._id !== id));
+    } catch (err) {
+      alert(err.message || 'Failed to delete job');
+    }
+  };
+
+  // Handle successful job post
+  const handleJobPostSuccess = (newJob) => {
+    fetchJobs(); // Refresh the list
+  };
+
+  // Filter jobs based on active tab and search
+  const filteredJobs = jobs.filter(job => {
+    const matchesTab = activeTab === 'All' || 
+      (activeTab.includes('Jobs') && job.type === 'Job') ||
+      (activeTab.includes('Internships') && job.type === 'Internship') ||
+      (activeTab.includes('Traineeships') && job.type === 'Traineeship');
+    
+    const matchesSearch = job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.company?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    return matchesTab && matchesSearch;
+  });
+
+  // Calculate stats
+  const totalJobs = jobs.filter(j => j.type === 'Job').length;
+  const totalInternships = jobs.filter(j => j.type === 'Internship').length;
+  const totalTraineeships = jobs.filter(j => j.type === 'Traineeship').length;
+
   const handleNavigation = (path) => {
     navigate(path);
   };
@@ -33,12 +91,15 @@ const JobManagement = () => {
     navigate('/login');
   };
 
-  const jobs = [
-    { id: 1, position: 'Frontend Developer Intern', company: 'Leapfrog Technology', type: 'Internship', location: 'Kathmandu', posted: '2025-10-15', deadline: '2025-11-15', applicants: 45, status: 'Active' },
-    { id: 2, position: 'Mobile App Developer', company: 'F1Soft International', type: 'Job', location: 'Kathmandu', posted: '2025-10-18', deadline: '2025-11-20', applicants: 32, status: 'Active' },
-    { id: 3, position: 'Data Analyst Intern', company: 'Verisk Nepal', type: 'Internship', location: 'Kathmandu', posted: '2025-10-05', deadline: '2025-11-10', applicants: 28, status: 'Active' },
-    { id: 4, position: 'UI/UX Designer', company: 'Yomari', type: 'Job', location: 'Kathmandu', posted: '2025-10-20', deadline: '2025-11-25', applicants: 18, status: 'Active' },
-  ];
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
@@ -118,14 +179,18 @@ const JobManagement = () => {
           </div>
 
       {/* PostJob Modal */}
-      <PostJob isOpen={isPostJobOpen} onClose={() => setIsPostJobOpen(false)} />
+      <PostJob 
+        isOpen={isPostJobOpen} 
+        onClose={() => setIsPostJobOpen(false)} 
+        onSuccess={handleJobPostSuccess}
+      />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <MiniStat label="Total Postings" value="8" color="blue" />
-        <MiniStat label="Active Jobs" value="4" color="indigo" />
-        <MiniStat label="Active Internships" value="4" color="orange" />
-        <MiniStat label="Total Applications" value="252" color="emerald" />
+        <MiniStat label="Total Postings" value={jobs.length.toString()} color="blue" />
+        <MiniStat label="Active Jobs" value={totalJobs.toString()} color="indigo" />
+        <MiniStat label="Active Internships" value={totalInternships.toString()} color="orange" />
+        <MiniStat label="Traineeships" value={totalTraineeships.toString()} color="emerald" />
       </div>
 
       {/* Search and Tabs */}
@@ -135,17 +200,19 @@ const JobManagement = () => {
           <input 
             type="text" 
             placeholder="Search jobs by title or company..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-slate-100 border-transparent rounded-lg py-2.5 pl-10 pr-4 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
           />
         </div>
 
         <div className="flex border-b border-slate-200 text-sm font-medium text-slate-500">
-          {['All (8)', 'Jobs (4)', 'Internships (4)'].map((tab) => (
+          {[`All (${jobs.length})`, `Jobs (${totalJobs})`, `Internships (${totalInternships})`, `Traineeships (${totalTraineeships})`].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-8 py-3 -mb-px transition-colors ${
-                activeTab === tab 
+              onClick={() => setActiveTab(tab.split(' ')[0])}
+              className={`px-6 py-3 -mb-px transition-colors ${
+                activeTab === tab.split(' ')[0]
                 ? 'text-blue-900 border-b-2 border-blue-900' 
                 : 'hover:text-slate-700'
               }`}
@@ -158,6 +225,28 @@ const JobManagement = () => {
 
       {/* Table */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            <span className="ml-2 text-slate-500">Loading jobs...</span>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12 text-red-500">
+            <p>{error}</p>
+            <button 
+              onClick={fetchJobs}
+              className="mt-2 text-blue-600 hover:underline"
+            >
+              Try again
+            </button>
+          </div>
+        ) : filteredJobs.length === 0 ? (
+          <div className="text-center py-12 text-slate-500">
+            <Briefcase className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+            <p className="font-medium">No jobs found</p>
+            <p className="text-sm">Post your first job opportunity to get started</p>
+          </div>
+        ) : (
         <table className="w-full text-left">
           <thead className="bg-slate-50/50 border-b border-slate-100">
             <tr className="text-slate-400 text-[11px] uppercase tracking-widest">
@@ -165,47 +254,47 @@ const JobManagement = () => {
               <th className="px-6 py-4 font-semibold">Company</th>
               <th className="px-6 py-4 font-semibold">Type</th>
               <th className="px-6 py-4 font-semibold">Location</th>
+              <th className="px-6 py-4 font-semibold">Duration</th>
               <th className="px-6 py-4 font-semibold">Posted Date</th>
-              <th className="px-6 py-4 font-semibold">Deadline</th>
-              <th className="px-6 py-4 font-semibold">Applicants</th>
-              <th className="px-6 py-4 font-semibold">Status</th>
+              <th className="px-6 py-4 font-semibold">Salary</th>
               <th className="px-6 py-4 font-semibold">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {jobs.map((job) => (
-              <tr key={job.id} className="text-sm hover:bg-slate-50/80 transition-colors">
-                <td className="px-6 py-4 font-semibold text-slate-800">{job.position}</td>
+            {filteredJobs.map((job) => (
+              <tr key={job._id} className="text-sm hover:bg-slate-50/80 transition-colors">
+                <td className="px-6 py-4 font-semibold text-slate-800">{job.title}</td>
                 <td className="px-6 py-4 text-slate-500">{job.company}</td>
                 <td className="px-6 py-4">
-                  <span className="px-2 py-1 bg-slate-100 rounded text-[10px] font-bold text-slate-500 uppercase">
+                  <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
+                    job.type === 'Job' ? 'bg-blue-100 text-blue-600' :
+                    job.type === 'Internship' ? 'bg-orange-100 text-orange-600' :
+                    'bg-emerald-100 text-emerald-600'
+                  }`}>
                     {job.type}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-slate-500">{job.location}</td>
-                <td className="px-6 py-4 text-slate-400">{job.posted}</td>
-                <td className="px-6 py-4 text-slate-400">{job.deadline}</td>
-                <td className="px-6 py-4">
-                   <div className="flex items-center gap-1.5 text-slate-500">
-                      <Users size={14} className="text-slate-400" /> {job.applicants}
-                   </div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-bold">
-                    {job.status}
-                  </span>
-                </td>
+                <td className="px-6 py-4 text-slate-500">{job.duration}</td>
+                <td className="px-6 py-4 text-slate-400">{formatDate(job.postDate)}</td>
+                <td className="px-6 py-4 text-slate-500">{job.salary}</td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3 text-slate-400">
-                    <button className="hover:text-slate-600 transition-colors" title="Pause"><PauseCircle size={18}/></button>
                     <button className="hover:text-blue-600 transition-colors" title="Edit"><Edit size={18}/></button>
-                    <button className="hover:text-red-600 transition-colors" title="Delete"><Trash2 size={18}/></button>
+                    <button 
+                      onClick={() => handleDeleteJob(job._id)}
+                      className="hover:text-red-600 transition-colors" 
+                      title="Delete"
+                    >
+                      <Trash2 size={18}/>
+                    </button>
                   </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        )}
       </div>
         </div>
       </main>
