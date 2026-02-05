@@ -48,8 +48,8 @@ const Login = () => {
       localStorage.setItem("user", JSON.stringify(response.user));
       localStorage.setItem("userType", "applicant");
       
-      // Navigate to applicant dashboard
-      navigate("/applicant/dashboard", { replace: true });
+      // Navigate to home page
+      navigate("/", { replace: true });
     } catch (error) {
       setError(error.message || "Login failed. Please try again.");
     } finally {
@@ -89,8 +89,8 @@ const Login = () => {
         localStorage.setItem("user", JSON.stringify(response.user));
         localStorage.setItem("userType", "applicant");
 
-        // Navigate to applicant dashboard
-        navigate("/applicant/dashboard", { replace: true });
+        // Navigate to home page
+        navigate("/", { replace: true });
       } catch (error) {
         setError(error.message || "Google login failed. Please try again.");
       } finally {
@@ -110,9 +110,12 @@ const Login = () => {
       <div className="flex justify-center items-center py-20 px-4">
         <div className="w-full max-w-md bg-white rounded-xl shadow-sm p-8">
           <div className="flex flex-col items-center text-center mb-8">
-            <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mb-4">
-              <GraduationCap className="text-white w-6 h-6" />
-            </div>
+            {/* <div className="flex items-center gap-2 mb-4">
+              <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                <GraduationCap className="text-white w-6 h-6" />
+              </div>
+              <span className="text-xl font-bold">Careersphere</span>
+            </div> */}
             <h2 className="text-2xl font-semibold">Welcome Back!</h2>
             <p className="text-sm text-gray-500 mt-1">
               Sign in to your account

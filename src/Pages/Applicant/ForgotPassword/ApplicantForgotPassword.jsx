@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, ArrowLeft, KeyRound, Lock, Eye, EyeOff, CheckCircle, Clock } from "lucide-react";
+import { Mail, ArrowLeft, KeyRound, Lock, Eye, EyeOff, CheckCircle, Clock, GraduationCap } from "lucide-react";
 import Header from "../../../Components/Header";
-import Logo from "../../../Components/Logo/Logo";
 import { api } from "../../../utils/api";
 
 const ApplicantForgotPassword = () => {
@@ -133,197 +132,225 @@ const ApplicantForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-[#f6f9ff]">
       <Header />
-      <div className="flex items-center justify-center pt-20 pb-10 px-4">
-        <div className="w-full max-w-md">
-          <Logo />
+      <div className="flex justify-center items-center py-20 px-4">
+        <div className="w-full max-w-md bg-white rounded-xl shadow-sm p-8">
+          <div className="flex flex-col items-center text-center mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                <GraduationCap className="text-white w-6 h-6" />
+              </div>
+              <span className="text-xl font-bold">Careersphere</span>
+            </div>
+          </div>
+          {/* Step 1: Email */}
+          {step === 1 && (
+            <div className="space-y-6">
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                className="flex items-center gap-2 text-gray-600 hover:text-blue-600 text-sm transition"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back to Login
+              </button>
 
-          <div className="bg-slate-800 rounded-xl shadow-2xl p-8 mt-8 border border-slate-700">
-            {/* Step 1: Email */}
-            {step === 1 && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-center mb-6">
-                  <Mail className="w-12 h-12 text-blue-400" />
+              <div className="flex items-center justify-center mb-4">
+                <Mail className="w-10 h-10 text-blue-600" />
+              </div>
+              <h2 className="text-2xl font-semibold text-center">Reset Password</h2>
+              <p className="text-gray-500 text-center text-sm">Enter your email to receive a verification code</p>
+
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600 text-center">{error}</p>
                 </div>
-                <h2 className="text-2xl font-bold text-white text-center">Reset Password</h2>
-                <p className="text-slate-400 text-center text-sm">Enter your email to receive a verification code</p>
+              )}
 
-                <form onSubmit={handleEmailSubmit} className="space-y-4">
-                  <div>
+              <form onSubmit={handleEmailSubmit} className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Email</label>
+                  <div className="relative mt-1">
+                    <Mail className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" />
                     <input
                       type="email"
-                      placeholder="Enter your email"
+                      placeholder="your.email@example.com"
                       value={email}
                       onChange={(e) => {
                         setEmail(e.target.value);
                         setError("");
                       }}
-                      className="w-full px-4 py-3 rounded-lg bg-slate-700 text-white placeholder-slate-400 border border-slate-600 focus:border-blue-400 focus:outline-none transition"
+                      className="w-full pl-10 pr-3 py-3 rounded-lg bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
-
-                  {error && <div className="text-red-400 text-sm text-center">{error}</div>}
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50"
-                  >
-                    {loading ? "Sending..." : "Send Verification Code"}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => navigate("/login")}
-                    className="w-full flex items-center justify-center gap-2 text-slate-400 hover:text-white text-sm transition"
-                  >
-                    <ArrowLeft className="w-4 h-4" /> Back to Login
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {/* Step 2: Verification Code */}
-            {step === 2 && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-center mb-6">
-                  <KeyRound className="w-12 h-12 text-green-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-white text-center">Verify Code</h2>
-                <p className="text-slate-400 text-center text-sm">Enter the 6-digit code sent to your email</p>
 
-                <form onSubmit={handleCodeSubmit} className="space-y-4">
-                  <div className="flex justify-center gap-2">
-                    {code.map((digit, index) => (
-                      <input
-                        key={index}
-                        id={`code-${index}`}
-                        type="text"
-                        maxLength={1}
-                        value={digit}
-                        onChange={(e) => handleCodeChange(index, e.target.value)}
-                        onKeyDown={(e) => handleCodeKeyDown(index, e)}
-                        className="w-12 h-12 text-center text-2xl font-bold rounded-lg bg-slate-700 text-white border border-slate-600 focus:border-blue-400 focus:outline-none transition"
-                      />
-                    ))}
-                  </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-[#1f3a8a] text-white py-3 rounded-lg text-sm font-medium hover:bg-[#1a2f73] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? "Sending..." : "Send Verification Code"}
+                </button>
+              </form>
+            </div>
+          )}
 
-                  <div className="flex items-center justify-center gap-2 text-slate-400 text-sm">
-                    <Clock className="w-4 h-4" />
-                    <span>Time remaining: {formatTime(timeLeft)}</span>
-                  </div>
+          {/* Step 2: Verification Code */}
+          {step === 2 && (
+            <div className="space-y-6">
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="flex items-center gap-2 text-gray-600 hover:text-blue-600 text-sm transition"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back to Email
+              </button>
 
-                  {error && <div className="text-red-400 text-sm text-center">{error}</div>}
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50"
-                  >
-                    {loading ? "Verifying..." : "Verify Code"}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className="w-full text-slate-400 hover:text-white text-sm transition"
-                  >
-                    Back to Email
-                  </button>
-                </form>
+              <div className="flex items-center justify-center mb-4">
+                <KeyRound className="w-10 h-10 text-green-600" />
               </div>
-            )}
+              <h2 className="text-2xl font-semibold text-center">Verify Code</h2>
+              <p className="text-gray-500 text-center text-sm">Enter the 6-digit code sent to your email</p>
 
-            {/* Step 3: New Password */}
-            {step === 3 && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-center mb-6">
-                  <Lock className="w-12 h-12 text-purple-400" />
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600 text-center">{error}</p>
                 </div>
-                <h2 className="text-2xl font-bold text-white text-center">Set New Password</h2>
-                <p className="text-slate-400 text-center text-sm">Enter your new password</p>
+              )}
 
-                <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                  <div className="relative">
+              <form onSubmit={handleCodeSubmit} className="space-y-4">
+                <div className="flex justify-center gap-2">
+                  {code.map((digit, index) => (
+                    <input
+                      key={index}
+                      id={`code-${index}`}
+                      type="text"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleCodeChange(index, e.target.value)}
+                      onKeyDown={(e) => handleCodeKeyDown(index, e)}
+                      className="w-12 h-12 text-center text-2xl font-bold rounded-lg bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    />
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-center gap-2 text-gray-500 text-sm">
+                  <Clock className="w-4 h-4" />
+                  <span>Time remaining: {formatTime(timeLeft)}</span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-[#1f3a8a] text-white py-3 rounded-lg text-sm font-medium hover:bg-[#1a2f73] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? "Verifying..." : "Verify Code"}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Step 3: New Password */}
+          {step === 3 && (
+            <div className="space-y-6">
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                className="flex items-center gap-2 text-gray-600 hover:text-blue-600 text-sm transition"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back to Verification
+              </button>
+
+              <div className="flex items-center justify-center mb-4">
+                <Lock className="w-10 h-10 text-purple-600" />
+              </div>
+              <h2 className="text-2xl font-semibold text-center">Set New Password</h2>
+              <p className="text-gray-500 text-center text-sm">Enter your new password</p>
+
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600 text-center">{error}</p>
+                </div>
+              )}
+
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">New Password</label>
+                  <div className="relative mt-1">
+                    <Lock className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" />
                     <input
                       type={showPassword ? "text" : "password"}
-                      placeholder="New Password"
+                      placeholder="Enter new password"
                       value={password}
                       onChange={(e) => {
                         setPassword(e.target.value);
                         setError("");
                       }}
-                      className="w-full px-4 py-3 rounded-lg bg-slate-700 text-white placeholder-slate-400 border border-slate-600 focus:border-blue-400 focus:outline-none transition"
+                      className="w-full pl-10 pr-10 py-3 rounded-lg bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3 text-slate-400 hover:text-white"
+                      className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
                     >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                </div>
 
-                  <div className="relative">
+                <div>
+                  <label className="text-sm font-medium">Confirm Password</label>
+                  <div className="relative mt-1">
+                    <Lock className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" />
                     <input
                       type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Confirm Password"
+                      placeholder="Confirm new password"
                       value={confirmPassword}
                       onChange={(e) => {
                         setConfirmPassword(e.target.value);
                         setError("");
                       }}
-                      className="w-full px-4 py-3 rounded-lg bg-slate-700 text-white placeholder-slate-400 border border-slate-600 focus:border-blue-400 focus:outline-none transition"
+                      className="w-full pl-10 pr-10 py-3 rounded-lg bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-3 text-slate-400 hover:text-white"
+                      className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
                     >
-                      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
-
-                  {error && <div className="text-red-400 text-sm text-center">{error}</div>}
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50"
-                  >
-                    {loading ? "Resetting..." : "Reset Password"}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setStep(2)}
-                    className="w-full text-slate-400 hover:text-white text-sm transition"
-                  >
-                    Back to Verification
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {/* Step 4: Success */}
-            {step === 4 && (
-              <div className="space-y-6 text-center">
-                <div className="flex justify-center mb-6">
-                  <CheckCircle className="w-16 h-16 text-green-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-white">Password Reset Successful!</h2>
-                <p className="text-slate-400">Your password has been successfully reset. You can now log in with your new password.</p>
 
                 <button
-                  onClick={() => navigate("/login", { replace: true })}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition"
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-[#1f3a8a] text-white py-3 rounded-lg text-sm font-medium hover:bg-[#1a2f73] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Back to Login
+                  {loading ? "Resetting..." : "Reset Password"}
                 </button>
+              </form>
+            </div>
+          )}
+
+          {/* Step 4: Success */}
+          {step === 4 && (
+            <div className="space-y-6 text-center">
+              <div className="flex justify-center mb-4">
+                <CheckCircle className="w-16 h-16 text-green-600" />
               </div>
-            )}
-          </div>
+              <h2 className="text-2xl font-semibold">Password Reset Successful!</h2>
+              <p className="text-gray-500">Your password has been successfully reset. You can now log in with your new password.</p>
+
+              <button
+                onClick={() => navigate("/login", { replace: true })}
+                className="w-full bg-[#1f3a8a] text-white py-3 rounded-lg text-sm font-medium hover:bg-[#1a2f73] transition-colors"
+              >
+                Back to Login
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

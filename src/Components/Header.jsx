@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "./Buttons/button";
 import Logo from "./Logo/Logo";
@@ -15,6 +15,22 @@ const navItems = [
 export const Header = ({ isDashboard = false, user = null, onLogout = null }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [loggedInUser, setLoggedInUser] = useState(null);
+  const [userType, setUserType] = useState(null);
+
+  useEffect(() => {
+    // Check if user is logged in from localStorage
+    const storedUser = localStorage.getItem("user");
+    const storedUserType = localStorage.getItem("userType");
+    if (storedUser) {
+      try {
+        setLoggedInUser(JSON.parse(storedUser));
+        setUserType(storedUserType);
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+      }
+    }
+  }, [location.pathname, loggedInUser, userType]);
 
   // Dashboard mode - shows user profile and notifications
   if (isDashboard && user) {
@@ -82,7 +98,55 @@ export const Header = ({ isDashboard = false, user = null, onLogout = null }) =>
     );
   }
 
-  // Public mode - shows login/signup buttons
+  // Public mode - shows profile for logged in applicant or login/signup buttons
+  // Check if applicant is logged in
+  if (loggedInUser && userType === "applicant") {
+    return (
+      <header className="header">
+        <div className="header__inner">
+          <div className="header__brand" style={{ cursor: "pointer" }} onClick={() => navigate("/")}>
+            <Logo />
+            <div className="header__title">CareerSphere</div>
+          </div>
+
+          <nav>
+            <ul className="header__nav">
+              {navItems.map((item, index) => (
+                <li key={index}>
+                  <a
+                    href={item.path}
+                    onClick={(e) => {
+                      if (item.path !== "#") {
+                        e.preventDefault();
+                        navigate(item.path);
+                      }
+                    }}
+                    className={`header__nav-link ${location.pathname === item.path ? "is-active" : ""}`}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <div className="header__actions">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate("/applicant/dashboard")}
+                className="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold shadow-md hover:bg-blue-700 transition-colors cursor-pointer"
+                title="Go to Dashboard"
+              >
+                {loggedInUser.name ? loggedInUser.name.charAt(0).toUpperCase() : "U"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  // Non-logged in mode - shows login/signup buttons
   return (
     <header className="header">
       <div className="header__inner">
