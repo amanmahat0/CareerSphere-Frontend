@@ -92,19 +92,8 @@ const CompanyLogin = () => {
       {/* Login Card */}
       <div className="flex justify-center items-center py-20 px-4">
         <div className="w-full max-w-md bg-white rounded-xl shadow-sm p-8 relative">
-          {/* Back Button */}
-          <button
-            onClick={() => navigate("/login")}
-            className="absolute top-6 left-6 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm">Back</span>
-          </button>
 
           <div className="flex flex-col items-center text-center mb-8 mt-8">
-            <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mb-4">
-              <Building2 className="text-white w-6 h-6" />
-            </div>
             <h1 className="text-2xl font-bold text-gray-900">Company Login</h1>
             <p className="text-gray-600 text-sm mt-2">Sign in to your company account</p>
           </div>

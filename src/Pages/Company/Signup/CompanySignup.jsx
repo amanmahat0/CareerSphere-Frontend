@@ -122,36 +122,13 @@ const CompanySignup = () => {
       {/* Signup Card */}
       <div className="flex justify-center items-center py-12 px-4">
         <div className="w-full max-w-md bg-white rounded-xl shadow-sm p-8 relative">
-          {/* Back Button */}
-          <button
-            onClick={() => navigate("/company/login")}
-            className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm">Back</span>
-          </button>
-
+          
           <div className="flex flex-col items-center text-center mb-8">
-            <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mb-4">
-              <Building2 className="text-white w-6 h-6" />
-            </div>
             <h1 className="text-2xl font-bold text-gray-900">Company Signup</h1>
             <p className="text-gray-600 text-sm mt-2">Create your company account</p>
           </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
-              <p className="text-red-600 text-sm">{error}</p>
-            </div>
-          )}
-
-          {/* Success Message */}
-          {success && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-6">
-              <p className="text-green-600 text-sm">Account created successfully! Redirecting...</p>
-            </div>
-          )}
+          
 
           {/* Signup Form */}
           <form onSubmit={handleSubmit}>
@@ -199,7 +176,7 @@ const CompanySignup = () => {
                     const digitsOnly = e.target.value.replace(/\D/g, '');
                     handleChange({ target: { name: 'phonenumber', value: digitsOnly } });
                   }}
-                  placeholder="5550000000"
+                  placeholder="9800000000"
                   className="w-full pl-10 pr-3 py-3 rounded-lg bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -252,12 +229,12 @@ const CompanySignup = () => {
             </div>
 
             {/* Terms */}
-            <label className="flex items-start gap-2 text-sm">
+            <label className="flex items-start gap-3 text-sm mb-6">
               <input
                 type="checkbox"
                 checked={agreeToTerms}
                 onChange={(e) => setAgreeToTerms(e.target.checked)}
-                className="rounded mt-1"
+                className="rounded mt-1 w-4 h-4"
               />
               <span className="text-gray-600">
                 I agree to the{" "}
@@ -266,6 +243,19 @@ const CompanySignup = () => {
                 </button>
               </span>
             </label>
+            {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
+              <p className="flex justify-center items-center text-red-600 text-sm">{error}</p>
+            </div>
+          )}
+
+          {/* Success Message */}
+          {success && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-6">
+              <p className="flex justify-center items-center text-green-600 text-sm">Account created successfully! Redirecting...</p>
+            </div>
+          )}
 
             {/* Sign Up */}
             <button

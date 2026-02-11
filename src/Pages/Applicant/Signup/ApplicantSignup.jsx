@@ -171,12 +171,7 @@ const ApplicantSignup = () => {
             <p className="text-gray-600 text-sm mt-2">Start your job search journey</p>
           </div>
 
-          {/* Success Message */}
-          {success && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-6">
-              <p className="text-green-600 text-sm">Account created! Redirecting...</p>
-            </div>
-          )}
+          
 
           {/* Signup Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -288,7 +283,7 @@ const ApplicantSignup = () => {
             </div>
 
             {/* Terms */}
-            <label className="flex items-start gap-2">
+            <label className="flex items-start gap-2 mb-6">
               <input
                 type="checkbox"
                 checked={agreeToTerms}
@@ -302,6 +297,12 @@ const ApplicantSignup = () => {
                 </button>
               </span>
             </label>
+            {/* Success Message */}
+          {success && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-6">
+              <p className="flex justify-center items-center text-green-600 text-sm">Account created! Redirecting...</p>
+            </div>
+          )}
             {/* Error Message */}
             {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">

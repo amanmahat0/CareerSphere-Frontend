@@ -70,7 +70,12 @@ const CompanyForgotPassword = () => {
       setStep(2);
       setTimeLeft(300); // Reset timer
     } catch (error) {
-      setError(error.message || "Failed to send verification code");
+      // Check if it's a user type mismatch error
+      if (error.message && (error.message.includes("no user") || error.message.includes("not registered as an institution") || error.message.includes("not registered as a company") || error.message.includes("applicant"))) {
+        setError("This email is not registered as a company account. Please use the applicant login to reset password.");
+      } else {
+        setError(error.message || "Failed to send verification code");
+      }
     } finally {
       setLoading(false);
     }
@@ -141,14 +146,6 @@ const CompanyForgotPassword = () => {
       <Header />
       <div className="flex justify-center items-center py-20 px-4">
         <div className="w-full max-w-md bg-white rounded-xl shadow-sm p-8">
-          <div className="flex flex-col items-center text-center mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-                <GraduationCap className="text-white w-6 h-6" />
-              </div>
-              <span className="text-xl font-bold">Careersphere</span>
-            </div>
-          </div>
           {/* Step 1: Email */}
           {step === 1 && (
             <div className="space-y-6">
@@ -168,7 +165,7 @@ const CompanyForgotPassword = () => {
 
               {error && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600 text-center">{error}</p>
+                  <p className="flex justify-center items-center text-sm text-red-600 text-center">{error}</p>
                 </div>
               )}
 
@@ -220,7 +217,7 @@ const CompanyForgotPassword = () => {
 
               {error && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600 text-center">{error}</p>
+                  <p className="flex justify-center items-center text-sm text-red-600 text-center">{error}</p>
                 </div>
               )}
 
@@ -275,7 +272,7 @@ const CompanyForgotPassword = () => {
 
               {error && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600 text-center">{error}</p>
+                  <p className="flex justify-center items-center text-sm text-red-600">{error}</p>
                 </div>
               )}
 

@@ -70,7 +70,12 @@ const ApplicantForgotPassword = () => {
       setStep(2);
       setTimeLeft(300); // Reset timer
     } catch (error) {
-      setError(error.message || "Failed to send verification code");
+      // Check if it's a user type mismatch error
+      if (error.message && (error.message.includes("no user") || error.message.includes("not registered as an applicant") || error.message.includes("institution") || error.message.includes("company"))) {
+        setError("This email is not registered as an applicant account. Please use the company login to reset password.");
+      } else {
+        setError(error.message || "Failed to send verification code");
+      }
     } finally {
       setLoading(false);
     }
@@ -141,14 +146,7 @@ const ApplicantForgotPassword = () => {
       <Header />
       <div className="flex justify-center items-center py-20 px-4">
         <div className="w-full max-w-md bg-white rounded-xl shadow-sm p-8">
-          <div className="flex flex-col items-center text-center mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-                <GraduationCap className="text-white w-6 h-6" />
-              </div>
-              <span className="text-xl font-bold">Careersphere</span>
-            </div>
-          </div>
+          
           {/* Step 1: Email */}
           {step === 1 && (
             <div className="space-y-6">
@@ -166,11 +164,7 @@ const ApplicantForgotPassword = () => {
               <h2 className="text-2xl font-semibold text-center">Reset Password</h2>
               <p className="text-gray-500 text-center text-sm">Enter your email to receive a verification code</p>
 
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600 text-center">{error}</p>
-                </div>
-              )}
+
 
               <form onSubmit={handleEmailSubmit} className="space-y-4">
                 <div>
@@ -188,6 +182,11 @@ const ApplicantForgotPassword = () => {
                       className="w-full pl-10 pr-3 py-3 rounded-lg bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
+                  {error && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg mt-4">
+                      <p className="flex justify-center items-center text-sm text-red-600 text-center">{error}</p>
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -200,6 +199,7 @@ const ApplicantForgotPassword = () => {
               </form>
             </div>
           )}
+              
 
           {/* Step 2: Verification Code */}
           {step === 2 && (
@@ -218,11 +218,7 @@ const ApplicantForgotPassword = () => {
               <h2 className="text-2xl font-semibold text-center">Verify Code</h2>
               <p className="text-gray-500 text-center text-sm">Enter the 6-digit code sent to your email</p>
 
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600 text-center">{error}</p>
-                </div>
-              )}
+              
 
               <form onSubmit={handleCodeSubmit} className="space-y-4">
                 <div className="flex justify-center gap-2">
@@ -235,10 +231,15 @@ const ApplicantForgotPassword = () => {
                       value={digit}
                       onChange={(e) => handleCodeChange(index, e.target.value)}
                       onKeyDown={(e) => handleCodeKeyDown(index, e)}
-                      className="w-12 h-12 text-center text-2xl font-bold rounded-lg bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      className="w-12 h-12 text-center text-lg font-normal rounded-lg bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     />
                   ))}
                 </div>
+                {error && (
+                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="flex justify-center items-center text-sm text-red-600">{error}</p>
+                 </div>
+                )}
 
                 <div className="flex items-center justify-center gap-2 text-gray-500 text-sm">
                   <Clock className="w-4 h-4" />
@@ -268,16 +269,10 @@ const ApplicantForgotPassword = () => {
               </button>
 
               <div className="flex items-center justify-center mb-4">
-                <Lock className="w-10 h-10 text-purple-600" />
+                <Lock className="w-10 h-10 text-green-600" />
               </div>
               <h2 className="text-2xl font-semibold text-center">Set New Password</h2>
               <p className="text-gray-500 text-center text-sm">Enter your new password</p>
-
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-600 text-center">{error}</p>
-                </div>
-              )}
 
               <form onSubmit={handlePasswordSubmit} className="space-y-4">
                 <div>
@@ -326,6 +321,11 @@ const ApplicantForgotPassword = () => {
                       {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                {error && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg mt-4">
+                    <p className="flex justify-center items-center text-sm text-red-600 text-center">{error}</p>
+                  </div>
+                )}
                 </div>
 
                 <button
