@@ -8,6 +8,7 @@ import CompanySignup from './Pages/Company/Signup/CompanySignup.jsx';
 import ApplicantForgotPassword from './Pages/Applicant/ForgotPassword/ApplicantForgotPassword.jsx';
 import CompanyForgotPassword from './Pages/Company/ForgotPassword/CompanyForgotPassword.jsx';
 import ApplicantDashboard from './Pages/Applicant/Dashboard/ApplicantDashboard.jsx';
+import ApplicantProfile from './Pages/Applicant/Profile/ApplicantProfile.jsx';
 import CompanyDashboard from './Pages/Company/Dashboard/CompanyDashboard.jsx';
 import JobManagement from './Pages/Company/Dashboard/JobManagement.jsx';
 import AdminDashboard from './Pages/Admin/Dashboard/AdminDashboard.jsx';
@@ -25,6 +26,7 @@ function App() {
       <Route path="/applicant/forgot-password" element={<ApplicantForgotPassword />} />
       <Route path="/company/forgot-password" element={<CompanyForgotPassword />} />
       <Route path="/applicant/dashboard" element={<ApplicantDashboard />} />
+      <Route path="/applicant/profile" element={<ApplicantProfile />} />
       
       {/* Company Routes */}
       <Route path="/company/dashboard" element={<CompanyDashboard />} />

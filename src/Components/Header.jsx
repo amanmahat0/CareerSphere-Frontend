@@ -131,13 +131,19 @@ export const Header = ({ isDashboard = false, user = null, onLogout = null }) =>
           </nav>
 
           <div className="header__actions">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate("/applicant/dashboard")}
-                className="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold shadow-md hover:bg-blue-700 transition-colors cursor-pointer"
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
                 title="Go to Dashboard"
               >
-                {loggedInUser.name ? loggedInUser.name.charAt(0).toUpperCase() : "U"}
+                <div className="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold shadow-md">
+                  {loggedInUser.name ? loggedInUser.name.charAt(0).toUpperCase() : "U"}
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold leading-tight">{loggedInUser.name || "User"}</p>
+                  <p className="text-xs text-slate-400">{userType || "applicant"}</p>
+                </div>
               </button>
             </div>
           </div>
