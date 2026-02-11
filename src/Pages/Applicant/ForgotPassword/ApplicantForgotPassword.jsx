@@ -132,7 +132,12 @@ const ApplicantForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f6f9ff]">
+    <div className="min-h-screen bg-[#f6f9ff]" style={{
+      backgroundImage: 'url("/images/bg-skyline.png")',
+      backgroundSize: 'cover',
+      backgroundPosition: 'bottom',
+      backgroundAttachment: 'fixed'
+    }}>
       <Header />
       <div className="flex justify-center items-center py-20 px-4">
         <div className="w-full max-w-md bg-white rounded-xl shadow-sm p-8">
@@ -149,7 +154,7 @@ const ApplicantForgotPassword = () => {
             <div className="space-y-6">
               <button
                 type="button"
-                onClick={() => navigate("/login")}
+                onClick={() => navigate("/applicant/login")}
                 className="flex items-center gap-2 text-gray-600 hover:text-blue-600 text-sm transition"
               >
                 <ArrowLeft className="w-4 h-4" /> Back to Login
@@ -344,7 +349,7 @@ const ApplicantForgotPassword = () => {
               <p className="text-gray-500">Your password has been successfully reset. You can now log in with your new password.</p>
 
               <button
-                onClick={() => navigate("/login", { replace: true })}
+                onClick={() => navigate("/applicant/login", { replace: true })}
                 className="w-full bg-[#1f3a8a] text-white py-3 rounded-lg text-sm font-medium hover:bg-[#1a2f73] transition-colors"
               >
                 Back to Login

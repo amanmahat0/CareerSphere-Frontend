@@ -30,7 +30,7 @@ export const Header = ({ isDashboard = false, user = null, onLogout = null }) =>
         console.error("Error parsing user data:", error);
       }
     }
-  }, [location.pathname, loggedInUser, userType]);
+  }, [location.pathname]);
 
   // Dashboard mode - shows user profile and notifications
   if (isDashboard && user) {
@@ -177,7 +177,7 @@ export const Header = ({ isDashboard = false, user = null, onLogout = null }) =>
         </nav>
 
         <div className="header__actions">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/applicant/login")}>
             Login
           </Button>
           <Button size="sm" onClick={() => navigate("/applicant/signup")}>Sign Up</Button>

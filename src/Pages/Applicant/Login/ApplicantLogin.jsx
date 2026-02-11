@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
 import { GraduationCap, Mail, Lock, Eye, EyeOff, Building2 } from "lucide-react";
-import Header from "../../Components/Header";
-import { api } from "../../utils/api";
+import Header from "../../../Components/Header";
+import { api } from "../../../utils/api";
+import Footer from "../../../Components/Footer";
 
-const Login = () => {
+const ApplicantLogin = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
@@ -103,30 +104,23 @@ const Login = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#f6f9ff]">
+    <div className="min-h-screen bg-[#f6f9ff]" style={{
+      backgroundImage: 'url("/images/bg-skyline.png")',
+      backgroundSize: 'cover',
+      backgroundPosition: 'bottom',
+      backgroundAttachment: 'fixed'
+    }}>
       <Header />
 
       {/* Login Card */}
       <div className="flex justify-center items-center py-20 px-4">
         <div className="w-full max-w-md bg-white rounded-xl shadow-sm p-8">
           <div className="flex flex-col items-center text-center mb-8">
-            {/* <div className="flex items-center gap-2 mb-4">
-              <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-                <GraduationCap className="text-white w-6 h-6" />
-              </div>
-              <span className="text-xl font-bold">Careersphere</span>
-            </div> */}
             <h2 className="text-2xl font-semibold">Welcome Back!</h2>
             <p className="text-sm text-gray-500 mt-1">
               Sign in to your account
             </p>
           </div>
-
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
 
           <form onSubmit={handleSubmit}>
             {/* Email */}
@@ -173,6 +167,11 @@ const Login = () => {
                 </button>
               </div>
             </div>
+            {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
 
             {/* Remember / Forgot */}
             <div className="flex justify-between items-center mb-6 text-sm">
@@ -240,7 +239,7 @@ const Login = () => {
           {/* Institution Box */}
           <button
             onClick={() => navigate("/company/login")}
-            className="mt-6 w-full bg-blue-50 p-4 rounded-lg flex items-center justify-between hover:bg-blue-100 transition-colors cursor-pointer"
+            className="mt-6 w-full bg-blue-100 p-4 rounded-lg flex items-center justify-between hover:bg-blue-200 transition-colors cursor-pointer"
           >
             <Building2 className="w-5 h-5 text-blue-600" />
             <div className="flex-1 text-left ml-3">
@@ -260,8 +259,9 @@ const Login = () => {
           💬
         </button>
       </div>
+      <div><Footer /></div>
     </div>
   );
 };
 
-export default Login;
+export default ApplicantLogin;

@@ -56,7 +56,7 @@ const Dashboard = () => {
   const handleLogout = () => {
     // Clear auth token and redirect to login
     localStorage.removeItem('token');
-    navigate('/login');
+    navigate('/applicant/login');
   };
 
   return (

@@ -74,7 +74,7 @@ const UserManagement = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate('/login');
+    navigate('/applicant/login');
   };
 
   // Filter applicants based on search

@@ -88,7 +88,7 @@ const JobManagement = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate('/login');
+    navigate('/applicant/login');
   };
 
   // Format date for display

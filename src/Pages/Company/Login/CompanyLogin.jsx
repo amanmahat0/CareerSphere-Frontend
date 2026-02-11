@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Building2, Mail, Lock, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import Header from "../../../Components/Header";
 import { api } from "../../../utils/api";
+import Footer from "../../../Components/Footer";
 
 const CompanyLogin = () => {
   const navigate = useNavigate();
@@ -80,7 +81,12 @@ const CompanyLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f6f9ff]">
+    <div className="min-h-screen bg-[#f6f9ff]" style={{
+      backgroundImage: 'url("/images/bg-skyline.png")',
+      backgroundSize: 'cover',
+      backgroundPosition: 'bottom',
+      backgroundAttachment: 'fixed'
+    }}>
       <Header />
 
       {/* Login Card */}
@@ -103,100 +109,102 @@ const CompanyLogin = () => {
             <p className="text-gray-600 text-sm mt-2">Sign in to your company account</p>
           </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
-              <p className="text-red-600 text-sm">{error}</p>
-            </div>
-          )}
-
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit}>
             {/* Email Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+            <div className="mb-4">
+              <label className="text-sm font-medium">Email</label>
+              <div className="relative mt-1">
+                <Mail className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" />
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="company@example.com"
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  className="w-full pl-10 pr-3 py-3 rounded-lg bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
             </div>
 
             {/* Password Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+            <div className="mb-4">
+              <label className="text-sm font-medium">Password</label>
+              <div className="relative mt-1">
+                <Lock className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" />
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="Enter your password"
-                  className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  className="w-full pl-10 pr-10 py-3 rounded-lg bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
+            {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center">
+            {/* Remember / Forgot */}
+            <div className="flex justify-between items-center mb-6 text-sm">
+              <label className="flex items-center gap-2 text-gray-600 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                  className="rounded"
                 />
-                <span className="ml-2 text-sm text-gray-600">Remember me</span>
+                Remember me
               </label>
               <button
                 type="button"
                 onClick={() => navigate("/company/forgot-password")}
-                className="text-sm text-blue-600 hover:underline"
+                className="text-blue-600 hover:underline"
               >
                 Forgot password?
               </button>
             </div>
 
-            {/* Login Button */}
+            {/* Sign In */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#1f3a8a] text-white py-3 rounded-lg text-sm font-medium hover:bg-[#1a2f73] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Logging in..." : "Login"}
+              {loading ? "Signing In..." : "Sign In"}
             </button>
           </form>
 
-          {/* Signup Link */}
-          <p className="text-center text-gray-600 text-sm mt-6">
+          {/* Sign up */}
+          <p className="text-center text-sm text-gray-600 mt-6">
             Don't have an account?{" "}
             <button
               onClick={() => navigate("/company/signup")}
-              className="text-blue-600 hover:underline font-medium"
+              className="text-blue-600 hover:underline"
             >
               Sign up
             </button>
           </p>
         </div>
       </div>
+
+      {/* Chat Button */}
+      <div className="fixed bottom-6 right-6">
+        <button className="w-12 h-12 rounded-full bg-[#1f3a8a] text-white flex items-center justify-center shadow-lg hover:bg-[#1a2f73] transition-colors">
+          💬
+        </button>
+      </div>
+      <div><Footer /></div>
     </div>
   );
 };

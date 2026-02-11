@@ -132,7 +132,12 @@ const CompanyForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f6f9ff]">
+    <div className="min-h-screen bg-[#f6f9ff]" style={{
+      backgroundImage: 'url("/images/bg-skyline.png")',
+      backgroundSize: 'cover',
+      backgroundPosition: 'bottom',
+      backgroundAttachment: 'fixed'
+    }}>
       <Header />
       <div className="flex justify-center items-center py-20 px-4">
         <div className="w-full max-w-md bg-white rounded-xl shadow-sm p-8">

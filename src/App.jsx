@@ -1,7 +1,7 @@
 import './App.css'
 import { Routes, Route } from 'react-router-dom';
 import HomePage from './Pages/Home/home.jsx';
-import Login from './Pages/Login/Login.jsx';
+import ApplicantLogin from './Pages/Applicant/Login/ApplicantLogin.jsx';
 import CompanyLogin from './Pages/Company/Login/CompanyLogin.jsx';
 import ApplicantSignup from './Pages/Applicant/Signup/ApplicantSignup.jsx';
 import CompanySignup from './Pages/Company/Signup/CompanySignup.jsx';
@@ -17,7 +17,8 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<Login />} />
+      <Route path="/applicant/login" element={<ApplicantLogin />} />
+      <Route path="/login" element={<ApplicantLogin />} />
       <Route path="/company/login" element={<CompanyLogin />} />
       <Route path="/applicant/signup" element={<ApplicantSignup />} />
       <Route path="/company/signup" element={<CompanySignup />} />
