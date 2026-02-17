@@ -5,7 +5,7 @@ import {
   Calendar, 
   Bell, Menu, CheckCircle2, Clock
 } from 'lucide-react';
-import Sidebar from '../Components/Sidebar';
+import Sidebar from '../Components/Applicant Sidebar';
 import Header from '../../../Components/Header';
 
 const ApplicantDashboard = () => {

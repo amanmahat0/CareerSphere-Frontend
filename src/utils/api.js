@@ -105,5 +105,13 @@ export const api = {
       method: "DELETE",
     });
   },
+
+  // Contact API
+  async submitContactForm(contactData) {
+    return this.request("/contact", {
+      method: "POST",
+      body: contactData,
+    });
+  },
 };
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   Facebook,
   Twitter,
@@ -34,10 +35,10 @@ const Footer = () => {
         <div>
           <h3 className="text-white font-semibold mb-4">Quick Links</h3>
           <ul className="space-y-2 text-xs">
-            <li><a href="#" className="hover:text-white">About Us</a></li>
-            <li><a href="#" className="hover:text-white">How It Works</a></li>
-            <li><a href="#" className="hover:text-white">Help Center</a></li>
-            <li><a href="#" className="hover:text-white">Contact</a></li>
+            <li><Link to="/about" className="hover:text-white">About Us</Link></li>
+            <li><Link to="/how-it-works" className="hover:text-white">How It Works</Link></li>
+            <li><Link to="/faq" className="hover:text-white">Help Center</Link></li>
+            <li><Link to="/contact" className="hover:text-white">Contact</Link></li>
           </ul>
         </div>
 
@@ -45,9 +46,9 @@ const Footer = () => {
         <div>
           <h3 className="text-white font-semibold mb-4">For Applicants</h3>
           <ul className="space-y-2 text-xs">
-            <li><a href="#" className="hover:text-white">Find Jobs</a></li>
-            <li><a href="#" className="hover:text-white">Find Internships</a></li>
-            <li><a href="#" className="hover:text-white">Resume Builder</a></li>
+            <li><Link to="/jobs" className="hover:text-white">Find Jobs</Link></li>
+            <li><Link to="/internships" className="hover:text-white">Find Internships</Link></li>
+            <li><Link to="/resume-builder" className="hover:text-white">Resume Builder</Link></li>
           </ul>
         </div>
 
@@ -66,10 +67,10 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-4 mt-12 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between text-xs">
         <p>© 2026 CareerSphere. All rights reserved.</p>
         <div className="flex space-x-6 mt-4 md:mt-0">
-          <a href="#" className="hover:text-white">Privacy Policy</a>
-          <a href="#" className="hover:text-white">Terms of Service</a>
-          <a href="#" className="hover:text-white">Cookie Policy</a>
-          <a href="#" className="hover:text-white">Accessibility</a>
+          <Link to="/privacy" className="hover:text-white">Privacy Policy</Link>
+          <Link to="/terms" className="hover:text-white">Terms of Service</Link>
+          <Link to="/cookies" className="hover:text-white">Cookie Policy</Link>
+          <Link to="/accessibility" className="hover:text-white">Accessibility</Link>
         </div>
       </div>
     </footer>

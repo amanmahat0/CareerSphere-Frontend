@@ -6,10 +6,10 @@ import { Bell, LogOut } from "lucide-react";
 
 const navItems = [
   { label: "Home", path: "/" },
-  { label: "About", path: "#" },
-  { label: "Internships", path: "#" },
-  { label: "Jobs", path: "#" },
-  { label: "Contact", path: "#" },
+  { label: "About", path: "/about" },
+  { label: "Internships", path: "/internships" },
+  { label: "Jobs", path: "/jobs" },
+  { label: "Contact", path: "/contact" },
 ];
 
 export const Header = ({ isDashboard = false, user = null, onLogout = null }) => {

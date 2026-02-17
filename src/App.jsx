@@ -13,7 +13,7 @@ import CompanyDashboard from './Pages/Company/Dashboard/CompanyDashboard.jsx';
 import JobManagement from './Pages/Company/Dashboard/JobManagement.jsx';
 import AdminDashboard from './Pages/Admin/Dashboard/AdminDashboard.jsx';
 import UserManagement from './Pages/Admin/Dashboard/UserManagement.jsx';
-
+import ContactPage  from './Components/Contact.jsx';
 function App() {
   return (
     <Routes>
@@ -27,6 +27,7 @@ function App() {
       <Route path="/company/forgot-password" element={<CompanyForgotPassword />} />
       <Route path="/applicant/dashboard" element={<ApplicantDashboard />} />
       <Route path="/applicant/profile" element={<ApplicantProfile />} />
+      <Route path="/contact" element={<ContactPage />} />
       
       {/* Company Routes */}
       <Route path="/company/dashboard" element={<CompanyDashboard />} />

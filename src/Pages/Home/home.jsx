@@ -8,7 +8,7 @@ import {
   MapPin, 
   ChevronRight
 } from 'lucide-react';
-import Footer from '../../Components/Footer';
+import Footer from '../../Components/footer';
 import Header from '../../Components/Header';
 
 const HomePage = () => {

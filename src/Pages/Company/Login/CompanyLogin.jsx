@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Building2, Mail, Lock, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import Header from "../../../Components/Header";
 import { api } from "../../../utils/api";
-import Footer from "../../../Components/Footer";
+import Footer from "../../../Components/footer";
 
 const CompanyLogin = () => {
   const navigate = useNavigate();

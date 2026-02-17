@@ -12,7 +12,7 @@ import {
   Check,
   Briefcase
 } from 'lucide-react';
-import Sidebar from '../Components/Sidebar';
+import Sidebar from '../Components/Applicant Sidebar';
 import CertificatesSection from './ApplicantCertificates';
 import Header from '../../../Components/Header';
 import { api } from '../../../utils/api';

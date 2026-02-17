@@ -4,7 +4,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { GraduationCap, Mail, Lock, Eye, EyeOff, Building2 } from "lucide-react";
 import Header from "../../../Components/Header";
 import { api } from "../../../utils/api";
-import Footer from "../../../Components/Footer";
+import Footer from "../../../Components/footer";
 
 const ApplicantLogin = () => {
   const navigate = useNavigate();
