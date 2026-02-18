@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { 
   FileText, 
   Calendar, 
-  Bell, Menu, CheckCircle2, Clock
+  CheckCircle2, Clock
 } from 'lucide-react';
 import Sidebar from '../Components/Applicant Sidebar';
-import Header from '../../../Components/Header';
+import DashboardHeader from '../../../Components/DashboardHeader';
 
 const ApplicantDashboard = () => {
   const navigate = useNavigate();
@@ -19,11 +19,8 @@ const ApplicantDashboard = () => {
       try {
         const parsedUser = JSON.parse(storedUser);
         setUser({
-          name: parsedUser.name || 'User',
-          role: 'Applicant',
-          avatar: parsedUser.name ? parsedUser.name.charAt(0).toUpperCase() : 'U',
+          name: parsedUser.name || parsedUser.fullname || 'User',
           resumeComplete: false,
-          notificationCount: 2
         });
       } catch (error) {
         console.error('Error parsing user:', error);
@@ -54,8 +51,13 @@ const ApplicantDashboard = () => {
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-      {/* Header Component */}
-      <Header isDashboard={false} />
+      {/* Dashboard Header Component */}
+      <DashboardHeader 
+        onMenuClick={() => setSidebarOpen(true)} 
+        userRole="Applicant"
+        dashboardPath="/applicant/dashboard"
+        profilePath="/applicant/profile"
+      />
 
       {/* Main Content Section */}
       <div className="flex flex-1 overflow-hidden">
@@ -83,7 +85,7 @@ const ApplicantDashboard = () => {
           {/* Warning Alert - Only show if resume incomplete */}
           {!user.resumeComplete && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 flex items-start gap-4">
-              <div className="bg-amber-100 p-1.5 rounded-full text-amber-600 mt-0.5 flex-shrink-0">
+              <div className="bg-amber-100 p-1.5 rounded-full text-amber-600 mt-0.5 shrink-0">
                 <FileText size={18} />
               </div>
               <div className="flex-1 min-w-0">

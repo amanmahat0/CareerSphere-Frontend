@@ -9,14 +9,15 @@ import {
   Edit,
   X,
   Check,
-  Briefcase,
   Camera,
   Upload,
-  Trash2
+  Trash2,
+  Lock
 } from 'lucide-react';
 import Sidebar from '../Components/Applicant Sidebar';
 import CertificatesSection from './ApplicantCertificates';
-import Header from '../../../Components/Header';
+import ApplicantChangePassword from '../ForgotPassword/ApplicantChangePassword';
+import DashboardHeader from '../../../Components/DashboardHeader';
 import { api } from '../../../utils/api';
 
 // Helper Component: InputField for editable profile fields
@@ -306,8 +307,13 @@ const ApplicantProfile = () => {
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-      {/* Header Component */}
-      <Header isDashboard={false} />
+      {/* Dashboard Header Component */}
+      <DashboardHeader 
+        onMenuClick={() => setSidebarOpen(true)} 
+        userRole="Applicant"
+        dashboardPath="/applicant/dashboard"
+        profilePath="/applicant/profile"
+      />
 
       {/* Main Content Section */}
       <div className="flex flex-1 overflow-hidden">
@@ -332,16 +338,22 @@ const ApplicantProfile = () => {
             </div>
 
             {/* Tabs */}
-            <div className="flex space-x-8 border-b border-slate-200 mb-6">
+            <div className="flex space-x-8 border-b border-slate-200 mb-6 overflow-x-auto">
               <button 
                 onClick={() => setActiveTab('profile')}
-                className={`pb-2 text-xs font-medium flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'profile' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                className={`pb-2 text-xs font-medium flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'profile' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
               >
                 <User size={14} /> Profile Information
               </button>
               <button 
+                onClick={() => setActiveTab('password')}
+                className={`pb-2 text-xs font-medium flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'password' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+              >
+                <Lock size={14} /> Change Password
+              </button>
+              <button 
                 onClick={() => setActiveTab('certificates')}
-                className={`pb-2 text-xs font-medium flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'certificates' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                className={`pb-2 text-xs font-medium flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'certificates' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
               >
                 <FileText size={14} /> Certificates (4)
               </button>
@@ -483,23 +495,6 @@ const ApplicantProfile = () => {
                           onChange={handleInputChange}
                           icon={<MapPin className="text-purple-500" size={16} />}
                         />
-                        <div className="mb-2">
-                          <label className="block text-xs font-medium text-slate-700 mb-2">Applicant Type</label>
-                          <div className="flex items-center gap-2 bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 focus-within:border-blue-500 focus-within:bg-blue-50 transition">
-                            <Briefcase className="text-indigo-500" size={16} />
-                            <select
-                              name="applicantType"
-                              value={editFormData.applicantType || 'Student'}
-                              onChange={handleInputChange}
-                              className="flex-1 bg-transparent outline-none text-slate-900 text-sm"
-                            >
-                              <option value="Student">Student</option>
-                              <option value="Fresh Graduate">Fresh Graduate</option>
-                              <option value="Experienced">Experienced</option>
-                              <option value="Career Changer">Career Changer</option>
-                            </select>
-                          </div>
-                        </div>
                       </div>
                     ) : (
                       <div className="grid md:grid-cols-2 gap-y-4 gap-x-8">
@@ -523,17 +518,14 @@ const ApplicantProfile = () => {
                           label="Address" 
                           value={profileData?.address || 'Not provided'} 
                         />
-                        <InfoItem 
-                          icon={<Briefcase className="text-indigo-500" size={16} />} 
-                          label="Applicant Type" 
-                          value={profileData?.applicantType || 'Not provided'} 
-                        />
                       </div>
                     )}
                   </div>
 
                 </div>
               </div>
+            ) : activeTab === 'password' ? (
+              <ApplicantChangePassword profileData={profileData} />
             ) : (
               <CertificatesSection />
             )}

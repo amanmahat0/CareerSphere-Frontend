@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Briefcase, Users, Calendar, 
-  Award, Bell, Search, MessageCircle, 
+  Award, Search, MessageCircle, 
   CalendarPlus, Upload, HelpCircle, Menu
 } from 'lucide-react';
 import { 
@@ -10,7 +10,7 @@ import {
   Tooltip, Legend, ResponsiveContainer 
 } from 'recharts';
 import CompanySidebar from '../Components/CompanySidebar';
-import Header from '../../../Components/Header';
+import DashboardHeader from '../../../Components/DashboardHeader';
 
 // Mock data for the chart
 const chartData = [
@@ -26,8 +26,13 @@ const CompanyDashboard = () => {
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-      {/* Header Component */}
-      <Header isDashboard={false} />
+      {/* Dashboard Header Component */}
+      <DashboardHeader 
+        onMenuClick={() => setSidebarOpen(!sidebarOpen)} 
+        userRole="Company"
+        dashboardPath="/company/dashboard"
+        profilePath="/company/profile"
+      />
 
       {/* Main Content Section */}
       <div className="flex flex-1 overflow-hidden">
@@ -44,15 +49,8 @@ const CompanyDashboard = () => {
 
         {/* Dashboard Content */}
         <main className="flex-1 overflow-y-auto">
-          {/* Sub Header */}
-          <div className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-10 gap-4">
-            <button 
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden p-2 hover:bg-slate-100 rounded-lg"
-            >
-              <Menu size={20} />
-            </button>
-
+          {/* Sub Header with Search */}
+          <div className="h-14 bg-white border-b border-slate-200 flex items-center px-4 lg:px-8 sticky top-0 z-10 gap-4">
             <div className="relative w-96">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
@@ -60,21 +58,6 @@ const CompanyDashboard = () => {
                 placeholder="Search applications, applicants..." 
                 className="w-full bg-slate-100 border-transparent rounded-lg py-2 pl-10 pr-4 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
               />
-            </div>
-            <div className="flex items-center gap-3 lg:gap-4 ml-auto">
-              <button className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors" title="Notifications">
-                <Bell size={20} />
-                <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-semibold">3</span>
-              </button>
-              <div className="hidden sm:flex items-center gap-3 border-l border-slate-200 pl-4">
-                <div className="text-right">
-                  <p className="text-sm font-semibold">Leapfrog Technology</p>
-                  <p className="text-xs text-slate-500">Recruiter</p>
-                </div>
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-900 rounded-full flex items-center justify-center text-white font-bold">
-                  L
-                </div>
-              </div>
             </div>
           </div>
 

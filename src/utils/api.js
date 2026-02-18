@@ -3,16 +3,24 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api"
 export const api = {
   async request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
-    const config = {
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-      ...options,
+    
+    // Build headers - merge Content-Type with any custom headers
+    const headers = {
+      "Content-Type": "application/json",
+      ...options.headers,
     };
 
-    if (options.body && typeof options.body === "object") {
-      config.body = JSON.stringify(options.body);
+    // Build config without headers from options (we've already merged them)
+    const { headers: _, body, ...restOptions } = options;
+    const config = {
+      ...restOptions,
+      headers,
+    };
+
+    if (body && typeof body === "object") {
+      config.body = JSON.stringify(body);
+    } else if (body) {
+      config.body = body;
     }
 
     try {
