@@ -10,6 +10,7 @@ import CompanyForgotPassword from './Pages/Company/ForgotPassword/CompanyForgotP
 import ApplicantDashboard from './Pages/Applicant/Dashboard/ApplicantDashboard.jsx';
 import ApplicantProfile from './Pages/Applicant/Profile/ApplicantProfile.jsx';
 import CompanyDashboard from './Pages/Company/Dashboard/CompanyDashboard.jsx';
+import CompanyProfile from './Pages/Company/Profile/CompanyProfile.jsx';
 import JobManagement from './Pages/Company/Dashboard/JobManagement.jsx';
 import AdminDashboard from './Pages/Admin/Dashboard/AdminDashboard.jsx';
 import UserManagement from './Pages/Admin/Dashboard/UserManagement.jsx';
@@ -31,6 +32,7 @@ function App() {
       
       {/* Company Routes */}
       <Route path="/company/dashboard" element={<CompanyDashboard />} />
+      <Route path="/company/profile" element={<CompanyProfile />} />
       <Route path="/company/jobs" element={<JobManagement />} />
       
       {/* Admin Routes */}

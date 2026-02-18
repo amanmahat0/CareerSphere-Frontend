@@ -1,14 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  LayoutGrid, 
+  LayoutDashboard, 
   Building2, 
   Briefcase, 
   Users, 
   Calendar, 
   Award, 
   Bell, 
-  Settings,
   LogOut
 } from 'lucide-react';
 
@@ -16,18 +15,17 @@ const CompanySidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
   const navigate = useNavigate();
 
   const navigationItems = [
-    { icon: LayoutGrid, label: 'Dashboard', id: 'dashboard', path: '/company/dashboard' },
-    { icon: Building2, label: 'Institution Profile', id: 'profile', path: '/company/profile' },
-    { icon: Briefcase, label: 'Job Management', id: 'jobs', path: '/company/jobs' },
-    { icon: Users, label: 'Applicant Management', id: 'applicants', path: '/company/applicants' },
-    { icon: Calendar, label: 'Interview Management', id: 'interviews', path: '/company/interviews' },
-    { icon: Award, label: 'Offers & Certificates', id: 'offers', path: '/company/offers' },
-    { icon: Bell, label: 'Notifications', id: 'notifications', path: '/company/notifications' },
-    { icon: Settings, label: 'Settings', id: 'settings', path: '/company/settings' },
+    { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
+    { icon: Briefcase, label: 'Job Management', id: 'jobs' },
+    { icon: Users, label: 'Applicant Management', id: 'applicants' },
+    { icon: Calendar, label: 'Interview Management', id: 'interviews' },
+    { icon: Award, label: 'Offers & Certificates', id: 'offers' },
+    { icon: Bell, label: 'Notifications', id: 'notifications' },
+    { icon: Building2, label: 'Profile', id: 'profile' },
   ];
 
-  const handleNavigation = (path) => {
-    navigate(path);
+  const handleNavigation = (id) => {
+    navigate(`/company/${id}`);
     onClose();
   };
 
@@ -35,7 +33,7 @@ const CompanySidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('userType');
-    navigate('/login');
+    navigate('/');
   };
 
   return (
@@ -48,7 +46,7 @@ const CompanySidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
             icon={<item.icon size={20}/>} 
             label={item.label}
             active={item.id === activePage}
-            onClick={() => handleNavigation(item.path)}
+            onClick={() => handleNavigation(item.id)}
           />
         ))}
       </nav>

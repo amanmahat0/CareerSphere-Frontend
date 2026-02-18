@@ -34,7 +34,7 @@ const Sidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('userType');
-    navigate('/login');
+    navigate('/');
   };
 
   return (

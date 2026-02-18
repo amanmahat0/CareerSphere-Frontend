@@ -49,22 +49,10 @@ const CompanyDashboard = () => {
 
         {/* Dashboard Content */}
         <main className="flex-1 overflow-y-auto">
-          {/* Sub Header with Search */}
-          <div className="h-14 bg-white border-b border-slate-200 flex items-center px-4 lg:px-8 sticky top-0 z-10 gap-4">
-            <div className="relative w-96">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input 
-                type="text" 
-                placeholder="Search applications, applicants..." 
-                className="w-full bg-slate-100 border-transparent rounded-lg py-2 pl-10 pr-4 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
-              />
-            </div>
-          </div>
-
           <div className="p-4 lg:p-8 space-y-8">
             {/* Dashboard Header */}
             <div>
-              <h1 className="text-3xl lg:text-4xl font-bold mb-2">Leapfrog Technology Dashboard 🚀</h1>
+              <h1 className="text-3xl lg:text-4xl font-bold mb-2">Dashboard </h1>
               <p className="text-slate-500 text-sm lg:text-base">Manage your recruitment and placement activities</p>
             </div>
 
