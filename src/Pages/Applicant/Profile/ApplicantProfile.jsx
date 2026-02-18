@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FileText, 
   User, 
-  Calendar, 
   Mail, 
   Phone, 
   MapPin, 
   Edit,
   X,
   Check,
-  Briefcase
+  Briefcase,
+  Camera,
+  Upload,
+  Trash2
 } from 'lucide-react';
 import Sidebar from '../Components/Applicant Sidebar';
 import CertificatesSection from './ApplicantCertificates';
@@ -52,6 +54,8 @@ const InfoItem = ({ icon, label, value }) => {
   );
 };
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 const ApplicantProfile = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -61,20 +65,26 @@ const ApplicantProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({});
   const [loading, setLoading] = useState(false);
+  const [uploadingPicture, setUploadingPicture] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       const storedUser = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
       if (storedUser) {
         try {
           const parsedUser = JSON.parse(storedUser);
           
           // Fetch fresh user data from backend if userId exists
-          if (parsedUser.id || parsedUser._id) {
+          if ((parsedUser.id || parsedUser._id) && token) {
             try {
               const response = await api.request('/applicant/profile', {
                 method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
               });
               
               const userData = {
@@ -84,9 +94,9 @@ const ApplicantProfile = () => {
               };
               
               setUser({
-                name: userData.name || 'User',
+                name: userData.name || userData.fullname || 'User',
                 role: 'Applicant',
-                avatar: userData.name ? userData.name.charAt(0).toUpperCase() : 'U',
+                avatar: (userData.name || userData.fullname || 'U').charAt(0).toUpperCase(),
                 notificationCount: 2
               });
               setProfileData(userData);
@@ -95,9 +105,9 @@ const ApplicantProfile = () => {
               console.log('Backend profile fetch failed, using localStorage:', error.message);
               // Fallback to localStorage data
               setUser({
-                name: parsedUser.name || 'User',
+                name: parsedUser.name || parsedUser.fullname || 'User',
                 role: 'Applicant',
-                avatar: parsedUser.name ? parsedUser.name.charAt(0).toUpperCase() : 'U',
+                avatar: (parsedUser.name || parsedUser.fullname || 'U').charAt(0).toUpperCase(),
                 notificationCount: 2
               });
               setProfileData(parsedUser);
@@ -105,9 +115,9 @@ const ApplicantProfile = () => {
             }
           } else {
             setUser({
-              name: parsedUser.name || 'User',
+              name: parsedUser.name || parsedUser.fullname || 'User',
               role: 'Applicant',
-              avatar: parsedUser.name ? parsedUser.name.charAt(0).toUpperCase() : 'U',
+              avatar: (parsedUser.name || parsedUser.fullname || 'U').charAt(0).toUpperCase(),
               notificationCount: 2
             });
             setProfileData(parsedUser);
@@ -144,20 +154,26 @@ const ApplicantProfile = () => {
   const handleSave = async () => {
     setLoading(true);
     try {
+      const token = localStorage.getItem('token');
       // Call API to update profile
       const response = await api.request('/applicant/profile/update', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: editFormData
       });
       
-      // Update localStorage
-      localStorage.setItem('user', JSON.stringify(editFormData));
+      // Update localStorage with server response data
+      const updatedData = response.data || editFormData;
+      localStorage.setItem('user', JSON.stringify(updatedData));
       
       // Update state
-      setProfileData(editFormData);
+      setProfileData(updatedData);
       setUser(prev => ({
         ...prev,
-        name: editFormData.name || 'User'
+        name: updatedData.name || updatedData.fullname || 'User',
+        avatar: (updatedData.name || updatedData.fullname || 'U').charAt(0).toUpperCase()
       }));
       
       setIsEditing(false);
@@ -174,6 +190,116 @@ const ApplicantProfile = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleProfilePictureClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleProfilePictureChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setMessage({ type: 'error', text: 'Only image files (JPEG, PNG, GIF, WebP) are allowed' });
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'File size must be less than 5MB' });
+      return;
+    }
+
+    setUploadingPicture(true);
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+
+      const response = await fetch(`${API_BASE_URL}/applicant/profile/picture`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to upload profile picture');
+      }
+
+      // Update state with new profile picture
+      const newProfilePicture = data.data.profilePicture;
+      setProfileData(prev => ({ ...prev, profilePicture: newProfilePicture }));
+      setEditFormData(prev => ({ ...prev, profilePicture: newProfilePicture }));
+      
+      // Update localStorage
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      localStorage.setItem('user', JSON.stringify({ ...storedUser, profilePicture: newProfilePicture }));
+
+      setMessage({ type: 'success', text: 'Profile picture uploaded successfully!' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+      setMessage({ type: 'error', text: error.message || 'Failed to upload profile picture' });
+    } finally {
+      setUploadingPicture(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleDeleteProfilePicture = async () => {
+    if (!profileData?.profilePicture) return;
+    
+    setUploadingPicture(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/applicant/profile/picture`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to delete profile picture');
+      }
+
+      // Update state to remove profile picture
+      setProfileData(prev => ({ ...prev, profilePicture: null }));
+      setEditFormData(prev => ({ ...prev, profilePicture: null }));
+      
+      // Update localStorage
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      localStorage.setItem('user', JSON.stringify({ ...storedUser, profilePicture: null }));
+
+      setMessage({ type: 'success', text: 'Profile picture deleted successfully!' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      console.error('Error deleting profile picture:', error);
+      setMessage({ type: 'error', text: error.message || 'Failed to delete profile picture' });
+    } finally {
+      setUploadingPicture(false);
+    }
+  };
+
+  const getProfilePictureUrl = () => {
+    if (!profileData?.profilePicture) return null;
+    // If it's a relative URL, prepend the base URL
+    if (profileData.profilePicture.startsWith('/uploads')) {
+      return `${API_BASE_URL.replace('/api', '')}${profileData.profilePicture}`;
+    }
+    return profileData.profilePicture;
   };
 
   if (!user) return <div className="flex items-center justify-center h-screen">Loading...</div>;
@@ -270,13 +396,53 @@ const ApplicantProfile = () => {
                   
                   {/* Header: Avatar & Basic Info */}
                   <div className="flex items-start gap-5 mb-8">
-                    <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center border-4 border-white shadow-sm overflow-hidden shrink-0">
-                      <div className="w-full h-full bg-linear-to-br from-blue-500 to-blue-900 flex items-center justify-center text-white text-2xl font-bold">
-                        {user?.avatar}
+                    <div className="relative group">
+                      <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center border-4 border-white shadow-lg overflow-hidden shrink-0">
+                        {getProfilePictureUrl() ? (
+                          <img 
+                            src={getProfilePictureUrl()} 
+                            alt="Profile" 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-900 flex items-center justify-center text-white text-3xl font-bold">
+                            {user?.avatar}
+                          </div>
+                        )}
                       </div>
+                      {/* Profile Picture Upload Overlay */}
+                      <div 
+                        onClick={handleProfilePictureClick}
+                        className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      >
+                        {uploadingPicture ? (
+                          <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
+                        ) : (
+                          <Camera className="text-white" size={24} />
+                        )}
+                      </div>
+                      {/* Delete button */}
+                      {profileData?.profilePicture && (
+                        <button
+                          onClick={handleDeleteProfilePicture}
+                          disabled={uploadingPicture}
+                          className="absolute -bottom-1 -right-1 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full shadow-md transition disabled:opacity-50"
+                          title="Delete profile picture"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                        onChange={handleProfilePictureChange}
+                        className="hidden"
+                      />
                     </div>
                     <div className="pt-2">
-                      <h2 className="text-2xl font-bold text-slate-900 mb-2">{user?.name || 'User'}</h2>
+                      <h2 className="text-2xl font-bold text-slate-900 mb-1">{user?.name || 'User'}</h2>
+                      <p className="text-sm text-slate-500">Click on avatar to upload a new picture</p>
                     </div>
                   </div>
 
@@ -285,6 +451,14 @@ const ApplicantProfile = () => {
                     <h3 className="text-base font-semibold text-slate-800 mb-4 border-b border-slate-100 pb-2">Personal Information</h3>
                     {isEditing ? (
                       <div className="grid md:grid-cols-2 gap-y-4 gap-x-8">
+                        <InputField
+                          label="Full Name"
+                          name="name"
+                          type="text"
+                          value={editFormData.name || editFormData.fullname || ''}
+                          onChange={handleInputChange}
+                          icon={<User className="text-slate-500" size={16} />}
+                        />
                         <InputField
                           label="Email Address"
                           name="email"
@@ -309,17 +483,31 @@ const ApplicantProfile = () => {
                           onChange={handleInputChange}
                           icon={<MapPin className="text-purple-500" size={16} />}
                         />
-                        <InputField
-                          label="Date of Birth"
-                          name="dob"
-                          type="date"
-                          value={editFormData.dob || ''}
-                          onChange={handleInputChange}
-                          icon={<Calendar className="text-orange-500" size={16} />}
-                        />
+                        <div className="mb-2">
+                          <label className="block text-xs font-medium text-slate-700 mb-2">Applicant Type</label>
+                          <div className="flex items-center gap-2 bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 focus-within:border-blue-500 focus-within:bg-blue-50 transition">
+                            <Briefcase className="text-indigo-500" size={16} />
+                            <select
+                              name="applicantType"
+                              value={editFormData.applicantType || 'Student'}
+                              onChange={handleInputChange}
+                              className="flex-1 bg-transparent outline-none text-slate-900 text-sm"
+                            >
+                              <option value="Student">Student</option>
+                              <option value="Fresh Graduate">Fresh Graduate</option>
+                              <option value="Experienced">Experienced</option>
+                              <option value="Career Changer">Career Changer</option>
+                            </select>
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <div className="grid md:grid-cols-2 gap-y-4 gap-x-8">
+                        <InfoItem 
+                          icon={<User className="text-slate-500" size={16} />} 
+                          label="Full Name" 
+                          value={profileData?.name || profileData?.fullname || 'Not provided'} 
+                        />
                         <InfoItem 
                           icon={<Mail className="text-blue-500" size={16} />} 
                           label="Email Address" 
@@ -334,11 +522,6 @@ const ApplicantProfile = () => {
                           icon={<MapPin className="text-purple-500" size={16} />} 
                           label="Address" 
                           value={profileData?.address || 'Not provided'} 
-                        />
-                        <InfoItem 
-                          icon={<Calendar className="text-orange-500" size={16} />} 
-                          label="Date of Birth" 
-                          value={profileData?.dob || 'Not provided'} 
                         />
                         <InfoItem 
                           icon={<Briefcase className="text-indigo-500" size={16} />} 
