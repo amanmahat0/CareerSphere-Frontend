@@ -29,7 +29,24 @@ const DashboardHeader = ({
         });
       } catch (error) {
         console.error('Error parsing user:', error);
+        // Set default user on error
+        setUser({
+          name: userRole === 'Admin' ? 'Admin User' : 'User',
+          role: userRole,
+          avatar: userRole === 'Admin' ? 'A' : 'U',
+          profilePicture: null,
+          notificationCount: 0
+        });
       }
+    } else {
+      // Set default user when no user in localStorage
+      setUser({
+        name: userRole === 'Admin' ? 'Admin User' : 'User',
+        role: userRole,
+        avatar: userRole === 'Admin' ? 'A' : 'U',
+        profilePicture: null,
+        notificationCount: 0
+      });
     }
   }, [userRole]);
 

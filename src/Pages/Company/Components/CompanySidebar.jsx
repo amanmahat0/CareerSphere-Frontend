@@ -17,7 +17,7 @@ const CompanySidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
   const navigationItems = [
     { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
     { icon: Briefcase, label: 'Job Management', id: 'jobs' },
-    { icon: Users, label: 'Applicant Management', id: 'applicants' },
+    { icon: Users, label: 'Applications', id: 'applications' },
     { icon: Calendar, label: 'Interview Management', id: 'interviews' },
     { icon: Award, label: 'Offers & Certificates', id: 'offers' },
     { icon: Bell, label: 'Notifications', id: 'notifications' },
@@ -51,7 +51,7 @@ const CompanySidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
         ))}
       </nav>
 
-      <div className="py-18 px-4 mt-auto">
+      <div className="p-4 mb-16 mt-auto border-t border-slate-200">
         <button 
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-3 bg-red-100 text-slate-600 hover:bg-red-200 rounded-lg transition-colors text-sm font-medium"

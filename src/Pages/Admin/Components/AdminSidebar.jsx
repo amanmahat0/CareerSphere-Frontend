@@ -21,18 +21,15 @@ const AdminSidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
 
   const navigationItems = [
     { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard', path: '/admin/dashboard' },
-    { icon: Users, label: 'User Management', id: 'users', path: '/admin/users' },
-    { icon: Briefcase, label: 'Institution Management', id: 'institutions', path: '/admin/institutions' },
+    { icon: Users, label: 'Applicant Management', id: 'applicants', path: '/admin/applicants' },
+    { icon: Briefcase, label: 'Company Management', id: 'companies', path: '/admin/companies' },
     { icon: FileText, label: 'Applications', id: 'applications', path: '/admin/applications' },
     { icon: Calendar, label: 'Interviews', id: 'interviews', path: '/admin/interviews' },
     { icon: FileCheck, label: 'Resumes & Certificates', id: 'documents', path: '/admin/documents' },
     { icon: Bell, label: 'Notifications', id: 'notifications', path: '/admin/notifications' },
-    { icon: Users, label: 'User Directory', id: 'directory', path: '/admin/directory' },
     { icon: BarChart3, label: 'Reports & Analytics', id: 'reports', path: '/admin/reports' },
-    { icon: ShieldCheck, label: 'Institution Verification', id: 'verification', path: '/admin/verification' },
-    { icon: CheckSquare, label: 'Job Post Approval', id: 'approvals', path: '/admin/approvals' },
     { icon: Megaphone, label: 'Announcements', id: 'announcements', path: '/admin/announcements' },
-    { icon: Settings, label: 'System Settings', id: 'settings', path: '/admin/settings' },
+    { icon: Settings, label: 'Settings', id: 'settings', path: '/admin/settings' },
   ];
 
   const handleNavigation = (path) => {
@@ -62,7 +59,7 @@ const AdminSidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
         ))}
       </nav>
 
-      <div className="py-18 px-4 mt-auto">
+      <div className="p-4 mb-16 mt-auto border-t border-slate-200">
         <button 
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-3 bg-red-100 text-slate-600 hover:bg-red-200 rounded-lg transition-colors text-sm font-medium"

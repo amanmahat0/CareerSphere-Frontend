@@ -52,7 +52,7 @@ const Sidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
         ))}
       </nav>
 
-      <div className="py-18 px-4 mt-auto">
+      <div className="p-4 mb-16 mt-auto border-t border-slate-200">
         <button 
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-3 bg-red-100 text-slate-600 hover:bg-red-200 rounded-lg transition-colors text-sm font-medium"

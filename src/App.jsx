@@ -13,7 +13,8 @@ import CompanyDashboard from './Pages/Company/Dashboard/CompanyDashboard.jsx';
 import CompanyProfile from './Pages/Company/Profile/CompanyProfile.jsx';
 import JobManagement from './Pages/Company/Dashboard/JobManagement.jsx';
 import AdminDashboard from './Pages/Admin/Dashboard/AdminDashboard.jsx';
-import UserManagement from './Pages/Admin/Dashboard/UserManagement.jsx';
+import ApplicantManagement from './Pages/Admin/ApplicantManagement/ApplicantManagement.jsx';
+import CompanyManagement from './Pages/Admin/CompanyManagement/CompanyManagement.jsx';
 import ContactPage  from './Components/Contact.jsx';
 function App() {
   return (
@@ -38,7 +39,8 @@ function App() {
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminDashboard />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
-      <Route path="/admin/users" element={<UserManagement />} />
+      <Route path="/admin/applicants" element={<ApplicantManagement />} />
+      <Route path="/admin/companies" element={<CompanyManagement />} />
     </Routes>
   );
 }
