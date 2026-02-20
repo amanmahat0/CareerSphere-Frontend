@@ -9,6 +9,7 @@ import ApplicantForgotPassword from './Pages/Applicant/ForgotPassword/ApplicantF
 import CompanyForgotPassword from './Pages/Company/ForgotPassword/CompanyForgotPassword.jsx';
 import ApplicantDashboard from './Pages/Applicant/Dashboard/ApplicantDashboard.jsx';
 import ApplicantProfile from './Pages/Applicant/Profile/ApplicantProfile.jsx';
+import ResumeBuilder from './Pages/Applicant/ResumeBuilder/ResumeBuilder.jsx';
 import CompanyDashboard from './Pages/Company/Dashboard/CompanyDashboard.jsx';
 import CompanyProfile from './Pages/Company/Profile/CompanyProfile.jsx';
 import JobManagement from './Pages/Company/Dashboard/JobManagement.jsx';
@@ -31,6 +32,7 @@ function App() {
       <Route path="/company/forgot-password" element={<CompanyForgotPassword />} />
       <Route path="/applicant/dashboard" element={<ApplicantDashboard />} />
       <Route path="/applicant/profile" element={<ApplicantProfile />} />
+      <Route path="/applicant/resume" element={<ResumeBuilder />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/about" element={<AboutPage />} />
       

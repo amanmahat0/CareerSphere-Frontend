@@ -6,7 +6,6 @@ import {
   Briefcase, 
   Users, 
   Calendar, 
-  Award, 
   Bell, 
   LogOut
 } from 'lucide-react';
@@ -18,8 +17,8 @@ const CompanySidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
     { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
     { icon: Briefcase, label: 'Job Management', id: 'jobs' },
     { icon: Users, label: 'Applications', id: 'applications' },
-    { icon: Calendar, label: 'Interview Management', id: 'interviews' },
-    { icon: Award, label: 'Offers & Certificates', id: 'offers' },
+    { icon: Calendar, label: 'Interviews', id: 'interviews' },
+    //{ icon: Award, label: 'Offers & Certificates', id: 'offers' },
     { icon: Bell, label: 'Notifications', id: 'notifications' },
     { icon: Building2, label: 'Profile', id: 'profile' },
   ];
