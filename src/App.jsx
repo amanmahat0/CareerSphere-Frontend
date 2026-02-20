@@ -16,6 +16,8 @@ import AdminDashboard from './Pages/Admin/Dashboard/AdminDashboard.jsx';
 import ApplicantManagement from './Pages/Admin/ApplicantManagement/ApplicantManagement.jsx';
 import CompanyManagement from './Pages/Admin/CompanyManagement/CompanyManagement.jsx';
 import ContactPage  from './Components/Contact.jsx';
+import { AboutPage } from './Components/About.jsx';
+
 function App() {
   return (
     <Routes>
@@ -30,6 +32,7 @@ function App() {
       <Route path="/applicant/dashboard" element={<ApplicantDashboard />} />
       <Route path="/applicant/profile" element={<ApplicantProfile />} />
       <Route path="/contact" element={<ContactPage />} />
+      <Route path="/about" element={<AboutPage />} />
       
       {/* Company Routes */}
       <Route path="/company/dashboard" element={<CompanyDashboard />} />
