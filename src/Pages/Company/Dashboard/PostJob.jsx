@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { api } from '../../../utils/api';
 
-const PostJob = ({ isOpen, onClose, onSuccess }) => {
-  const [formData, setFormData] = useState({
+const PostJob = ({ isOpen, onClose, onSuccess, editJob = null }) => {
+  const isEditMode = !!editJob;
+  
+  const getInitialFormData = () => ({
     title: '',
     company: '',
     type: 'Internship',
@@ -17,8 +19,32 @@ const PostJob = ({ isOpen, onClose, onSuccess }) => {
     responsibilities: '',
     benefits: '',
   });
+
+  const [formData, setFormData] = useState(getInitialFormData());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editJob) {
+      setFormData({
+        title: editJob.title || '',
+        company: editJob.company || '',
+        type: editJob.type || 'Internship',
+        location: editJob.location || 'Kathmandu',
+        duration: editJob.duration || '',
+        description: editJob.description || '',
+        salary: editJob.salary || '',
+        skills: Array.isArray(editJob.skills) ? editJob.skills.join(', ') : (editJob.skills || ''),
+        deadline: editJob.deadline ? editJob.deadline.split('T')[0] : '',
+        requirements: Array.isArray(editJob.requirements) ? editJob.requirements.join('\n') : (editJob.requirements || ''),
+        responsibilities: Array.isArray(editJob.responsibilities) ? editJob.responsibilities.join('\n') : (editJob.responsibilities || ''),
+        benefits: Array.isArray(editJob.benefits) ? editJob.benefits.join('\n') : (editJob.benefits || ''),
+      });
+    } else {
+      setFormData(getInitialFormData());
+    }
+  }, [editJob]);
 
   if (!isOpen) return null;
 
@@ -43,24 +69,17 @@ const PostJob = ({ isOpen, onClose, onSuccess }) => {
         benefits: formData.benefits ? formData.benefits.split('\n').map(s => s.trim()).filter(Boolean) : [],
       };
       
-      const response = await api.createJob(jobData);
-      console.log("Job Posted!", response);
+      let response;
+      if (isEditMode) {
+        response = await api.updateJob(editJob._id, jobData);
+        console.log("Job Updated!", response);
+      } else {
+        response = await api.createJob(jobData);
+        console.log("Job Posted!", response);
+      }
       
       // Reset form
-      setFormData({
-        title: '',
-        company: '',
-        type: 'Internship',
-        location: 'Kathmandu',
-        duration: '',
-        description: '',
-        salary: '',
-        skills: '',
-        deadline: '',
-        requirements: '',
-        responsibilities: '',
-        benefits: '',
-      });
+      setFormData(getInitialFormData());
       
       if (onSuccess) onSuccess(response.job);
       onClose();
@@ -77,8 +96,8 @@ const PostJob = ({ isOpen, onClose, onSuccess }) => {
         {/* Header */}
         <div className="p-6 pb-2 flex justify-between items-start">
           <div>
-            <h2 className="text-xl font-bold text-slate-800">Post New Opportunity</h2>
-            <p className="text-sm text-slate-500">Fill in the details for the job or internship posting</p>
+            <h2 className="text-xl font-bold text-slate-800">{isEditMode ? 'Edit Opportunity' : 'Post New Opportunity'}</h2>
+            <p className="text-sm text-slate-500">{isEditMode ? 'Update the details for this job or internship' : 'Fill in the details for the job or internship posting'}</p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
             <X size={20} />
@@ -262,7 +281,7 @@ const PostJob = ({ isOpen, onClose, onSuccess }) => {
               disabled={isLoading}
               className="flex-1 px-4 py-2.5 bg-blue-900 text-white rounded-lg text-sm font-semibold hover:bg-blue-950 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Posting...' : 'Post Opportunity'}
+              {isLoading ? (isEditMode ? 'Updating...' : 'Posting...') : (isEditMode ? 'Update Opportunity' : 'Post Opportunity')}
             </button>
           </div>
         </form>

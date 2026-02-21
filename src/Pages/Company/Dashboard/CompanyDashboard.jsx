@@ -56,34 +56,6 @@ const CompanyDashboard = () => {
               <p className="text-slate-500 text-sm lg:text-base">Manage your recruitment and placement activities</p>
             </div>
 
-            {/* Stat Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-              <StatCard title="Active Job Postings" value="2" trend="Currently open" icon={<Briefcase className="text-blue-600"/>} color="blue" />
-              <StatCard title="Total Applications" value="1" trend="+12 this week" icon={<Users className="text-blue-500"/>} color="indigo" />
-              <StatCard title="Scheduled Interviews" value="0" trend="Upcoming" icon={<Calendar className="text-orange-500"/>} color="orange" />
-              <StatCard title="Selected Candidates" value="0" trend="This season" icon={<Award className="text-emerald-500"/>} color="emerald" />
-            </div>
-
-            {/* Chart Section */}
-            <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-              <h3 className="text-lg font-semibold text-slate-800 mb-6">Department-wise Applications</h3>
-              <div className="h-75 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                    <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                    <Tooltip 
-                      cursor={{fill: '#f8fafc'}}
-                      contentStyle={{borderRadius: '8px', border: '1px solid #e2e8f0'}}
-                    />
-                    <Legend verticalAlign="bottom" height={36} wrapperStyle={{fontSize: '12px'}}/>
-                    <Bar dataKey="shortlisted" fill="#10b981" radius={[4, 4, 0, 0]} name="Shortlisted" />
-                    <Bar dataKey="total" fill="#1e3a8a" radius={[4, 4, 0, 0]} name="Total Applications" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </section>
 
             {/* Upcoming Interviews Section */}
             <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">

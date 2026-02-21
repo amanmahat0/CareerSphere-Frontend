@@ -12,6 +12,7 @@ import DashboardHeader from '../../../Components/DashboardHeader';
 const JobManagement = () => {
   const [activeTab, setActiveTab] = useState('All');
   const [isPostJobOpen, setIsPostJobOpen] = useState(false);
+  const [editingJob, setEditingJob] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -51,7 +52,23 @@ const JobManagement = () => {
 
   // Handle successful job post
   const handleJobPostSuccess = (newJob) => {
+    setEditingJob(null);
     fetchJobs(); // Refresh the list
+  };
+
+  // Handle edit job
+  const handleEditJob = (job) => {
+    console.log('Editing job:', job);
+    setEditingJob(job);
+    setTimeout(() => {
+      setIsPostJobOpen(true);
+    }, 0);
+  };
+
+  // Handle modal close
+  const handleModalClose = () => {
+    setIsPostJobOpen(false);
+    setEditingJob(null);
   };
 
   // Filter jobs based on active tab and search
@@ -115,7 +132,11 @@ const JobManagement = () => {
                 <p className="text-slate-500 text-sm lg:text-base">Post and manage job opportunities</p>
               </div>
               <button 
-                onClick={() => setIsPostJobOpen(true)}
+                type="button"
+                onClick={() => {
+                  setEditingJob(null);
+                  setIsPostJobOpen(true);
+                }}
                 className="bg-blue-900 text-white px-6 py-2.5 rounded-lg flex items-center gap-2 hover:bg-blue-950 transition-colors text-sm font-semibold shadow-md"
               >
                 <Plus size={18} /> Post New Opportunity
@@ -125,8 +146,9 @@ const JobManagement = () => {
             {/* PostJob Modal */}
             <PostJob 
               isOpen={isPostJobOpen} 
-              onClose={() => setIsPostJobOpen(false)} 
+              onClose={handleModalClose} 
               onSuccess={handleJobPostSuccess}
+              editJob={editingJob}
             />
 
             {/* Stats Grid */}
@@ -224,14 +246,28 @@ const JobManagement = () => {
                           <td className="px-6 py-4 text-slate-400">{job.deadline ? formatDate(job.deadline) : '-'}</td>
                           <td className="px-6 py-4 text-slate-500">{job.salary}</td>
                           <td className="px-6 py-4">
-                            <div className="flex items-center gap-3 text-slate-400">
-                              <button className="hover:text-blue-600 transition-colors" title="Edit"><Edit size={18}/></button>
+                            <div className="flex items-center gap-2">
                               <button 
-                                onClick={() => handleDeleteJob(job._id)}
-                                className="hover:text-red-600 transition-colors" 
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditJob(job);
+                                }}
+                                className="px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-1.5" 
+                                title="Edit"
+                              >
+                                <Edit size={14}/> Edit
+                              </button>
+                              <button 
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteJob(job._id);
+                                }}
+                                className="px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-1.5" 
                                 title="Delete"
                               >
-                                <Trash2 size={18}/>
+                                <Trash2 size={14}/> Delete
                               </button>
                             </div>
                           </td>
