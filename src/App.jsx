@@ -18,6 +18,8 @@ import ApplicantManagement from './Pages/Admin/ApplicantManagement/ApplicantMana
 import CompanyManagement from './Pages/Admin/CompanyManagement/CompanyManagement.jsx';
 import ContactPage  from './Components/Contact.jsx';
 import { AboutPage } from './Components/About.jsx';
+import Opportunities from './Pages/Opportunities/Oppotunities.jsx';
+import OpportunityDetails from './Pages/Opportunities/OppotunitiesDetails.jsx';
 
 function App() {
   return (
@@ -32,9 +34,15 @@ function App() {
       <Route path="/company/forgot-password" element={<CompanyForgotPassword />} />
       <Route path="/applicant/dashboard" element={<ApplicantDashboard />} />
       <Route path="/applicant/profile" element={<ApplicantProfile />} />
-      <Route path="/applicant/resume" element={<ResumeBuilder />} />
+      {/* <Route path="/applicant/resume" element={<ResumeBuilder />} /> */}
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/about" element={<AboutPage />} />
+      
+      {/* Opportunities Routes */}
+      <Route path="/opportunities" element={<Opportunities />} />
+      <Route path="/opportunities/:id" element={<OpportunityDetails />} />
+      <Route path="/jobs" element={<Opportunities />} />
+      <Route path="/internships" element={<Opportunities />} />
       
       {/* Company Routes */}
       <Route path="/company/dashboard" element={<CompanyDashboard />} />

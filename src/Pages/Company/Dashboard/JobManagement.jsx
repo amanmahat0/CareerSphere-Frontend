@@ -200,7 +200,7 @@ const JobManagement = () => {
                         <th className="px-6 py-4 font-semibold">Type</th>
                         <th className="px-6 py-4 font-semibold">Location</th>
                         <th className="px-6 py-4 font-semibold">Duration</th>
-                        <th className="px-6 py-4 font-semibold">Posted Date</th>
+                        <th className="px-6 py-4 font-semibold">Deadline</th>
                         <th className="px-6 py-4 font-semibold">Salary</th>
                         <th className="px-6 py-4 font-semibold">Actions</th>
                       </tr>
@@ -221,7 +221,7 @@ const JobManagement = () => {
                           </td>
                           <td className="px-6 py-4 text-slate-500">{job.location}</td>
                           <td className="px-6 py-4 text-slate-500">{job.duration}</td>
-                          <td className="px-6 py-4 text-slate-400">{formatDate(job.postDate)}</td>
+                          <td className="px-6 py-4 text-slate-400">{job.deadline ? formatDate(job.deadline) : '-'}</td>
                           <td className="px-6 py-4 text-slate-500">{job.salary}</td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3 text-slate-400">

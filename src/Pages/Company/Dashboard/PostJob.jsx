@@ -11,6 +11,11 @@ const PostJob = ({ isOpen, onClose, onSuccess }) => {
     duration: '',
     description: '',
     salary: '',
+    skills: '',
+    deadline: '',
+    requirements: '',
+    responsibilities: '',
+    benefits: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -29,7 +34,16 @@ const PostJob = ({ isOpen, onClose, onSuccess }) => {
     setError('');
 
     try {
-      const response = await api.createJob(formData);
+      // Prepare data - convert comma-separated strings to arrays
+      const jobData = {
+        ...formData,
+        skills: formData.skills ? formData.skills.split(',').map(s => s.trim()).filter(Boolean) : [],
+        requirements: formData.requirements ? formData.requirements.split('\n').map(s => s.trim()).filter(Boolean) : [],
+        responsibilities: formData.responsibilities ? formData.responsibilities.split('\n').map(s => s.trim()).filter(Boolean) : [],
+        benefits: formData.benefits ? formData.benefits.split('\n').map(s => s.trim()).filter(Boolean) : [],
+      };
+      
+      const response = await api.createJob(jobData);
       console.log("Job Posted!", response);
       
       // Reset form
@@ -41,6 +55,11 @@ const PostJob = ({ isOpen, onClose, onSuccess }) => {
         duration: '',
         description: '',
         salary: '',
+        skills: '',
+        deadline: '',
+        requirements: '',
+        responsibilities: '',
+        benefits: '',
       });
       
       if (onSuccess) onSuccess(response.job);
@@ -165,6 +184,66 @@ const PostJob = ({ isOpen, onClose, onSuccess }) => {
               rows={4}
               className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none" 
               required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Skills</label>
+              <input 
+                type="text" 
+                name="skills"
+                value={formData.skills}
+                onChange={handleChange}
+                placeholder="React, JavaScript, Node.js (comma separated)" 
+                className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" 
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Application Deadline</label>
+              <input 
+                type="date" 
+                name="deadline"
+                value={formData.deadline}
+                onChange={handleChange}
+                className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" 
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Requirements</label>
+            <textarea 
+              name="requirements"
+              value={formData.requirements}
+              onChange={handleChange}
+              placeholder="Enter each requirement on a new line..."
+              rows={3}
+              className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none" 
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Responsibilities</label>
+            <textarea 
+              name="responsibilities"
+              value={formData.responsibilities}
+              onChange={handleChange}
+              placeholder="Enter each responsibility on a new line..."
+              rows={3}
+              className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none" 
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Benefits</label>
+            <textarea 
+              name="benefits"
+              value={formData.benefits}
+              onChange={handleChange}
+              placeholder="Enter each benefit on a new line..."
+              rows={3}
+              className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none" 
             />
           </div>
 
