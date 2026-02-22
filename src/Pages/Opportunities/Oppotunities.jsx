@@ -77,7 +77,7 @@ const Opportunities = () => {
         }
       } catch (err) {
         console.error("Error fetching jobs:", err);
-        setError("Failed to load opportunities. Showing sample data.");
+        setError("Failed to load opportunities.");
         setJobs(getMockJobs());
       } finally {
         setLoading(false);
@@ -87,87 +87,6 @@ const Opportunities = () => {
     fetchJobs();
   }, []);
 
-  // Mock jobs data as fallback
-  const getMockJobs = () => [
-    {
-      _id: "1",
-      title: "Frontend Developer Intern",
-      company: "Leapfrog Technology",
-      type: "Internship",
-      location: "Kathmandu",
-      duration: "3 months",
-      description: "Join our team to work on modern React applications and learn from industry experts.",
-      salary: "NPR 15,000/month",
-      skills: ["React", "JavaScript", "Tailwind CSS"],
-      deadline: "2026-03-15",
-      logo: "🚀"
-    },
-    {
-      _id: "2",
-      title: "Data Analyst",
-      company: "Verisk Nepal",
-      type: "Job",
-      location: "Lalitpur",
-      duration: "Full-time",
-      description: "Analyze large datasets and create actionable insights for business decisions.",
-      salary: "NPR 60,000 - 80,000/month",
-      skills: ["Python", "SQL", "Excel", "Tableau"],
-      deadline: "2026-03-20",
-      logo: "📊"
-    },
-    {
-      _id: "3",
-      title: "Mobile App Developer",
-      company: "F1Soft International",
-      type: "Job",
-      location: "Kathmandu",
-      duration: "Full-time",
-      description: "Develop and maintain mobile applications for fintech solutions.",
-      salary: "NPR 80,000 - 120,000/month",
-      skills: ["React Native", "Flutter", "Firebase"],
-      deadline: "2026-03-10",
-      logo: "📱"
-    },
-    {
-      _id: "4",
-      title: "UI/UX Design Intern",
-      company: "Yomari",
-      type: "Internship",
-      location: "Pokhara",
-      duration: "6 months",
-      description: "Work with our design team to create user-centered digital experiences.",
-      salary: "NPR 12,000/month",
-      skills: ["Figma", "Adobe XD", "Sketch"],
-      deadline: "2026-03-25",
-      logo: "🎨"
-    },
-    {
-      _id: "5",
-      title: "Backend Developer",
-      company: "Cotiviti Nepal",
-      type: "Job",
-      location: "Kathmandu",
-      duration: "Full-time",
-      description: "Build scalable backend systems and APIs for healthcare solutions.",
-      salary: "NPR 70,000 - 100,000/month",
-      skills: ["Node.js", "Python", "MongoDB", "AWS"],
-      deadline: "2026-03-18",
-      logo: "⚙️"
-    },
-    {
-      _id: "6",
-      title: "Digital Marketing Intern",
-      company: "Daraz Nepal",
-      type: "Internship",
-      location: "Lalitpur",
-      duration: "3 months",
-      description: "Support digital marketing campaigns and learn e-commerce marketing strategies.",
-      salary: "NPR 10,000/month",
-      skills: ["SEO", "Social Media", "Google Ads"],
-      deadline: "2026-03-12",
-      logo: "📣"
-    }
-  ];
 
   // Filter opportunities based on search and filters
   const filteredOpportunities = jobs.filter(opp => {

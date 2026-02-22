@@ -151,13 +151,6 @@ const JobManagement = () => {
               editJob={editingJob}
             />
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-              <MiniStat label="Total Postings" value={jobs.length.toString()} color="blue" />
-              <MiniStat label="Active Jobs" value={totalJobs.toString()} color="indigo" />
-              <MiniStat label="Active Internships" value={totalInternships.toString()} color="orange" />
-              <MiniStat label="Traineeships" value={totalTraineeships.toString()} color="emerald" />
-            </div>
 
             {/* Search and Tabs */}
             <div className="space-y-4">

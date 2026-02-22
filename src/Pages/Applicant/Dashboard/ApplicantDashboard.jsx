@@ -103,38 +103,6 @@ const ApplicantDashboard = () => {
               <button onClick={() => navigate('/applicant/applications')} className="text-xs font-bold text-blue-600 px-4 py-1.5 border border-blue-600 rounded-lg hover:bg-blue-50 transition-all">View All</button>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="bg-slate-50/50">
-                  <tr className="text-slate-400 text-[11px] uppercase tracking-widest">
-                    <th className="px-6 py-4 font-semibold">Job Title</th>
-                    <th className="px-6 py-4 font-semibold">Company</th>
-                    <th className="px-6 py-4 font-semibold">Type</th>
-                    <th className="px-6 py-4 font-semibold">Status</th>
-                    <th className="px-6 py-4 font-semibold">Applied Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {applications.length > 0 ? (
-                    applications.map((app) => (
-                      <tr key={app.id} className="text-sm hover:bg-slate-50/80 transition-colors">
-                        <td className="px-6 py-4 font-semibold text-slate-800">{app.title}</td>
-                        <td className="px-6 py-4 text-slate-500">{app.company}</td>
-                        <td className="px-6 py-4">
-                          <span className="px-2 py-1 bg-slate-100 rounded text-[10px] font-bold text-slate-500 uppercase">{app.type}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`px-3 py-1 rounded-full text-[11px] font-bold ${app.statusColor}`}>{app.status}</span>
-                        </td>
-                        <td className="px-6 py-4 text-slate-400">{app.date}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="5" className="px-6 py-8 text-center text-slate-500">No applications yet. Start applying for opportunities!</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
             </div>
           </section>
 
@@ -144,36 +112,6 @@ const ApplicantDashboard = () => {
               <h2 className="text-lg font-bold">Upcoming Interviews</h2>
               <button onClick={() => navigate('/applicant/interviews')} className="text-sm font-semibold text-slate-500 px-4 py-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 transition-all">View Schedule</button>
             </div>
-            {interviews.length > 0 ? (
-              <div className="space-y-4">
-                {interviews.map((item) => (
-                  <div key={item.id} className="relative flex items-center justify-between p-5 border border-slate-100 rounded-xl group hover:border-blue-200 transition-all shadow-sm">
-                    <div className="absolute left-0 top-4 bottom-4 w-1 bg-blue-900 rounded-r-full" />
-                    <div className="flex items-center gap-5 ml-2">
-                      <div className="h-12 w-12 bg-slate-50 rounded-lg flex items-center justify-center text-xl">
-                        {item.role.includes('UI') ? '🎨' : '📊'}
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-900">{item.role}</h3>
-                        <p className="text-sm text-slate-400 mb-2">{item.company}</p>
-                        <div className="flex items-center gap-4 text-[11px] font-bold text-slate-400 uppercase tracking-tighter">
-                          <span className="flex items-center gap-1.5"><Calendar size={14} className="text-slate-300"/> {item.date}</span>
-                          <span className="flex items-center gap-1.5"><Clock size={14} className="text-slate-300"/> {item.time}</span>
-                          <span className="px-2 py-0.5 bg-slate-100 rounded text-slate-500 tracking-normal">{item.type}</span>
-                        </div>
-                      </div>
-                    </div>
-                    {item.type === 'Virtual' && (
-                      <button className="flex items-center gap-2 bg-blue-900 hover:bg-blue-950 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg transition-all active:scale-95">
-                        Join Meeting
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-slate-500">No upcoming interviews scheduled.</div>
-            )}
           </section>
 
           </div>

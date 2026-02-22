@@ -16,10 +16,8 @@ const Sidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
 
   const navigationItems = [
     { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
-    { icon: Search, label: 'Browse Jobs', id: 'browse-jobs' },
     { icon: Briefcase, label: 'Opportunities', id: 'opportunities' },
     { icon: FileText, label: 'My Applications', id: 'applications' },
-    { icon: BookmarkCheck, label: 'Saved Jobs', id: 'saved-jobs' },
     { icon: FileText, label: 'Resume Builder', id: 'resume' },
     { icon: Calendar, label: 'Interview Schedule', id: 'interviews' },
     { icon: User, label: 'My Profile', id: 'profile' },
