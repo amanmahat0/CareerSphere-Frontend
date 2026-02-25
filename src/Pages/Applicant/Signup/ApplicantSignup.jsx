@@ -4,7 +4,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { User, Mail, Phone, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import Header from "../../../Components/Header";
 import { api } from "../../../utils/api";
-import Footer from "../../../Components/footer";
+import Footer from "../../../Components/Footer";
 
 
 const ApplicantSignup = () => {

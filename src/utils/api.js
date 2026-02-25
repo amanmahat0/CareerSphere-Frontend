@@ -121,5 +121,32 @@ export const api = {
       body: contactData,
     });
   },
+
+  // Admin APIs - Applicant Management
+  async getAllApplicants() {
+    return this.request("/admin/applicants", {
+      method: "GET",
+    });
+  },
+
+  async createApplicant(applicantData) {
+    return this.request("/admin/applicants", {
+      method: "POST",
+      body: applicantData,
+    });
+  },
+
+  async updateApplicant(id, applicantData) {
+    return this.request(`/admin/applicants/${id}`, {
+      method: "PUT",
+      body: applicantData,
+    });
+  },
+
+  async deleteApplicant(id) {
+    return this.request(`/admin/applicants/${id}`, {
+      method: "DELETE",
+    });
+  },
 };
 

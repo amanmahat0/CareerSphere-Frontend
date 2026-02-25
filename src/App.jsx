@@ -34,7 +34,7 @@ function App() {
       <Route path="/company/forgot-password" element={<CompanyForgotPassword />} />
       <Route path="/applicant/dashboard" element={<ApplicantDashboard />} />
       <Route path="/applicant/profile" element={<ApplicantProfile />} />
-      <Route path="/applicant/resume" element={<ResumeBuilder />} />
+      {/* <Route path="/applicant/resume" element={<ResumeBuilder />} /> */}
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/about" element={<AboutPage />} />
       
