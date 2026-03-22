@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Sidebar from "../Components/Applicant Sidebar";
 import DashboardHeader from "../../../Components/DashboardHeader";
+import { api } from "../../../utils/api";
 
 // Import section components
 import PersonalInfoSection from "./components/PersonalInfoSection";
@@ -68,36 +69,51 @@ const ResumeBuilder = () => {
 
   // Load user data from localStorage
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        setResumeData((prev) => ({
-          ...prev,
-          personalInfo: {
-            ...prev.personalInfo,
-            name: user.name || user.fullname || "",
-            email: user.email || "",
-            phone: user.phone || "",
-          },
-        }));
-      } catch (error) {
-        console.error("Error loading user data:", error);
+    const loadResumeData = async () => {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        try {
+          const user = JSON.parse(storedUser);
+          setResumeData((prev) => ({
+            ...prev,
+            personalInfo: {
+              ...prev.personalInfo,
+              name: user.name || user.fullname || "",
+              email: user.email || "",
+              phone: user.phone || "",
+            },
+          }));
+        } catch (error) {
+          console.error("Error loading user data:", error);
+        }
       }
-    }
 
-    // Load saved resume data
-    const savedResume = localStorage.getItem("resumeData");
-    if (savedResume) {
+      // Try to load resume from database
       try {
-        setResumeData(JSON.parse(savedResume));
+        const response = await api.getResume();
+        if (response.success && response.data) {
+          setResumeData(response.data);
+          // Save to localStorage as backup
+          localStorage.setItem("resumeData", JSON.stringify(response.data));
+        }
       } catch (error) {
-        console.error("Error loading saved resume:", error);
+        console.error("Could not load resume from database:", error);
+        // Fall back to localStorage
+        const savedResume = localStorage.getItem("resumeData");
+        if (savedResume) {
+          try {
+            setResumeData(JSON.parse(savedResume));
+          } catch (error) {
+            console.error("Error loading saved resume:", error);
+          }
+        }
       }
-    }
+    };
+
+    loadResumeData();
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const isComplete =
       resumeData.personalInfo.name &&
       resumeData.personalInfo.email &&
@@ -105,13 +121,33 @@ const ResumeBuilder = () => {
       resumeData.education.some((e) => e.degree) &&
       resumeData.skills.length > 0;
 
-    localStorage.setItem("resumeData", JSON.stringify(resumeData));
+    // Filter out empty entries before saving
+    const filteredData = {
+      personalInfo: resumeData.personalInfo,
+      education: resumeData.education.filter(e => e.degree && e.institution),
+      experience: resumeData.experience.filter(e => e.position && e.company),
+      skills: resumeData.skills.filter(s => s && s.trim()),
+      projects: resumeData.projects.filter(p => p.title && p.title.trim()),
+      certifications: resumeData.certifications.filter(c => c.title && c.title.trim()),
+      isComplete: isComplete,
+    };
 
-    if (isComplete) {
-      localStorage.setItem("resumeComplete", "true");
-      alert("Resume saved successfully!");
-    } else {
-      alert("Resume saved! Note: Some required fields are still incomplete.");
+    try {
+      // Save to database
+      const response = await api.saveResume(filteredData);
+
+      // Also save to localStorage as backup
+      localStorage.setItem("resumeData", JSON.stringify(resumeData));
+
+      if (isComplete) {
+        localStorage.setItem("resumeComplete", "true");
+        alert("Resume saved successfully to database!");
+      } else {
+        alert("Resume saved! Note: Some required fields are still incomplete.");
+      }
+    } catch (error) {
+      console.error("Error saving resume:", error);
+      alert("Error saving resume: " + (error.message || "Please try again"));
     }
   };
 

@@ -45,18 +45,36 @@ const Opportunities = () => {
   const [user, setUser] = useState(null);
   const [resumeCompleted, setResumeCompleted] = useState(false);
 
-  // Check if user is logged in
+  // Check if user is logged in and fetch resume status
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        setResumeCompleted(parsedUser.resumeComplete || false);
-      } catch (error) {
-        console.error("Error parsing user data:", error);
+    const loadUserAndResumeStatus = async () => {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          
+          // Fetch resume completion status from API
+          try {
+            const resumeResponse = await api.getResume();
+            const isResumeComplete = resumeResponse.success && resumeResponse.data && resumeResponse.data.isComplete;
+            setResumeCompleted(isResumeComplete);
+            
+            // Store in localStorage for fallback
+            localStorage.setItem('resumeComplete', JSON.stringify(isResumeComplete));
+          } catch (error) {
+            console.error("Error fetching resume status:", error);
+            // Fall back to localStorage
+            const storedResumeComplete = localStorage.getItem('resumeComplete');
+            setResumeCompleted(storedResumeComplete ? JSON.parse(storedResumeComplete) : false);
+          }
+        } catch (error) {
+          console.error("Error parsing user data:", error);
+        }
       }
-    }
+    };
+    
+    loadUserAndResumeStatus();
   }, []);
 
   // Fetch jobs from API

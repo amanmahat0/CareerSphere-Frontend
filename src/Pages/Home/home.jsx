@@ -28,7 +28,7 @@ const HomePage = () => {
               <span className="text-blue-600">Simplified</span>
             </h1>
             <p className="text-gray-600 text-lg leading-relaxed max-w-lg">
-              Connect with Nepal's top companies, build your professional profile, and accelerate your career journey with CareerSphere — Nepal's leading placement and internship portal.
+              Connect with Nepal's top companies, build your professional profile, and accelerate your career journey with CareerSphere  Nepal's leading placement and internship portal.
             </p>
 
             {/* Search Bar */}

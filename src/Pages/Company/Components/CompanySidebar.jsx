@@ -14,17 +14,17 @@ const CompanySidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
   const navigate = useNavigate();
 
   const navigationItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
-    { icon: Briefcase, label: 'Job Management', id: 'jobs' },
-    { icon: Users, label: 'Applications', id: 'applications' },
-    { icon: Calendar, label: 'Interviews', id: 'interviews' },
+    { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard', path: '/company/dashboard' },
+    { icon: Briefcase, label: 'Job Management', id: 'jobs', path: '/company/jobs' },
+    { icon: Users, label: 'Applications', id: 'applications', path: '/company/applications' },
+    { icon: Calendar, label: 'Interviews', id: 'interviews', path: '/company/interviews' },
     //{ icon: Award, label: 'Offers & Certificates', id: 'offers' },
-    { icon: Bell, label: 'Notifications', id: 'notifications' },
-    { icon: Building2, label: 'Profile', id: 'profile' },
+    { icon: Bell, label: 'Notifications', id: 'notifications', path: '/company/notifications' },
+    { icon: Building2, label: 'Profile', id: 'profile', path: '/company/profile' },
   ];
 
-  const handleNavigation = (id) => {
-    navigate(`/company/${id}`);
+  const handleNavigation = (path) => {
+    navigate(path);
     onClose();
   };
 
@@ -45,7 +45,7 @@ const CompanySidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
             icon={<item.icon size={20}/>} 
             label={item.label}
             active={item.id === activePage}
-            onClick={() => handleNavigation(item.id)}
+            onClick={() => handleNavigation(item.path)}
           />
         ))}
       </nav>

@@ -10,9 +10,12 @@ import CompanyForgotPassword from './Pages/Company/ForgotPassword/CompanyForgotP
 import ApplicantDashboard from './Pages/Applicant/Dashboard/ApplicantDashboard.jsx';
 import ApplicantProfile from './Pages/Applicant/Profile/ApplicantProfile.jsx';
 import ResumeBuilder from './Pages/Applicant/ResumeBuilder/ResumeBuilder.jsx';
+import MyApplication from './Pages/Applicant/My Applications/MyApplication.jsx';
+import InterviewSchedule from './Pages/Applicant/InterviewSchedule/InterviewSchedule.jsx';
 import CompanyDashboard from './Pages/Company/Dashboard/CompanyDashboard.jsx';
 import CompanyProfile from './Pages/Company/Profile/CompanyProfile.jsx';
 import JobManagement from './Pages/Company/Dashboard/JobManagement.jsx';
+import Applications from './Pages/Company/Applications/Applications.jsx';
 import AdminDashboard from './Pages/Admin/Dashboard/AdminDashboard.jsx';
 import ApplicantManagement from './Pages/Admin/ApplicantManagement/ApplicantManagement.jsx';
 import CompanyManagement from './Pages/Admin/CompanyManagement/CompanyManagement.jsx';
@@ -34,7 +37,9 @@ function App() {
       <Route path="/company/forgot-password" element={<CompanyForgotPassword />} />
       <Route path="/applicant/dashboard" element={<ApplicantDashboard />} />
       <Route path="/applicant/profile" element={<ApplicantProfile />} />
-      {/* <Route path="/applicant/resume" element={<ResumeBuilder />} /> */}
+      <Route path="/applicant/resume" element={<ResumeBuilder />} />
+      <Route path="/applicant/applications" element={<MyApplication />} />
+      <Route path="/applicant/interviews" element={<InterviewSchedule />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/about" element={<AboutPage />} />
       
@@ -48,6 +53,7 @@ function App() {
       <Route path="/company/dashboard" element={<CompanyDashboard />} />
       <Route path="/company/profile" element={<CompanyProfile />} />
       <Route path="/company/jobs" element={<JobManagement />} />
+      <Route path="/company/applications" element={<Applications />} />
       
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminDashboard />} />

@@ -15,16 +15,16 @@ const Sidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
   const navigate = useNavigate();
 
   const navigationItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
-    { icon: Briefcase, label: 'Opportunities', id: 'opportunities' },
-    { icon: FileText, label: 'My Applications', id: 'applications' },
-    { icon: FileText, label: 'Resume Builder', id: 'resume' },
-    { icon: Calendar, label: 'Interview Schedule', id: 'interviews' },
-    { icon: User, label: 'My Profile', id: 'profile' },
+    { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard', path: '/applicant/dashboard' },
+    { icon: Briefcase, label: 'Opportunities', id: 'opportunities', path: '/opportunities' },
+    { icon: FileText, label: 'My Applications', id: 'applications', path: '/applicant/applications' },
+    { icon: FileText, label: 'Resume Builder', id: 'resume', path: '/applicant/resume' },
+    { icon: Calendar, label: 'Interview Schedule', id: 'interviews', path: '/applicant/interviews' },
+    { icon: User, label: 'My Profile', id: 'profile', path: '/applicant/profile' },
   ];
 
   const handleNavigation = (path) => {
-    navigate(`/applicant/${path}`);
+    navigate(path);
     onClose();
   };
 
@@ -45,7 +45,7 @@ const Sidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
             icon={<item.icon size={20}/>} 
             label={item.label}
             active={item.id === activePage}
-            onClick={() => handleNavigation(item.id)}
+            onClick={() => handleNavigation(item.path)}
           />
         ))}
       </nav>

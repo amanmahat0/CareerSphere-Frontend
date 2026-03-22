@@ -148,5 +148,135 @@ export const api = {
       method: "DELETE",
     });
   },
+
+  // Resume APIs
+  async getResume() {
+    const token = localStorage.getItem("token");
+    return this.request("/resume", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
+  async saveResume(resumeData) {
+    const token = localStorage.getItem("token");
+    return this.request("/resume/save", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: resumeData,
+    });
+  },
+
+  async updatePersonalInfo(personalInfo) {
+    const token = localStorage.getItem("token");
+    return this.request("/resume/personal-info", {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: { personalInfo },
+    });
+  },
+
+  async addEducation(educationData) {
+    const token = localStorage.getItem("token");
+    return this.request("/resume/education", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: educationData,
+    });
+  },
+
+  async addExperience(experienceData) {
+    const token = localStorage.getItem("token");
+    return this.request("/resume/experience", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: experienceData,
+    });
+  },
+
+  async updateSkills(skills) {
+    const token = localStorage.getItem("token");
+    return this.request("/resume/skills", {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: { skills },
+    });
+  },
+
+  async addProject(projectData) {
+    const token = localStorage.getItem("token");
+    return this.request("/resume/projects", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: projectData,
+    });
+  },
+
+  async addCertification(certificationData) {
+    const token = localStorage.getItem("token");
+    return this.request("/resume/certifications", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: certificationData,
+    });
+  },
+
+  // Job Application APIs
+  async submitJobApplication(jobId, coverLetter) {
+    const token = localStorage.getItem("token");
+    return this.request("/applications/submit", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: { jobId, coverLetter },
+    });
+  },
+
+  async getUserApplications() {
+    const token = localStorage.getItem("token");
+    return this.request("/applications", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
+  async getCompanyApplications() {
+    const token = localStorage.getItem("token");
+    return this.request("/applications/company/all", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
+  async getApplicationById(applicationId) {
+    const token = localStorage.getItem("token");
+    return this.request(`/applications/${applicationId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
 };
 

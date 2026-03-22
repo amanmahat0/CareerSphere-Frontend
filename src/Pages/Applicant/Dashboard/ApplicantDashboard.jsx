@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import Sidebar from '../Components/Applicant Sidebar';
 import DashboardHeader from '../../../Components/DashboardHeader';
+import { api } from '../../../utils/api';
 
 const ApplicantDashboard = () => {
   const navigate = useNavigate();
@@ -14,18 +15,40 @@ const ApplicantDashboard = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser({
-          name: parsedUser.name || parsedUser.fullname || 'User',
-          resumeComplete: false,
-        });
-      } catch (error) {
-        console.error('Error parsing user:', error);
+    const loadUserAndResume = async () => {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          
+          // Check resume completion status from database
+          try {
+            const resumeResponse = await api.getResume();
+            const isResumeComplete = resumeResponse.success && resumeResponse.data && resumeResponse.data.isComplete;
+            
+            setUser({
+              name: parsedUser.name || parsedUser.fullname || 'User',
+              resumeComplete: isResumeComplete,
+            });
+            
+            // Store resume completion status in localStorage
+            localStorage.setItem('resumeComplete', JSON.stringify(isResumeComplete));
+          } catch (error) {
+            console.error('Error fetching resume:', error);
+            // Fall back to localStorage or mark as incomplete
+            const storedResumeComplete = localStorage.getItem('resumeComplete');
+            setUser({
+              name: parsedUser.name || parsedUser.fullname || 'User',
+              resumeComplete: storedResumeComplete ? JSON.parse(storedResumeComplete) : false,
+            });
+          }
+        } catch (error) {
+          console.error('Error parsing user:', error);
+        }
       }
-    }
+    };
+    
+    loadUserAndResume();
   }, []);
 
   if (!user) return <div className="flex items-center justify-center h-screen">Loading...</div>;
