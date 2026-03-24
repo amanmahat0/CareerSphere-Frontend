@@ -1,6 +1,6 @@
-import React from "react";
+import React, { memo, useMemo } from "react";
 
-const ResumePreview = ({ data }) => {
+const ResumePreview = memo(({ data }) => {
   const { personalInfo, education, experience, skills, projects, certifications } = data;
 
   return (
@@ -161,6 +161,8 @@ const ResumePreview = ({ data }) => {
       </div>
     </div>
   );
-};
+});
+
+ResumePreview.displayName = "ResumePreview";
 
 export default ResumePreview;

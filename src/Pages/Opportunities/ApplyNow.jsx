@@ -7,19 +7,47 @@ const ApplyModal = ({ job, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [resumeData, setResumeData] = useState(null);
   const [error, setError] = useState(null);
+  const [resumeError, setResumeError] = useState(null);
+  const [isLoadingResume, setIsLoadingResume] = useState(true);
   const maxChars = 500;
 
   // Fetch user's resume on component mount
   useEffect(() => {
     const loadResume = async () => {
+      setIsLoadingResume(true);
       try {
         const response = await api.getResume();
         if (response.success && response.data) {
           setResumeData(response.data);
+          
+          // Check if resume is complete
+          if (!response.data.isComplete) {
+            // Check what's missing
+            const missingFields = [];
+            if (!response.data.personalInfo?.name || !response.data.personalInfo?.email || !response.data.personalInfo?.phone) {
+              missingFields.push('Personal Information');
+            }
+            if (!response.data.education || response.data.education.length === 0) {
+              missingFields.push('Education');
+            }
+            if (!response.data.experience || response.data.experience.length === 0) {
+              missingFields.push('Work Experience');
+            }
+            if (!response.data.skills || response.data.skills.length === 0) {
+              missingFields.push('Skills');
+            }
+            
+            const missingText = missingFields.length > 0 ? `: ${missingFields.join(', ')}` : '';
+            setResumeError(`Your resume is incomplete${missingText}. Please complete your resume before applying.`);
+          }
+        } else {
+          setResumeError('No resume found. Please complete your resume in the Resume Builder first.');
         }
       } catch (err) {
         console.error('Error loading resume:', err);
-        setError('Could not load your resume. Please ensure your resume is complete.');
+        setResumeError('Unable to load your resume. Please ensure your resume is saved and try again.');
+      } finally {
+        setIsLoadingResume(false);
       }
     };
     
@@ -34,12 +62,17 @@ const ApplyModal = ({ job, onClose, onSuccess }) => {
 
   const handleSubmit = async () => {
     if (!coverLetter.trim()) {
-      alert('Please write a cover letter before submitting.');
+      setError('Please write a cover letter before submitting.');
       return;
     }
 
     if (!resumeData) {
-      alert('Your resume is not ready. Please complete your resume first.');
+      setError('Your resume is not ready. Please complete your resume first.');
+      return;
+    }
+
+    if (!resumeData.isComplete) {
+      setError('Your resume is incomplete. Please complete all required sections before applying.');
       return;
     }
 
@@ -50,7 +83,8 @@ const ApplyModal = ({ job, onClose, onSuccess }) => {
       const response = await api.submitJobApplication(job._id || job.id, coverLetter);
 
       if (response.success) {
-        alert('Application submitted successfully!');
+        setError(null);
+        alert('✓ Application submitted successfully!');
         if (onSuccess) {
           onSuccess(response.data);
         }
@@ -119,20 +153,8 @@ const ApplyModal = ({ job, onClose, onSuccess }) => {
             <label className="block text-sm font-medium text-gray-800 mb-2">
               Resume <span className="text-red-500">*</span>
             </label>
-            {resumeData ? (
-              <div className="border border-green-200 bg-[#f4fcf6] rounded-xl p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="bg-green-100 p-2 rounded-lg text-green-600">
-                    <FileText size={20} />
-                  </div>
-                  <div>
-                    <p className="text-[15px] font-medium text-gray-800">{resumeData.personalInfo?.name || 'Your Resume'}</p>
-                    <p className="text-[13px] text-gray-500">Built with Resume Builder</p>
-                  </div>
-                </div>
-                <CheckCircle2 size={22} className="text-green-500" />
-              </div>
-            ) : (
+            
+            {isLoadingResume ? (
               <div className="border border-gray-200 bg-gray-50 rounded-xl p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="bg-gray-100 p-2 rounded-lg text-gray-600">
@@ -144,7 +166,49 @@ const ApplyModal = ({ job, onClose, onSuccess }) => {
                   </div>
                 </div>
               </div>
+            ) : resumeError ? (
+              <div className="border border-orange-200 bg-orange-50 rounded-xl p-4 flex items-start gap-3">
+                <AlertCircle size={20} className="text-orange-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-[15px] font-medium text-orange-900 mb-2">Resume Incomplete</p>
+                  <p className="text-[13px] text-orange-800 mb-3">{resumeError}</p>
+                  <a 
+                    href="/applicant/resume"
+                    className="inline-block text-[13px] font-medium text-orange-600 hover:text-orange-700 underline"
+                  >
+                    Go to Resume Builder →
+                  </a>
+                </div>
+              </div>
+            ) : resumeData && resumeData.isComplete ? (
+              <div className="border border-green-200 bg-[#f4fcf6] rounded-xl p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-green-100 p-2 rounded-lg text-green-600">
+                    <FileText size={20} />
+                  </div>
+                  <div>
+                    <p className="text-[15px] font-medium text-gray-800">{resumeData.personalInfo?.name || 'Your Resume'}</p>
+                    <p className="text-[13px] text-gray-500">Resume Complete</p>
+                  </div>
+                </div>
+                <CheckCircle2 size={22} className="text-green-500" />
+              </div>
+            ) : (
+              <div className="border border-yellow-200 bg-yellow-50 rounded-xl p-4 flex items-start gap-3">
+                <AlertCircle size={20} className="text-yellow-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-[15px] font-medium text-yellow-900 mb-2">Resume Not Complete</p>
+                  <p className="text-[13px] text-yellow-800 mb-3">Your resume needs to be completed before you can apply. Please make sure all required sections are filled.</p>
+                  <a 
+                    href="/applicant/resume"
+                    className="inline-block text-[13px] font-medium text-yellow-600 hover:text-yellow-700 underline"
+                  >
+                    Complete Resume →
+                  </a>
+                </div>
+              </div>
             )}
+            
             <p className="text-[13px] text-gray-500 mt-2">
               Your resume from the Resume Builder will be automatically attached.
             </p>
@@ -169,8 +233,9 @@ const ApplyModal = ({ job, onClose, onSuccess }) => {
         <div className="p-6 mt-2 flex gap-4">
           <button 
             onClick={handleSubmit}
-            disabled={loading || !resumeData}
+            disabled={loading || !resumeData || !resumeData.isComplete || isLoadingResume}
             className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-lg transition-colors text-[15px] flex items-center justify-center gap-2"
+            title={!resumeData ? 'Resume not loaded' : !resumeData.isComplete ? 'Complete your resume to apply' : 'Submit application'}
           >
             {loading ? (
               <>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../../ui/button";
 import {
@@ -61,52 +61,100 @@ const ResumeBuilder = () => {
         cgpa: "",
       },
     ],
-    experience: [],
+    experience: [
+      {
+        id: 1,
+        company: "",
+        title: "",
+        duration: "",
+        description: "",
+      },
+    ],
     skills: [],
     projects: [],
     certifications: [],
   });
 
-  // Load user data from localStorage
+  // Load user data and resume from database
   useEffect(() => {
     const loadResumeData = async () => {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
+      try {
+        // First, load user profile data
+        const storedUser = localStorage.getItem("user");
+        let userEmail = "";
+        let userPhone = "";
+        let userName = "";
+
+        if (storedUser) {
+          try {
+            const user = JSON.parse(storedUser);
+            userName = user.fullname || user.name || "";
+            userEmail = user.email || "";
+            userPhone = user.phonenumber || user.phone || "";
+          } catch (error) {
+            console.error("Error parsing user data:", error);
+          }
+        }
+
+        // Try to load resume from database
         try {
-          const user = JSON.parse(storedUser);
+          const response = await api.getResume();
+          if (response.success && response.data) {
+            // Merge database resume with user profile data
+            setResumeData({
+              personalInfo: {
+                name: response.data.personalInfo?.name || userName,
+                email: response.data.personalInfo?.email || userEmail,
+                phone: response.data.personalInfo?.phone || userPhone,
+                location: response.data.personalInfo?.location || "",
+                linkedin: response.data.personalInfo?.linkedin || "",
+                website: response.data.personalInfo?.website || "",
+                summary: response.data.personalInfo?.summary || "",
+              },
+              education: (response.data.education && response.data.education.length > 0) 
+                ? response.data.education.map((edu) => ({
+                    ...edu,
+                    id: edu._id || edu.id || Date.now(),
+                  }))
+                : [{ id: Date.now(), degree: "", institution: "", year: "", cgpa: "" }],
+              experience: (response.data.experience && response.data.experience.length > 0) 
+                ? response.data.experience.map((exp) => ({
+                    ...exp,
+                    id: exp._id || exp.id || Date.now(),
+                    title: exp.title || exp.position || "", // Map old 'position' to 'title'
+                  }))
+                : [{ id: Date.now(), company: "", title: "", duration: "", description: "" }],
+              skills: response.data.skills || [],
+              projects: response.data.projects || [],
+              certifications: response.data.certifications || [],
+            });
+          } else {
+            // No resume in database, use profile data
+            setResumeData((prev) => ({
+              ...prev,
+              personalInfo: {
+                ...prev.personalInfo,
+                name: userName,
+                email: userEmail,
+                phone: userPhone,
+              },
+            }));
+          }
+        } catch (error) {
+          console.error("Could not load resume from database:", error);
+          // Initialize with user profile data only
           setResumeData((prev) => ({
             ...prev,
             personalInfo: {
               ...prev.personalInfo,
-              name: user.name || user.fullname || "",
-              email: user.email || "",
-              phone: user.phone || "",
+              name: userName,
+              email: userEmail,
+              phone: userPhone,
             },
           }));
-        } catch (error) {
-          console.error("Error loading user data:", error);
-        }
-      }
-
-      // Try to load resume from database
-      try {
-        const response = await api.getResume();
-        if (response.success && response.data) {
-          setResumeData(response.data);
-          // Save to localStorage as backup
-          localStorage.setItem("resumeData", JSON.stringify(response.data));
         }
       } catch (error) {
-        console.error("Could not load resume from database:", error);
-        // Fall back to localStorage
-        const savedResume = localStorage.getItem("resumeData");
-        if (savedResume) {
-          try {
-            setResumeData(JSON.parse(savedResume));
-          } catch (error) {
-            console.error("Error loading saved resume:", error);
-          }
-        }
+        console.error("Error in loadResumeData:", error);
       }
     };
 
@@ -114,40 +162,71 @@ const ResumeBuilder = () => {
   }, []);
 
   const handleSave = async () => {
+    // Validation
     const isComplete =
       resumeData.personalInfo.name &&
       resumeData.personalInfo.email &&
       resumeData.personalInfo.phone &&
-      resumeData.education.some((e) => e.degree) &&
+      resumeData.education.some((e) => e.degree && e.institution) &&
+      resumeData.experience.some((e) => e.title && e.company) &&
       resumeData.skills.length > 0;
 
-    // Filter out empty entries before saving
-    const filteredData = {
-      personalInfo: resumeData.personalInfo,
-      education: resumeData.education.filter(e => e.degree && e.institution),
-      experience: resumeData.experience.filter(e => e.position && e.company),
+    // Prepare data for saving - include all components even if empty
+    const dataToSave = {
+      personalInfo: {
+        name: resumeData.personalInfo.name || "",
+        email: resumeData.personalInfo.email || "",
+        phone: resumeData.personalInfo.phone || "",
+        location: resumeData.personalInfo.location || "",
+        linkedin: resumeData.personalInfo.linkedin || "",
+        website: resumeData.personalInfo.website || "",
+        summary: resumeData.personalInfo.summary || "",
+      },
+      education: resumeData.education.map(e => ({
+        ...e,
+        degree: e.degree || "",
+        institution: e.institution || "",
+        year: e.year || "",
+        cgpa: e.cgpa || "",
+      })),
+      experience: resumeData.experience.map(e => ({
+        ...e,
+        company: e.company || "",
+        title: e.title || "",
+        duration: e.duration || "",
+        description: e.description || "",
+      })),
       skills: resumeData.skills.filter(s => s && s.trim()),
-      projects: resumeData.projects.filter(p => p.title && p.title.trim()),
-      certifications: resumeData.certifications.filter(c => c.title && c.title.trim()),
+      projects: resumeData.projects.map(p => ({
+        ...p,
+        name: p.name || "",
+        description: p.description || "",
+        link: p.link || "",
+      })),
+      certifications: resumeData.certifications.map(c => ({
+        ...c,
+        name: c.name || "",
+        issuer: c.issuer || "",
+        year: c.year || "",
+        credentialId: c.credentialId || "",
+      })),
       isComplete: isComplete,
     };
 
     try {
-      // Save to database
-      const response = await api.saveResume(filteredData);
+      const response = await api.saveResume(dataToSave);
 
-      // Also save to localStorage as backup
-      localStorage.setItem("resumeData", JSON.stringify(resumeData));
-
-      if (isComplete) {
-        localStorage.setItem("resumeComplete", "true");
-        alert("Resume saved successfully to database!");
-      } else {
-        alert("Resume saved! Note: Some required fields are still incomplete.");
+      if (response.success) {
+        if (isComplete) {
+          localStorage.setItem("resumeComplete", "true");
+          alert("✓ Resume saved successfully!\n\nAll sections have been saved to the database.");
+        } else {
+          alert("✓ Resume saved!\n\nNote: Some required fields are still incomplete:\n- Personal Info (name, email, phone)\n- At least one Education entry\n- At least one Experience entry\n- At least one Skill\n\nPlease complete these to finalize your resume.");
+        }
       }
     } catch (error) {
       console.error("Error saving resume:", error);
-      alert("Error saving resume: " + (error.message || "Please try again"));
+      alert("✗ Error saving resume:\n" + (error.message || "Please check your connection and try again."));
     }
   };
 
@@ -176,6 +255,9 @@ const ResumeBuilder = () => {
   const handleFinish = () => {
     setCurrentStep(7);
   };
+
+  // Memoize resume data to prevent unnecessary re-renders of preview
+  const memoizedResumeData = useMemo(() => resumeData, [resumeData]);
 
   const renderCurrentSection = () => {
     switch (currentStep) {
@@ -237,18 +319,45 @@ const ResumeBuilder = () => {
           <div className="space-y-6">
             <div>
               <h3 className="text-xl font-semibold text-slate-900 mb-2">Review & Save</h3>
-              <p className="text-sm text-slate-500">Review your resume on the right and save when ready</p>
+              <p className="text-sm text-slate-500">Review your complete resume on the right and save when ready</p>
             </div>
             
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-green-800 font-medium">Your resume is ready!</p>
-              <p className="text-green-700 text-sm mt-1">Check the preview on the right side. Click Save to complete.</p>
+            <div className="space-y-3 text-sm">
+              <div className={`flex items-start gap-3 p-3 rounded-lg ${resumeData.personalInfo.name && resumeData.personalInfo.email && resumeData.personalInfo.phone ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
+                <span className={resumeData.personalInfo.name && resumeData.personalInfo.email && resumeData.personalInfo.phone ? 'text-green-600' : 'text-yellow-600'}>✓</span>
+                <span className={resumeData.personalInfo.name && resumeData.personalInfo.email && resumeData.personalInfo.phone ? 'text-green-700' : 'text-yellow-700'}>Personal Information: {resumeData.personalInfo.name ? 'Complete' : 'Incomplete'}</span>
+              </div>
+              
+              <div className={`flex items-start gap-3 p-3 rounded-lg ${resumeData.education.filter(e => e.degree && e.institution).length > 0 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
+                <span className={resumeData.education.filter(e => e.degree && e.institution).length > 0 ? 'text-green-600' : 'text-yellow-600'}>✓</span>
+                <span className={resumeData.education.filter(e => e.degree && e.institution).length > 0 ? 'text-green-700' : 'text-yellow-700'}>Education: {resumeData.education.filter(e => e.degree && e.institution).length} entry(ies)</span>
+              </div>
+              
+              <div className={`flex items-start gap-3 p-3 rounded-lg ${resumeData.experience.filter(e => e.company && e.title).length > 0 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
+                <span className={resumeData.experience.filter(e => e.company && e.title).length > 0 ? 'text-green-600' : 'text-yellow-600'}>✓</span>
+                <span className={resumeData.experience.filter(e => e.company && e.title).length > 0 ? 'text-green-700' : 'text-yellow-700'}>Experience: {resumeData.experience.filter(e => e.company && e.title).length} entry(ies)</span>
+              </div>
+              
+              <div className={`flex items-start gap-3 p-3 rounded-lg ${resumeData.skills.filter(s => s && s.trim()).length > 0 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
+                <span className={resumeData.skills.filter(s => s && s.trim()).length > 0 ? 'text-green-600' : 'text-yellow-600'}>✓</span>
+                <span className={resumeData.skills.filter(s => s && s.trim()).length > 0 ? 'text-green-700' : 'text-yellow-700'}>Skills: {resumeData.skills.filter(s => s && s.trim()).length} skill(s)</span>
+              </div>
+              
+              <div className={`flex items-start gap-3 p-3 rounded-lg ${resumeData.projects.filter(p => p.name && p.name.trim()).length > 0 ? 'bg-blue-50 border border-blue-200' : 'bg-slate-50 border border-slate-200'}`}>
+                <span className={resumeData.projects.filter(p => p.name && p.name.trim()).length > 0 ? 'text-blue-600' : 'text-slate-400'}>•</span>
+                <span className={resumeData.projects.filter(p => p.name && p.name.trim()).length > 0 ? 'text-blue-700' : 'text-slate-600'}>Projects: {resumeData.projects.filter(p => p.name && p.name.trim()).length} entry(ies) (optional)</span>
+              </div>
+              
+              <div className={`flex items-start gap-3 p-3 rounded-lg ${resumeData.certifications.filter(c => c.name && c.name.trim()).length > 0 ? 'bg-blue-50 border border-blue-200' : 'bg-slate-50 border border-slate-200'}`}>
+                <span className={resumeData.certifications.filter(c => c.name && c.name.trim()).length > 0 ? 'text-blue-600' : 'text-slate-400'}>•</span>
+                <span className={resumeData.certifications.filter(c => c.name && c.name.trim()).length > 0 ? 'text-blue-700' : 'text-slate-600'}>Certifications: {resumeData.certifications.filter(c => c.name && c.name.trim()).length} entry(ies) (optional)</span>
+              </div>
             </div>
 
             <div className="space-y-3">
               <Button onClick={handleSave} className="w-full bg-green-600 hover:bg-green-700 text-white h-12">
                 <Save className="w-5 h-5 mr-2" />
-                Save Resume
+                Save to Database
               </Button>
               <Button variant="outline" onClick={handleDownloadPDF} className="w-full h-12">
                 <Download className="w-5 h-5 mr-2" />
@@ -383,7 +492,7 @@ const ResumeBuilder = () => {
                   <h2 className="text-lg font-semibold text-slate-900 mb-1">Live Preview</h2>
                   <p className="text-sm text-slate-500">Your resume updates in real-time</p>
                 </div>
-                <ResumePreview data={resumeData} />
+                <ResumePreview data={memoizedResumeData} />
               </div>
             </div>
           </div>

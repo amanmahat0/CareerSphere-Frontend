@@ -33,46 +33,25 @@ const CompanyLogin = () => {
       return;
     }
 
-    // Check for hardcoded admin credentials
-    const ADMIN_EMAIL = "admin@careersphere.com";
-    const ADMIN_PASSWORD = "Admin@123";
-
-    if (formData.email === ADMIN_EMAIL && formData.password === ADMIN_PASSWORD) {
-      // Admin login
-      const adminUser = {
-        id: "admin",
-        fullname: "Admin User",
-        email: ADMIN_EMAIL,
-        userType: "admin",
-      };
-
-      localStorage.setItem("token", "admin-token-" + Date.now());
-      localStorage.setItem("user", JSON.stringify(adminUser));
-      localStorage.setItem("userType", "admin");
-      localStorage.setItem("isAdmin", "true");
-
-      navigate("/admin/dashboard", { replace: true });
-      return;
-    }
-
     try {
       const response = await api.login(formData.email, formData.password);
-      
-      // Check if user type matches (institution only)
-      if (response.user.userType !== "institution") {
-        setError(`This account is registered as an ${response.user.userType}. Please use the applicant login page.`);
-        setLoading(false);
-        return;
-      }
       
       // Store token and user data
       localStorage.setItem("token", response.token);
       localStorage.setItem("user", JSON.stringify(response.user));
-      localStorage.setItem("userType", "institution");
-      localStorage.setItem("isAdmin", "false");
+      localStorage.setItem("userType", response.user.userType);
+      localStorage.setItem("isAdmin", response.user.userType === "admin" ? "true" : "false");
       
-      // Navigate to institution dashboard
-      navigate("/company/dashboard", { replace: true });
+      // Navigate based on user type
+      if (response.user.userType === "admin") {
+        navigate("/admin/dashboard", { replace: true });
+      } else if (response.user.userType === "institution") {
+        navigate("/company/dashboard", { replace: true });
+      } else {
+        setError(`This account is registered as an ${response.user.userType}. Please use the appropriate login page.`);
+        setLoading(false);
+        return;
+      }
     } catch (error) {
       setError(error.message || "Login failed. Please try again.");
     } finally {
