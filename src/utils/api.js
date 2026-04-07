@@ -4,11 +4,22 @@ export const api = {
   async request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
     
-    // Build headers - merge Content-Type with any custom headers
-    const headers = {
-      "Content-Type": "application/json",
-      ...options.headers,
-    };
+    // Build headers - only set Content-Type for non-FormData requests
+    const headers = {};
+    
+    if (!(options.body instanceof FormData)) {
+      headers["Content-Type"] = "application/json";
+    }
+    
+    headers["...options.headers"] = true;
+    Object.assign(headers, options.headers);
+    delete headers["...options.headers"];
+
+    // Add Authorization token if available
+    const token = localStorage.getItem("token");
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
 
     // Build config without headers from options (we've already merged them)
     const { headers: _, body, ...restOptions } = options;
@@ -17,7 +28,7 @@ export const api = {
       headers,
     };
 
-    if (body && typeof body === "object") {
+    if (body && typeof body === "object" && !(body instanceof FormData)) {
       config.body = JSON.stringify(body);
     } else if (body) {
       config.body = body;
@@ -28,6 +39,13 @@ export const api = {
       const data = await response.json();
 
       if (!response.ok) {
+        // Handle 401 - Clear token and redirect to login
+        if (response.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          window.location.href = "/login";
+          throw new Error(data.message || "Session expired. Please login again");
+        }
         throw new Error(data.message || "Something went wrong");
       }
 
@@ -216,23 +234,15 @@ export const api = {
   },
 
   async addProject(projectData) {
-    const token = localStorage.getItem("token");
     return this.request("/resume/projects", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
       body: projectData,
     });
   },
 
   async addCertification(certificationData) {
-    const token = localStorage.getItem("token");
     return this.request("/resume/certifications", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
       body: certificationData,
     });
   },
@@ -259,9 +269,27 @@ export const api = {
     });
   },
 
-  async getCompanyApplications() {
+  async getCompanyApplications(companyName = null) {
     const token = localStorage.getItem("token");
-    return this.request("/applications/company/all", {
+    let company = companyName;
+    
+    // If company not provided, try to fetch from user data
+    if (!company) {
+      const user = localStorage.getItem("user");
+      if (user) {
+        try {
+          const userData = JSON.parse(user);
+          company = userData.companyname || userData.company;
+        } catch (e) {
+          console.error("Error parsing user data:", e);
+        }
+      }
+    }
+    
+    // Build query string if company is available
+    const query = company ? `?company=${encodeURIComponent(company)}` : '';
+    
+    return this.request(`/applications/company/all${query}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -276,6 +304,144 @@ export const api = {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+    });
+  },
+
+  // Shortlist application
+  async shortlistApplication(applicationId) {
+    return this.request(`/applications/${applicationId}/shortlist`, {
+      method: "PUT",
+      body: {},
+    });
+  },
+
+  // Reject application
+  async rejectApplication(applicationId) {
+    return this.request(`/applications/${applicationId}/reject`, {
+      method: "PUT",
+      body: {},
+    });
+  },
+
+  // Update interview step
+  async updateInterviewStep(applicationId, interviewData) {
+    return this.request(`/applications/${applicationId}/interview`, {
+      method: "PUT",
+      body: interviewData,
+    });
+  },
+
+  // Company APIs
+  async getCompanyProfile() {
+    const token = localStorage.getItem("token");
+    return this.request("/company/profile", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
+  async updateCompanyProfile(profileData) {
+    const token = localStorage.getItem("token");
+    return this.request("/company/profile/update", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: profileData,
+    });
+  },
+
+  async uploadCompanyLogo(file) {
+    const token = localStorage.getItem("token");
+    const formData = new FormData();
+    formData.append("profilePicture", file);
+
+    return this.request("/company/profile/picture", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+  },
+
+  async uploadVerificationDocuments(files, documentTypes = []) {
+    const token = localStorage.getItem("token");
+    const formData = new FormData();
+    
+    files.forEach((file, index) => {
+      formData.append("documents", file);
+    });
+    
+    documentTypes.forEach((type, index) => {
+      formData.append(`documentTypes[${index}]`, type);
+    });
+
+    return this.request("/company/documents/upload", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+  },
+
+  async getCompanyVerificationStatus() {
+    const token = localStorage.getItem("token");
+    return this.request("/company/verification-status", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
+  // Admin APIs - Company Management
+  async getAllCompanies() {
+    return this.request("/admin/companies", {
+      method: "GET",
+    });
+  },
+
+  async getCompanyDetailsAdmin(companyId) {
+    return this.request(`/admin/companies/${companyId}`, {
+      method: "GET",
+    });
+  },
+
+  async verifyCompany(companyId, adminId, adminNotes = "") {
+    return this.request(`/admin/companies/${companyId}/verify`, {
+      method: "POST",
+      body: { adminId, adminNotes },
+    });
+  },
+
+  async rejectCompany(companyId, reason, adminNotes = "") {
+    return this.request(`/admin/companies/${companyId}/reject`, {
+      method: "POST",
+      body: { reason, adminNotes },
+    });
+  },
+
+  async deleteCompanyAdmin(companyId) {
+    return this.request(`/admin/companies/${companyId}`, {
+      method: "DELETE",
+    });
+  },
+
+  async createCompany(companyData) {
+    return this.request("/admin/companies", {
+      method: "POST",
+      body: companyData,
+    });
+  },
+
+  async updateCompany(id, companyData) {
+    return this.request(`/admin/companies/${id}`, {
+      method: "PUT",
+      body: companyData,
     });
   },
 };

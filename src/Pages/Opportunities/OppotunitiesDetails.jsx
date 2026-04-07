@@ -80,13 +80,11 @@ const OpportunityDetails = () => {
         } else if (response._id || response.id) {
           setJob(response);
         } else {
-          // Fallback to mock data if API fails
-          setJob(getMockJob(id));
+          setError("Failed to load job details.");
         }
       } catch (err) {
         console.error("Error fetching job details:", err);
         setError("Failed to load job details.");
-        setJob(getMockJob(id));
       } finally {
         setLoading(false);
       }
@@ -96,101 +94,6 @@ const OpportunityDetails = () => {
       fetchJobDetails();
     }
   }, [id]);
-
-  // Mock job data as fallback
-  const getMockJob = (jobId) => {
-    const mockJobs = {
-      "1": {
-        _id: "1",
-        title: "Frontend Developer Intern",
-        company: "Leapfrog Technology",
-        type: "Internship",
-        location: "Kathmandu",
-        duration: "3 months",
-        description: "Join our team to work on modern React applications and learn from industry experts. You will be working on real-world projects and gaining hands-on experience with cutting-edge technologies.",
-        salary: "NPR 15,000/month",
-        skills: ["React", "JavaScript", "Tailwind CSS", "Git", "REST APIs"],
-        deadline: "2026-03-15",
-        logo: "🚀",
-        requirements: [
-          "Currently pursuing or recently completed Bachelor's degree in Computer Science or related field",
-          "Basic understanding of React and JavaScript",
-          "Familiarity with version control (Git)",
-          "Good problem-solving skills",
-          "Excellent communication skills"
-        ],
-        responsibilities: [
-          "Develop and maintain web applications using React",
-          "Collaborate with the design team to implement UI/UX designs",
-          "Write clean, maintainable code",
-          "Participate in code reviews",
-          "Learn and adapt to new technologies"
-        ],
-        benefits: [
-          "Mentorship from senior developers",
-          "Flexible working hours",
-          "Certificate upon completion",
-          "Possibility of full-time offer"
-        ],
-        postedDate: "2026-02-01",
-        applicants: 45
-      },
-      "2": {
-        _id: "2",
-        title: "Data Analyst",
-        company: "Verisk Nepal",
-        type: "Job",
-        location: "Lalitpur",
-        duration: "Full-time",
-        description: "Analyze large datasets and create actionable insights for business decisions. Work with cross-functional teams to deliver data-driven solutions.",
-        salary: "NPR 60,000 - 80,000/month",
-        skills: ["Python", "SQL", "Excel", "Tableau", "Statistics"],
-        deadline: "2026-03-20",
-        logo: "📊",
-        requirements: [
-          "Bachelor's degree in Statistics, Mathematics, Computer Science, or related field",
-          "2+ years of experience in data analysis",
-          "Proficiency in SQL and Python",
-          "Experience with data visualization tools",
-          "Strong analytical skills"
-        ],
-        responsibilities: [
-          "Analyze complex datasets to identify trends and insights",
-          "Create reports and dashboards for stakeholders",
-          "Collaborate with teams to understand data needs",
-          "Develop and maintain data pipelines",
-          "Present findings to management"
-        ],
-        benefits: [
-          "Health insurance",
-          "Annual bonus",
-          "Professional development opportunities",
-          "Work from home options"
-        ],
-        postedDate: "2026-02-05",
-        applicants: 78
-      }
-    };
-    
-    return mockJobs[jobId] || {
-      _id: jobId,
-      title: "Job Position",
-      company: "Company Name",
-      type: "Job",
-      location: "Kathmandu",
-      duration: "Full-time",
-      description: "Job description will be loaded here.",
-      salary: "Negotiable",
-      skills: ["Skill 1", "Skill 2"],
-      deadline: "2026-03-30",
-      logo: "💼",
-      requirements: ["Requirement 1", "Requirement 2"],
-      responsibilities: ["Responsibility 1", "Responsibility 2"],
-      benefits: ["Benefit 1", "Benefit 2"],
-      postedDate: "2026-02-01",
-      applicants: 0
-    };
-  };
 
   const handleApply = () => {
     if (!user) {
@@ -285,8 +188,8 @@ const OpportunityDetails = () => {
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
-                  <div className="text-4xl flex items-center justify-center w-16 h-16 bg-gray-100 rounded-xl">
-                    {job.logo || <Building2 className="w-8 h-8 text-gray-400" />}
+                  <div className="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-xl">
+                    <Building2 className="w-8 h-8 text-gray-400" />
                   </div>
                   <div className="flex-1">
                     <h1 className="text-2xl font-bold text-gray-900 mb-1">{job.title}</h1>
@@ -333,7 +236,7 @@ const OpportunityDetails = () => {
                   <ul className="space-y-2">
                     {job.requirements.map((req, index) => (
                       <li key={index} className="flex items-start gap-2 text-gray-700">
-                        <CheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                        <span className="text-gray-400 font-bold">•</span>
                         {req}
                       </li>
                     ))}
@@ -352,7 +255,7 @@ const OpportunityDetails = () => {
                   <ul className="space-y-2">
                     {job.responsibilities.map((resp, index) => (
                       <li key={index} className="flex items-start gap-2 text-gray-700">
-                        <Briefcase className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                        <span className="text-gray-400 font-bold">•</span>
                         {resp}
                       </li>
                     ))}
@@ -371,7 +274,7 @@ const OpportunityDetails = () => {
                   <ul className="space-y-2">
                     {job.benefits.map((benefit, index) => (
                       <li key={index} className="flex items-start gap-2 text-gray-700">
-                        <CheckCircle className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
+                        <span className="text-gray-400 font-bold">•</span>
                         {benefit}
                       </li>
                     ))}
@@ -487,23 +390,83 @@ const OpportunityDetails = () => {
             {/* Company Card */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">About {job.company}</CardTitle>
+                <CardTitle className="text-lg">About {job.company?.name || job.company}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="text-2xl flex items-center justify-center w-12 h-12 bg-gray-100 rounded-lg">
-                    {job.logo || <Building2 className="w-6 h-6 text-gray-400" />}
+                  <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-lg">
+                    <Building2 className="w-6 h-6 text-gray-400" />
                   </div>
                   <div>
-                    <h3 className="font-bold">{job.company}</h3>
-                    <p className="text-sm text-gray-600">{job.location}</p>
+                    <h3 className="font-bold">{job.company?.name || job.company}</h3>
+                    <p className="text-sm text-gray-600">{job.company?.location || job.location}</p>
                   </div>
                 </div>
-                <Button variant="outline" className="w-full">
-                  View Company Profile
-                </Button>
+                {(job.companyDescription || job.company?.description) && (
+                  <p className="text-sm text-gray-600">{job.companyDescription || job.company?.description}</p>
+                )}
               </CardContent>
             </Card>
+
+            {/* Connect with Company Card */}
+            {(job.website || job.company?.website || job.linkedin || job.twitter || job.facebook || job.company?.linkedin || job.company?.twitter || job.company?.facebook) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Connect with {job.company?.name || job.company}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {(job.website || job.company?.website) && (
+                      <a 
+                        href={job.website || job.company?.website} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="block w-full px-4 py-2 text-center bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium border border-blue-200"
+                      >
+                        Visit Website
+                      </a>
+                    )}
+                    {(job.linkedin || job.company?.linkedin || job.twitter || job.company?.twitter || job.facebook || job.company?.facebook) && (
+                      <div className="flex gap-2">
+                        {(job.linkedin || job.company?.linkedin) && (
+                          <a 
+                            href={job.linkedin || job.company?.linkedin} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex-1 px-3 py-2 text-center bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium border border-blue-200"
+                            title="LinkedIn"
+                          >
+                            LinkedIn
+                          </a>
+                        )}
+                        {(job.twitter || job.company?.twitter) && (
+                          <a 
+                            href={job.twitter || job.company?.twitter} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex-1 px-3 py-2 text-center bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium border border-blue-200"
+                            title="Twitter"
+                          >
+                            Twitter
+                          </a>
+                        )}
+                        {(job.facebook || job.company?.facebook) && (
+                          <a 
+                            href={job.facebook || job.company?.facebook} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex-1 px-3 py-2 text-center bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium border border-blue-200"
+                            title="Facebook"
+                          >
+                            Facebook
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </main>

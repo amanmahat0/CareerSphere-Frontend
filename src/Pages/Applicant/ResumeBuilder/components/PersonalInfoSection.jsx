@@ -199,7 +199,7 @@ const _PersonalInfoSection = ({ data, onChange, onNext }) => {
               <p className="text-xs text-red-600 font-medium"> Summary exceeds {maxWords} words. Current: {wordCount}</p>
             )}
             {data.summary && wordCount > 0 && wordCount <= maxWords && (
-              <p className="text-xs text-green-600 font-medium">✓ Summary looks good ({wordCount} words)</p>
+              <p className="text-xs text-green-600 font-medium"></p>
             )}
           </div>
         </div>

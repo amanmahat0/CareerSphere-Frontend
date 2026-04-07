@@ -13,7 +13,7 @@ const _CertificationsSection = ({ data, onChange, onBack, onFinish }) => {
   const addCertification = () => {
     onChange([
       ...data,
-      { id: Date.now(), name: "", issuer: "", year: "", credentialId: "" },
+      { id: Date.now(), title: "", issuer: "", date: "", credentialId: "" },
     ]);
     setError("");
   };
@@ -30,44 +30,46 @@ const _CertificationsSection = ({ data, onChange, onBack, onFinish }) => {
     setError("");
   };
 
-  // Validation: All entries must have name and issuer if any exist
+  // Validation: This section is completely optional
   const isFormValid = () => {
-    if (data.length === 0) return true; // Optional section
-    return data.every((cert) => (cert.name || "").trim() && (cert.issuer || "").trim());
+    return true; // Always valid - section is optional
   };
 
   // Handle finish with database save
   const handleFinish = async () => {
-    if (!isFormValid()) {
-      setError("Please add certification name and issuer for all entries.");
-      return;
-    }
-
+    // No validation needed - section is optional
     setLoading(true);
     setError("");
 
     try {
       // Save only filled certification entries to database
-      for (const cert of data) {
-        if ((cert.name || "").trim() && (cert.issuer || "").trim()) {
-          await api.request("/resume/certifications", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: {
-              name: cert.name,
-              issuer: cert.issuer,
-              year: cert.year || "",
-              credentialId: cert.credentialId || "",
-            },
+      const filledCertifications = data.filter((cert) => (cert.title || "").trim() && (cert.issuer || "").trim());
+      
+      let saveFailed = false;
+      
+      for (const cert of filledCertifications) {
+        try {
+          await api.addCertification({
+            title: cert.title,
+            issuer: cert.issuer,
+            date: cert.date || "",
+            credentialId: cert.credentialId || "",
           });
+        } catch (entryError) {
+          console.error("Failed to save certification entry:", entryError);
+          saveFailed = true;
+          setError(`Failed to save certification: ${entryError.message || "Connection error"}`);
+          break;
         }
       }
-      onFinish();
+
+      if (!saveFailed) {
+        onFinish();
+      }
     } catch (err) {
       console.error("Error saving certifications:", err);
-      setError(err.message || "Failed to save certifications. Please try again.");
+      // Don't block progression for optional section
+      onFinish();
     } finally {
       setLoading(false);
     }
@@ -119,33 +121,29 @@ const _CertificationsSection = ({ data, onChange, onBack, onFinish }) => {
                   </Button>
                 </div>
                 <div>
-                  <Label>Certification Name <span className="text-red-500">*</span></Label>
+                  <Label>Certification Name</Label>
                   <Input
-                    value={cert.name}
-                    onChange={(e) => updateCertification(cert.id, "name", e.target.value)}
+                    value={cert.title}
+                    onChange={(e) => updateCertification(cert.id, "title", e.target.value)}
                     placeholder="e.g., AWS Certified Developer"
                     disabled={loading}
-                    className={!cert.name && error ? "border-red-500" : ""}
                   />
-                  {!cert.name && error && <p className="text-xs text-red-500 mt-1">Required</p>}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label>Issuing Organization <span className="text-red-500">*</span></Label>
+                    <Label>Issuing Organization</Label>
                     <Input
                       value={cert.issuer}
                       onChange={(e) => updateCertification(cert.id, "issuer", e.target.value)}
                       placeholder="e.g., Amazon Web Services"
                       disabled={loading}
-                      className={!cert.issuer && error ? "border-red-500" : ""}
                     />
-                    {!cert.issuer && error && <p className="text-xs text-red-500 mt-1">Required</p>}
                   </div>
                   <div>
-                    <Label>Year (optional)</Label>
+                    <Label>Date (optional)</Label>
                     <Input
-                      value={cert.year}
-                      onChange={(e) => updateCertification(cert.id, "year", e.target.value)}
+                      value={cert.date}
+                      onChange={(e) => updateCertification(cert.id, "date", e.target.value)}
                       placeholder="e.g., 2024"
                       disabled={loading}
                     />
@@ -174,13 +172,8 @@ const _CertificationsSection = ({ data, onChange, onBack, onFinish }) => {
         </Button>
         <Button 
           onClick={handleFinish}
-          disabled={loading || !isFormValid()}
-          className={`text-white ${
-            isFormValid() && !loading
-              ? "bg-green-600 hover:bg-green-700 cursor-pointer"
-              : "bg-gray-400 cursor-not-allowed"
-          } transition-colors`}
-          title={!isFormValid() ? "Please fill all required fields" : ""}
+          disabled={loading}
+          className="text-white bg-green-600 hover:bg-green-700 transition-colors"
         >
           {loading ? (
             <>

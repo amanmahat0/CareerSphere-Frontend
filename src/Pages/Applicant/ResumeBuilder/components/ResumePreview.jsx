@@ -110,23 +110,28 @@ const ResumePreview = memo(({ data }) => {
         )}
 
         {/* Projects */}
-        {projects.length > 0 && projects.some((p) => p.name) && (
+        {projects.length > 0 && projects.some((p) => p.title || p.name) && (
           <div className="mb-6">
             <h2 className="text-sm font-bold text-slate-900 mb-2 uppercase tracking-wide border-b border-slate-300 pb-1">
               Projects
             </h2>
             <div className="space-y-3">
               {projects.map(
-                (project) =>
-                  project.name && (
-                    <div key={project.id}>
-                      <h3 className="text-sm font-semibold text-slate-900 mb-1">{project.name}</h3>
+                (project, idx) =>
+                  (project.title || project.name) && (
+                    <div key={project.id || idx}>
+                      <h3 className="text-sm font-semibold text-slate-900 mb-1">{project.title || project.name}</h3>
                       {project.description && (
                         <p className="text-sm text-slate-700 mb-1">{project.description}</p>
                       )}
                       {project.technologies && project.technologies.length > 0 && (
                         <p className="text-sm text-slate-600">
                           <span className="font-medium">Technologies:</span> {project.technologies.join(", ")}
+                        </p>
+                      )}
+                      {project.link && (
+                        <p className="text-sm text-slate-600">
+                          <span className="font-medium">Link:</span> {project.link}
                         </p>
                       )}
                     </div>
@@ -137,21 +142,21 @@ const ResumePreview = memo(({ data }) => {
         )}
 
         {/* Certifications */}
-        {certifications.length > 0 && certifications.some((c) => c.name) && (
+        {certifications.length > 0 && certifications.some((c) => c.title || c.name) && (
           <div>
             <h2 className="text-sm font-bold text-slate-900 mb-2 uppercase tracking-wide border-b border-slate-300 pb-1">
               Certifications
             </h2>
             <div className="space-y-2">
               {certifications.map(
-                (cert) =>
-                  cert.name && (
-                    <div key={cert.id} className="flex justify-between">
+                (cert, idx) =>
+                  (cert.title || cert.name) && (
+                    <div key={cert.id || idx} className="flex justify-between">
                       <div>
-                        <p className="text-sm font-medium text-slate-900">{cert.name}</p>
+                        <p className="text-sm font-medium text-slate-900">{cert.title || cert.name}</p>
                         {cert.issuer && <p className="text-sm text-slate-600">{cert.issuer}</p>}
                       </div>
-                      {cert.year && <p className="text-sm text-slate-600">{cert.year}</p>}
+                      {(cert.date || cert.year) && <p className="text-sm text-slate-600">{cert.date || cert.year}</p>}
                     </div>
                   )
               )}

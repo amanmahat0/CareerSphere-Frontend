@@ -2,12 +2,16 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Search, Eye, XCircle, Loader2, AlertCircle } from 'lucide-react';
 import Sidebar from '../Components/Applicant Sidebar';
 import DashboardHeader from '../../../Components/DashboardHeader';
+import ApplicationDetailsModal from './ApplicationDetails';
 import { api } from '../../../utils/api';
 
 const statusStyles = {
 	pending: 'bg-slate-100 text-slate-700',
 	shortlisted: 'bg-blue-100 text-blue-700',
-	accepted: 'bg-green-100 text-green-700',
+	test: 'bg-purple-100 text-purple-700',
+	interview: 'bg-indigo-100 text-indigo-700',
+	offer: 'bg-yellow-100 text-yellow-700',
+	hired: 'bg-green-100 text-green-700',
 	rejected: 'bg-red-100 text-red-700',
 };
 
@@ -26,6 +30,7 @@ const MyApplication = () => {
 	const [applications, setApplications] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
+	const [selectedApplication, setSelectedApplication] = useState(null);
 
 	// Fetch applications from API
 	useEffect(() => {
@@ -203,19 +208,20 @@ const MyApplication = () => {
 														</td>
 														<td className="px-4 py-3">
 															<span
-																className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${statusStyles[application.status] || 'bg-slate-100 text-slate-700'}`}
-															>
-																{application.status}
+															className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${statusStyles[application.interviewStep] || 'bg-slate-100 text-slate-700'}`}
+														>
+															{application.interviewStep || application.status}
 															</span>
 														</td>
 														<td className="px-4 py-3">
 															<div className="flex items-center gap-2">
 																<button
 																	type="button"
+																	onClick={() => setSelectedApplication(application)}
 																	className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-blue-200 text-blue-700 hover:bg-blue-50 transition-colors text-xs"
 																>
 																	<Eye size={15} />
-																	Details
+																	View Details
 																</button>
 																<button
 																	type="button"
@@ -244,8 +250,25 @@ const MyApplication = () => {
 					</div>
 				</main>
 			</div>
+
+			{selectedApplication && (
+				<>
+					<div
+						className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+						onClick={() => setSelectedApplication(null)}
+					>
+						<div
+							onClick={(e) => e.stopPropagation()}
+						>
+							<ApplicationDetailsModal
+								application={selectedApplication}
+								onClose={() => setSelectedApplication(null)}
+							/>
+						</div>
+					</div>
+				</>
+			)}
 		</div>
 	);
 };
-
 export default MyApplication;

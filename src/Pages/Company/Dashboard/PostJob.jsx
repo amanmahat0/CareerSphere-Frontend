@@ -7,7 +7,6 @@ const PostJob = ({ isOpen, onClose, onSuccess, editJob = null }) => {
   
   const getInitialFormData = () => ({
     title: '',
-    company: '',
     type: 'Internship',
     location: 'Kathmandu',
     duration: '',
@@ -29,7 +28,6 @@ const PostJob = ({ isOpen, onClose, onSuccess, editJob = null }) => {
     if (editJob) {
       setFormData({
         title: editJob.title || '',
-        company: editJob.company || '',
         type: editJob.type || 'Internship',
         location: editJob.location || 'Kathmandu',
         duration: editJob.duration || '',
@@ -44,7 +42,7 @@ const PostJob = ({ isOpen, onClose, onSuccess, editJob = null }) => {
     } else {
       setFormData(getInitialFormData());
     }
-  }, [editJob]);
+  }, [editJob, isOpen]);
 
   if (!isOpen) return null;
 
@@ -62,12 +60,22 @@ const PostJob = ({ isOpen, onClose, onSuccess, editJob = null }) => {
     try {
       // Prepare data - convert comma-separated strings to arrays
       const jobData = {
-        ...formData,
+        title: formData.title,
+        type: formData.type,
+        location: formData.location,
+        duration: formData.duration,
+        description: formData.description,
+        salary: formData.salary,
         skills: formData.skills ? formData.skills.split(',').map(s => s.trim()).filter(Boolean) : [],
         requirements: formData.requirements ? formData.requirements.split('\n').map(s => s.trim()).filter(Boolean) : [],
         responsibilities: formData.responsibilities ? formData.responsibilities.split('\n').map(s => s.trim()).filter(Boolean) : [],
         benefits: formData.benefits ? formData.benefits.split('\n').map(s => s.trim()).filter(Boolean) : [],
       };
+      
+      // Add deadline only if provided
+      if (formData.deadline) {
+        jobData.deadline = formData.deadline;
+      }
       
       let response;
       if (isEditMode) {
@@ -128,18 +136,6 @@ const PostJob = ({ isOpen, onClose, onSuccess, editJob = null }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Company *</label>
-              <input 
-                type="text"
-                name="company"
-                value={formData.company}
-                onChange={handleChange}
-                placeholder="Enter company name"
-                className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
-                required
-              />
-            </div>
-            <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Type *</label>
               <select 
                 name="type"
@@ -152,9 +148,6 @@ const PostJob = ({ isOpen, onClose, onSuccess, editJob = null }) => {
                 <option value="Traineeship">Traineeship</option>
               </select>
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Location *</label>
               <input 
@@ -166,6 +159,9 @@ const PostJob = ({ isOpen, onClose, onSuccess, editJob = null }) => {
                 required
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Duration *</label>
               <input 
@@ -178,19 +174,16 @@ const PostJob = ({ isOpen, onClose, onSuccess, editJob = null }) => {
                 required
               />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Salary *</label>
-            <input 
-              type="text" 
-              name="salary"
-              value={formData.salary}
-              onChange={handleChange}
-              placeholder="e.g., NPR 6-8 Lakhs/year or Negotiable"
-              className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" 
-              required
-            />
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Application Deadline</label>
+              <input 
+                type="date" 
+                name="deadline"
+                value={formData.deadline}
+                onChange={handleChange}
+                className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" 
+              />
+            </div>
           </div>
 
           <div>
@@ -219,13 +212,15 @@ const PostJob = ({ isOpen, onClose, onSuccess, editJob = null }) => {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Application Deadline</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Salary *</label>
               <input 
-                type="date" 
-                name="deadline"
-                value={formData.deadline}
+                type="text" 
+                name="salary"
+                value={formData.salary}
                 onChange={handleChange}
+                placeholder="e.g., NPR 6-8 Lakhs/year or Negotiable"
                 className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" 
+                required
               />
             </div>
           </div>

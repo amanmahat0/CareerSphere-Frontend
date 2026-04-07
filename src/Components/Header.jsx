@@ -67,7 +67,7 @@ export const Header = ({ isDashboard = false, user = null, onLogout = null }) =>
 
           <div className="header__actions">
             <div className="flex items-center gap-4">
-              <div className="relative cursor-pointer p-2 hover:bg-slate-50 rounded-full transition-colors">
+              <div className="relative cursor-pointer p-2 hover:bg-slate-50 rounded-full transition-colors" onClick={() => navigate("/applicant/notifications")}>
                 <Bell size={20} className="text-slate-400" />
                 {user.notificationCount > 0 && (
                   <span className="absolute top-1.5 right-1.5 bg-red-600 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center border-2 border-white font-bold">
@@ -154,7 +154,7 @@ export const Header = ({ isDashboard = false, user = null, onLogout = null }) =>
           <div className="header__actions">
             <div className="flex items-center gap-4">
               {/* Notifications */}
-              <div className="relative cursor-pointer p-2 hover:bg-slate-100 rounded-full transition-colors">
+              <div className="relative cursor-pointer p-2 hover:bg-slate-100 rounded-full transition-colors" onClick={() => navigate("/applicant/notifications")}>
                 <Bell size={20} className="text-slate-500" />
                 <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold">
                   2
@@ -167,7 +167,7 @@ export const Header = ({ isDashboard = false, user = null, onLogout = null }) =>
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                   className="flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg transition-colors"
                 >
-                  <div className="h-9 w-9 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-900 flex items-center justify-center text-white font-bold shadow-md">
+                  <div className="h-9 w-9 rounded-full overflow-hidden bg-linear-to-br from-blue-500 to-blue-900 flex items-center justify-center text-white font-bold shadow-md">
                     {getProfilePictureUrl() ? (
                       <img src={getProfilePictureUrl()} alt="Profile" className="w-full h-full object-cover" />
                     ) : (

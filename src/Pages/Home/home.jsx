@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   Briefcase, 
@@ -6,12 +6,94 @@ import {
   BarChart, 
   Users, 
   MapPin, 
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Footer from '../../Components/Footer';
 import Header from '../../Components/Header';
+import { api } from '../../utils/api';
 
 const HomePage = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('jobs');
+  const [searchText, setSearchText] = useState('');
+  const [opportunities, setOpportunities] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchOpportunities();
+  }, [activeTab]);
+
+  const fetchOpportunities = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      let filters = {};
+      
+      if (activeTab !== 'all') {
+        filters.type = activeTab.charAt(0).toUpperCase() + activeTab.slice(1, -1);
+      }
+      
+      console.log('Fetching with filters:', filters);
+      const response = await api.getAllJobs(filters);
+      console.log('Full API Response:', response);
+      console.log('Response type:', typeof response);
+      console.log('Response keys:', Object.keys(response || {}));
+      
+      // Handle different response structures
+      let jobsData = [];
+      
+      // Check multiple possible response structures
+      if (response?.data && Array.isArray(response.data)) {
+        jobsData = response.data;
+        console.log('Using response.data');
+      } else if (response?.success && Array.isArray(response?.jobs)) {
+        jobsData = response.jobs;
+        console.log('Using response.jobs');
+      } else if (Array.isArray(response)) {
+        jobsData = response;
+        console.log('Response is direct array');
+      } else if (response?.message && response?.data) {
+        jobsData = response.data;
+        console.log('Using response.data from success message');
+      }
+      
+      console.log('Parsed jobs data:', jobsData);
+      console.log('Jobs count:', jobsData.length);
+      
+      if (jobsData.length > 0) {
+        console.log('First job object:', JSON.stringify(jobsData[0], null, 2));
+      }
+      
+      const slicedData = jobsData.slice(0, 6);
+      console.log('After slice:', slicedData.length);
+      setOpportunities(slicedData);
+      console.log('Set opportunities state to:', slicedData.length, 'items');
+    } catch (error) {
+      console.error('Error fetching opportunities:', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      setError(error.message || 'Failed to load opportunities');
+      setOpportunities([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredOpportunities = opportunities.filter((opp) => {
+    const query = searchText.toLowerCase();
+    return (
+      opp.title?.toLowerCase().includes(query) ||
+      opp.company?.toLowerCase().includes(query) ||
+      opp.location?.toLowerCase().includes(query)
+    );
+  });
+
+  const handleViewAll = () => {
+    navigate('/opportunities');
+  };
   return (
     <div className="font-sans text-gray-800 bg-white">
       {/* ================= NAVBAR ================= */}
@@ -37,9 +119,14 @@ const HomePage = () => {
               <input 
                 type="text" 
                 placeholder="Search for jobs, internships, companies..." 
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
                 className="flex-1 px-4 py-2 outline-none text-gray-700 placeholder-gray-400"
               />
-              <button className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition">
+              <button 
+                onClick={() => navigate('/opportunities')}
+                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition"
+              >
                 Search
               </button>
             </div>
@@ -114,45 +201,78 @@ const HomePage = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Latest Opportunities in Nepal</h2>
               <p className="text-gray-600 text-sm">Fresh openings from Nepal's top companies</p>
             </div>
-            <button className="text-blue-600 text-sm font-medium hover:underline flex items-center border border-gray-300 bg-white px-4 py-1.5 rounded-md">
+            <button 
+              onClick={handleViewAll}
+              className="text-blue-600 text-sm font-medium hover:underline flex items-center border border-gray-300 bg-white px-4 py-1.5 rounded-md"
+            >
               View All <ChevronRight className="w-4 h-4 ml-1" />
             </button>
           </div>
 
           {/* Tabs */}
           <div className="flex space-x-6 mb-8 border-b border-gray-200">
-            <button className="pb-3 border-b-2 border-blue-600 text-blue-600 font-medium text-sm">Jobs</button>
-            <button className="pb-3 text-gray-500 hover:text-gray-700 font-medium text-sm">Internships</button>
-            <button className="pb-3 text-gray-500 hover:text-gray-700 font-medium text-sm">Traineeships</button>
+            <button 
+              onClick={() => setActiveTab('jobs')}
+              className={`pb-3 border-b-2 font-medium text-sm transition-colors ${activeTab === 'jobs' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              Jobs
+            </button>
+            <button 
+              onClick={() => setActiveTab('internships')}
+              className={`pb-3 border-b-2 font-medium text-sm transition-colors ${activeTab === 'internships' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              Internships
+            </button>
+            <button 
+              onClick={() => setActiveTab('traineeships')}
+              className={`pb-3 border-b-2 font-medium text-sm transition-colors ${activeTab === 'traineeships' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              Traineeships
+            </button>
+            <button 
+              onClick={() => setActiveTab('all')}
+              className={`pb-3 border-b-2 font-medium text-sm transition-colors ${activeTab === 'all' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            >
+              All
+            </button>
           </div>
 
           {/* Job Grid */}
-          <div className="grid md:grid-cols-3 gap-6">
-            <JobCard 
-              title="Data Analyst"
-              company="F1Soft International"
-              location="Pokhara"
-              exp="0-2 years"
-              salary="NPR 6-8 Lakhs/year"
-              tag="Full time"
-            />
-            <JobCard 
-              title="Flutter Developer"
-              company="Yomari"
-              location="Kathmandu"
-              exp="1-3 years"
-              salary="NPR 8-12 Lakhs/year"
-              tag="Full time"
-            />
-            <JobCard 
-              title="Backend Developer"
-              company="Verisk Nepal"
-              location="Kathmandu"
-              exp="2-4 years"
-              salary="NPR 10-15 Lakhs/year"
-              tag="Full time"
-            />
-          </div>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-4">
+              <p className="font-medium">Error loading opportunities:</p>
+              <p className="text-sm">{error}</p>
+            </div>
+          )}
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="animate-spin text-blue-600 mr-2" size={32} />
+              <p className="text-gray-600">Loading opportunities...</p>
+            </div>
+          ) : opportunities.length > 0 ? (
+            <div className="grid md:grid-cols-3 gap-6">
+              {opportunities.map((opp) => {
+                console.log('Rendering card for:', opp);
+                return (
+                  <JobCard 
+                    key={opp._id}
+                    id={opp._id}
+                    title={opp.title}
+                    company={opp.company}
+                    location={opp.location}
+                    exp={opp.experienceRequired || '0-2 years'}
+                    salary={opp.salary || 'Competitive'}
+                    tag={opp.type}
+                    data={opp}
+                  />
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No opportunities found</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -166,9 +286,6 @@ const HomePage = () => {
           <div className="flex justify-center space-x-4">
             <button className="bg-white text-blue-700 px-8 py-3 rounded-lg font-bold hover:bg-gray-100 transition">
               Get Started Free
-            </button>
-            <button className="border border-white text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-600 transition">
-              Sign In
             </button>
           </div>
         </div>
@@ -192,23 +309,38 @@ const FeatureCard = ({ icon, title, desc }) => (
   </div>
 );
 
-const JobCard = ({ title, company, location, exp, salary, tag }) => (
-  <div className="bg-white p-6 rounded-xl border border-gray-200 hover:border-blue-300 transition group cursor-pointer">
-    <div className="flex justify-between items-start mb-4">
-      <span className="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-1 rounded">{tag}</span>
-    </div>
-    <h3 className="font-bold text-lg text-gray-900 mb-1 group-hover:text-blue-600">{title}</h3>
-    <p className="text-blue-600 font-medium text-sm mb-4">{company}</p>
-    
-    <div className="flex items-center text-gray-500 text-xs mb-6">
-      <MapPin className="w-3 h-3 mr-1" /> {location}
-    </div>
+const JobCard = ({ id, title, company, location, exp, salary, tag, data }) => {
+  const navigate = useNavigate();
+  
+  // Fallback to data object if individual props are missing
+  const displayTitle = title || data?.jobTitle || data?.title || 'Job Title';
+  const displayCompany = company || data?.companyName || data?.company || 'Company';
+  const displayLocation = location || data?.city || data?.location || 'Location';
+  const displayExp = exp || data?.experienceRequired || '0-2 years';
+  const displaySalary = salary || data?.salary || 'Competitive';
+  const displayTag = tag || data?.type || 'Job';
+  
+  return (
+    <div 
+      onClick={() => navigate(`/opportunities/${id}`)}
+      className="bg-white p-6 rounded-xl border border-gray-200 hover:border-blue-300 transition group cursor-pointer"
+    >
+      <div className="flex justify-between items-start mb-4">
+        <span className="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-1 rounded">{displayTag}</span>
+      </div>
+      <h3 className="font-bold text-lg text-gray-900 mb-1 group-hover:text-blue-600">{displayTitle}</h3>
+      <p className="text-blue-600 font-medium text-sm mb-4">{displayCompany}</p>
+      
+      <div className="flex items-center text-gray-500 text-xs mb-6">
+        <MapPin className="w-3 h-3 mr-1" /> {displayLocation}
+      </div>
 
-    <div className="pt-4 border-t border-gray-100 flex justify-between items-center text-xs font-medium text-gray-700">
-      <span>{exp}</span>
-      <span>{salary}</span>
+      <div className="pt-4 border-t border-gray-100 flex justify-between items-center text-xs font-medium text-gray-700">
+        <span>{displayExp}</span>
+        <span>{displaySalary}</span>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default HomePage;

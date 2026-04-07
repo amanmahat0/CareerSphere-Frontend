@@ -129,8 +129,7 @@ const ApplicantManagement = () => {
     return (
       app.name?.toLowerCase().includes(term) ||
       app.email?.toLowerCase().includes(term) ||
-      app.phone?.toLowerCase().includes(term) ||
-      app.applicantType?.toLowerCase().includes(term)
+      app.phone?.toLowerCase().includes(term)
     );
   });
 
@@ -145,7 +144,6 @@ const ApplicantManagement = () => {
         onMenuClick={() => setSidebarOpen(!sidebarOpen)} 
         userRole="Admin"
         dashboardPath="/admin/dashboard"
-        profilePath="/admin/profile"
       />
 
       {/* Main Content Section */}
@@ -173,9 +171,6 @@ const ApplicantManagement = () => {
                   <p className="text-slate-500 text-sm mt-0.5">Manage applicant profiles and placement status</p>
                 </div>
                 <div className="flex gap-3 flex-wrap">
-                  <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">
-                    <Download size={16} /> Export Data
-                  </button>
                   <button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-lg text-sm font-medium hover:bg-blue-800 transition-shadow shadow-md">
                     <Plus size={16} /> Add Applicant
                   </button>
@@ -219,35 +214,32 @@ const ApplicantManagement = () => {
                   ) : (
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-slate-50/50 text-[11px] uppercase tracking-wider text-slate-500 font-bold border-b border-slate-100">
+                      <tr className="bg-slate-50/50 text-[13px] uppercase tracking-wider text-slate-500 font-bold border-b border-slate-100">
+                        <th className="px-4 py-4 w-12">S.N</th>
                         <th className="px-4 lg:px-6 py-4">Name</th>
                         <th className="px-4 py-4">Email</th>
                         <th className="px-4 py-4 hidden md:table-cell">Phone</th>
-                        <th className="px-4 py-4 hidden lg:table-cell">Type</th>
+                        <th className="px-4 py-4 hidden lg:table-cell">Resume Status</th>
                         <th className="px-4 lg:px-6 py-4 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {filteredApplicants.length > 0 ? (
-                        filteredApplicants.map((app) => (
+                        filteredApplicants.map((app, index) => (
                           <tr key={app.id} className="hover:bg-slate-50/50 transition-colors text-sm">
+                            <td className="px-4 py-4 text-slate-600 text-xs font-medium">{index + 1}</td>
                             <td className="px-4 lg:px-6 py-4">
-                              <div className="flex items-center gap-3">
-                                {app.profilePicture ? (
-                                  <img src={app.profilePicture} alt={app.name} className="w-9 h-9 rounded-full object-cover shrink-0" />
-                                ) : (
-                                  <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                                    <Users size={16} className="text-slate-400" />
-                                  </div>
-                                )}
-                                <p className="font-semibold text-slate-700">{app.name}</p>
-                              </div>
+                              <p className="font-semibold text-slate-700">{app.name}</p>
                             </td>
                             <td className="px-4 py-4 text-slate-600 text-xs">{app.email}</td>
                             <td className="px-4 py-4 text-slate-600 hidden md:table-cell text-xs">{app.phone}</td>
                             <td className="px-4 py-4 hidden lg:table-cell">
-                              <span className="px-2 lg:px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded border border-blue-100">
-                                {app.applicantType || 'Student'}
+                              <span className={`px-2 lg:px-3 py-1 text-[10px] font-bold rounded border ${
+                                app.resumeStatus === 'completed'
+                                  ? 'bg-green-50 text-green-600 border-green-100'
+                                  : 'bg-yellow-50 text-yellow-600 border-yellow-100'
+                              }`}>
+                                {app.resumeStatus === 'completed' ? 'Completed' : 'Pending'}
                               </span>
                             </td>
                             <td className="px-4 lg:px-6 py-4 text-right">
@@ -264,7 +256,7 @@ const ApplicantManagement = () => {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
+                          <td colSpan="6" className="px-6 py-12 text-center text-slate-500">
                             <p className="font-medium">No applicants found matching your filters</p>
                           </td>
                         </tr>
@@ -281,7 +273,7 @@ const ApplicantManagement = () => {
 
       {/* Add/Edit Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/40 bg-opacity-20 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-slate-800">{editingId ? 'Edit Applicant' : 'Add Applicant'}</h3>

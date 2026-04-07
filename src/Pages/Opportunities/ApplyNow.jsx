@@ -99,19 +99,19 @@ const ApplyModal = ({ job, onClose, onSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 font-sans z-50">
+    <div className="fixed inset-0 bg-black/40 bg-opacity-20 flex items-center justify-center p-4 font-sans z-50">
       {/* Modal Container */}
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-[550px] overflow-hidden">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-[550px] overflow-hidden">
         
         {/* Header */}
-        <div className="flex justify-between items-center p-6 pb-4">
-          <h2 className="text-[22px] font-semibold text-gray-800">
+        <div className="flex justify-between items-center p-6 pb-4 border-b border-slate-200">
+          <h2 className="text-lg font-bold text-slate-800">
             Apply for {job?.title || 'Position'}
           </h2>
           <button 
             onClick={onClose}
             disabled={loading}
-            className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+            className="text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50 p-2 hover:bg-slate-50 rounded-lg"
           >
             <X size={20} />
           </button>
@@ -122,86 +122,86 @@ const ApplyModal = ({ job, onClose, onSuccess }) => {
           
           {/* Error Alert */}
           {error && (
-            <div className="border border-red-200 bg-red-50 rounded-xl p-4 flex gap-3 items-start">
+            <div className="border border-red-200 bg-red-50 rounded-lg p-4 flex gap-3 items-start">
               <AlertCircle size={20} className="text-red-500 shrink-0 mt-0.5" />
               <div>
-                <p className="text-[14px] text-red-900">{error}</p>
+                <p className="text-sm text-red-900">{error}</p>
               </div>
             </div>
           )}
 
           {/* Cover Letter Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-800 mb-2">
+            <label className="block text-sm font-medium text-slate-800 mb-2">
               Why are you applying for this position? <span className="text-red-500">*</span>
             </label>
             <textarea
-              className="w-full border border-gray-100 bg-gray-50/50 rounded-lg p-3 text-[15px] text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full border border-slate-200 bg-slate-50/50 rounded-lg p-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
               rows="4"
               placeholder="Explain why you're interested in this position and what makes you a good fit..."
               value={coverLetter}
               onChange={handleTextChange}
               disabled={loading}
             />
-            <div className="text-sm text-gray-500 mt-2">
+            <div className="text-xs text-slate-500 mt-2">
               {coverLetter.length}/{maxChars} characters
             </div>
           </div>
 
           {/* Resume Section */}
           <div>
-            <label className="block text-sm font-medium text-gray-800 mb-2">
+            <label className="block text-sm font-medium text-slate-800 mb-2">
               Resume <span className="text-red-500">*</span>
             </label>
             
             {isLoadingResume ? (
-              <div className="border border-gray-200 bg-gray-50 rounded-xl p-4 flex items-center justify-between">
+              <div className="border border-gray-200 bg-gray-50 rounded-lg p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="bg-gray-100 p-2 rounded-lg text-gray-600">
                     <Loader2 size={20} className="animate-spin" />
                   </div>
                   <div>
-                    <p className="text-[15px] font-medium text-gray-800">Loading Resume...</p>
-                    <p className="text-[13px] text-gray-500">Please wait a moment</p>
+                    <p className="text-sm font-medium text-gray-800">Loading Resume...</p>
+                    <p className="text-xs text-gray-500">Please wait a moment</p>
                   </div>
                 </div>
               </div>
             ) : resumeError ? (
-              <div className="border border-orange-200 bg-orange-50 rounded-xl p-4 flex items-start gap-3">
+              <div className="border border-orange-200 bg-orange-50 rounded-lg p-4 flex items-start gap-3">
                 <AlertCircle size={20} className="text-orange-500 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-[15px] font-medium text-orange-900 mb-2">Resume Incomplete</p>
-                  <p className="text-[13px] text-orange-800 mb-3">{resumeError}</p>
+                  <p className="text-sm font-medium text-orange-900 mb-2">Resume Incomplete</p>
+                  <p className="text-xs text-orange-800 mb-3">{resumeError}</p>
                   <a 
                     href="/applicant/resume"
-                    className="inline-block text-[13px] font-medium text-orange-600 hover:text-orange-700 underline"
+                    className="inline-block text-xs font-medium text-orange-600 hover:text-orange-700 underline"
                   >
                     Go to Resume Builder →
                   </a>
                 </div>
               </div>
             ) : resumeData && resumeData.isComplete ? (
-              <div className="border border-green-200 bg-[#f4fcf6] rounded-xl p-4 flex items-center justify-between">
+              <div className="border border-green-200 bg-green-50 rounded-lg p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="bg-green-100 p-2 rounded-lg text-green-600">
                     <FileText size={20} />
                   </div>
                   <div>
-                    <p className="text-[15px] font-medium text-gray-800">{resumeData.personalInfo?.name || 'Your Resume'}</p>
-                    <p className="text-[13px] text-gray-500">Resume Complete</p>
+                    <p className="text-sm font-medium text-gray-800">{resumeData.personalInfo?.name || 'Your Resume'}</p>
+                    <p className="text-xs text-gray-500">Resume Complete</p>
                   </div>
                 </div>
                 <CheckCircle2 size={22} className="text-green-500" />
               </div>
             ) : (
-              <div className="border border-yellow-200 bg-yellow-50 rounded-xl p-4 flex items-start gap-3">
+              <div className="border border-yellow-200 bg-yellow-50 rounded-lg p-4 flex items-start gap-3">
                 <AlertCircle size={20} className="text-yellow-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-[15px] font-medium text-yellow-900 mb-2">Resume Not Complete</p>
-                  <p className="text-[13px] text-yellow-800 mb-3">Your resume needs to be completed before you can apply. Please make sure all required sections are filled.</p>
+                  <p className="text-sm font-medium text-yellow-900 mb-2">Resume Not Complete</p>
+                  <p className="text-xs text-yellow-800 mb-3">Your resume needs to be completed before you can apply. Please make sure all required sections are filled.</p>
                   <a 
                     href="/applicant/resume"
-                    className="inline-block text-[13px] font-medium text-yellow-600 hover:text-yellow-700 underline"
+                    className="inline-block text-xs font-medium text-yellow-600 hover:text-yellow-700 underline"
                   >
                     Complete Resume →
                   </a>
@@ -209,17 +209,17 @@ const ApplyModal = ({ job, onClose, onSuccess }) => {
               </div>
             )}
             
-            <p className="text-[13px] text-gray-500 mt-2">
+            <p className="text-xs text-gray-500 mt-2">
               Your resume from the Resume Builder will be automatically attached.
             </p>
           </div>
 
           {/* Alert Box */}
-          <div className="border border-blue-100 bg-blue-50/50 rounded-xl p-4 flex gap-3 items-start">
+          <div className="border border-blue-100 bg-blue-50/50 rounded-lg p-4 flex gap-3 items-start">
             <AlertCircle size={20} className="text-blue-500 shrink-0 mt-0.5" />
             <div>
-              <p className="text-[14px] text-gray-800 mb-1.5">Before submitting:</p>
-              <ul className="list-disc list-inside text-[14px] text-gray-600 space-y-1">
+              <p className="text-sm text-slate-800 mb-1.5 font-medium">Before submitting:</p>
+              <ul className="list-disc list-inside text-sm text-slate-600 space-y-1">
                 <li>Make sure your resume is up-to-date</li>
                 <li>All information provided is accurate</li>
                 <li>You can update your resume anytime from Dashboard</li>
@@ -230,16 +230,16 @@ const ApplyModal = ({ job, onClose, onSuccess }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-6 mt-2 flex gap-4">
+        <div className="p-6 mt-2 bg-white border-t border-slate-200 flex gap-4">
           <button 
             onClick={handleSubmit}
             disabled={loading || !resumeData || !resumeData.isComplete || isLoadingResume}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-lg transition-colors text-[15px] flex items-center justify-center gap-2"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium px-4 py-2 rounded transition-colors text-sm flex items-center justify-center gap-2"
             title={!resumeData ? 'Resume not loaded' : !resumeData.isComplete ? 'Complete your resume to apply' : 'Submit application'}
           >
             {loading ? (
               <>
-                <Loader2 size={18} className="animate-spin" />
+                <Loader2 size={16} className="animate-spin" />
                 Submitting...
               </>
             ) : (
@@ -249,7 +249,7 @@ const ApplyModal = ({ job, onClose, onSuccess }) => {
           <button 
             onClick={onClose}
             disabled={loading}
-            className="flex-1 bg-white border border-gray-200 hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-700 font-medium py-2.5 rounded-lg transition-colors text-[15px]"
+            className="flex-1 bg-white border border-slate-200 hover:bg-slate-50 disabled:bg-gray-100 disabled:cursor-not-allowed text-slate-700 font-medium px-4 py-2 rounded transition-colors text-sm"
           >
             Cancel
           </button>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Eye, Check, X, Loader2, AlertCircle } from 'lucide-react';
+import { Search, Filter, Eye, Check, X, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import CompanySidebar from '../Components/CompanySidebar';
 import DashboardHeader from '../../../Components/DashboardHeader';
+import ViewDetails from './ViewDetails';
 import { api } from '../../../utils/api';
 
 // Helper function to determine status badge colors
@@ -35,27 +36,59 @@ export default function Applications() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   // Fetch applications
-  useEffect(() => {
-    const fetchApplications = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await api.getCompanyApplications();
-        if (response.success) {
-          setApplications(response.data || []);
-        } else {
-          setError('Failed to load applications');
-        }
-      } catch (err) {
-        console.error('Error fetching applications:', err);
-        setError(err.message || 'Failed to load applications');
-      } finally {
+  const fetchApplications = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const token = localStorage.getItem("token");
+      const user = localStorage.getItem("user");
+      
+      if (!token || !user) {
+        setError('User not authenticated. Please login again.');
+        setApplications([]);
         setLoading(false);
+        return;
       }
-    };
 
+      let userData = {};
+      try {
+        userData = JSON.parse(user);
+      } catch (e) {
+        console.error('Error parsing user data:', e);
+      }
+
+      const companyName = userData?.companyname || userData?.company || '';
+      
+      if (!companyName) {
+        console.warn('Company name not found in user data. Attempting to fetch anyway...');
+      }
+
+      const response = await api.getCompanyApplications();
+      
+      if (response.success && response.data) {
+        setApplications(response.data);
+      } else if (response.data) {
+        setApplications(Array.isArray(response.data) ? response.data : []);
+      } else {
+        setApplications([]);
+        setError(response.message || 'Failed to load applications');
+      }
+    } catch (err) {
+      console.error('Error fetching applications:', err);
+      setError(err.message || 'Failed to load applications. Please try again.');
+      setApplications([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Auto-fetch applications on component mount
+  useEffect(() => {
     fetchApplications();
   }, []);
 
@@ -75,12 +108,23 @@ export default function Applications() {
         setApplications(applications.map(app =>
           app._id === applicationId ? { ...app, status: newStatus } : app
         ));
+        setIsDetailsModalOpen(false);
         alert(`Application ${newStatus} successfully`);
       }
     } catch (err) {
       console.error('Error updating application:', err);
       setError(err.message || 'Failed to update application');
     }
+  };
+
+  const handleViewDetails = (application) => {
+    setSelectedApplication(application);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleCloseDetailsModal = () => {
+    setIsDetailsModalOpen(false);
+    setSelectedApplication(null);
   };
 
   // Filter applications
@@ -118,15 +162,27 @@ export default function Applications() {
           <div className="max-w-7xl mx-auto space-y-6">
             <div>
               <h1 className="text-3xl lg:text-4xl font-bold mb-2">Applications</h1>
-              <p className="text-slate-500 text-sm lg:text-base">Review and manage job applicants</p>
+              <p className="text-slate-500 text-sm lg:text-base">Review and manage job applicants <span className="font-semibold text-slate-700">({applications.length} total)</span></p>
             </div>
 
             {error && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-                <AlertCircle size={20} className="text-red-600 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-red-800 font-medium">Error</p>
-                  <p className="text-red-700 text-sm">{error}</p>
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg space-y-2">
+                <div className="flex items-start gap-3">
+                  <AlertCircle size={20} className="text-red-600 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-red-800 font-medium">Error Loading Applications</p>
+                    <p className="text-red-700 text-sm mt-1">{error}</p>
+                    <button
+                      onClick={fetchApplications}
+                      disabled={loading}
+                      className="mt-2 text-red-600 hover:text-red-800 text-sm font-semibold underline disabled:opacity-50"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                </div>
+                <div className="text-xs text-red-600 bg-red-100 p-2 rounded mt-2">
+                  <p><strong>Debug Info:</strong> Make sure you are logged in as a company user and have posted jobs.</p>
                 </div>
               </div>
             )}
@@ -144,6 +200,15 @@ export default function Applications() {
               </div>
               
               <div className="flex items-center gap-3">
+                <button
+                  onClick={fetchApplications}
+                  disabled={loading}
+                  className="flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-100 disabled:opacity-50 transition-colors"
+                  title="Refresh applications"
+                >
+                  <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+                  Refresh
+                </button>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
@@ -202,29 +267,13 @@ export default function Applications() {
                             </td>
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-2">
-                                <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-slate-600 border border-slate-200 rounded-md hover:bg-slate-50 hover:text-slate-700 transition-colors text-xs font-medium">
+                                <button 
+                                  onClick={() => handleViewDetails(app)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-slate-600 border border-slate-200 rounded-md hover:bg-slate-50 hover:text-slate-700 transition-colors text-xs font-medium"
+                                >
                                   <Eye size={15} />
-                                  View
+                                  View Details
                                 </button>
-                                
-                                {app.status === 'pending' && (
-                                  <>
-                                    <button 
-                                      onClick={() => handleStatusUpdate(app._id, 'shortlisted')}
-                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-blue-700 border border-blue-200 rounded-md hover:bg-blue-50 transition-colors text-xs font-medium"
-                                    >
-                                      <Check size={15} />
-                                      Shortlist
-                                    </button>
-                                    <button 
-                                      onClick={() => handleStatusUpdate(app._id, 'rejected')}
-                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-red-700 border border-red-200 rounded-md hover:bg-red-50 transition-colors text-xs font-medium"
-                                    >
-                                      <X size={15} />
-                                      Reject
-                                    </button>
-                                  </>
-                                )}
                               </div>
                             </td>
                           </tr>
@@ -244,6 +293,14 @@ export default function Applications() {
           </div>
         </main>
       </div>
+
+      {/* View Details Modal */}
+      <ViewDetails 
+        application={selectedApplication}
+        isOpen={isDetailsModalOpen}
+        onClose={handleCloseDetailsModal}
+        onStatusUpdate={handleStatusUpdate}
+      />
     </div>
   );
 }

@@ -19,6 +19,7 @@ import {
   Loader2
 } from "lucide-react";
 import { api } from "../../utils/api";
+import ApplyModal from "./ApplyNow";
 
 // Nepal cities data
 const nepalCities = [
@@ -44,6 +45,8 @@ const Opportunities = () => {
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
   const [resumeCompleted, setResumeCompleted] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [showApplyModal, setShowApplyModal] = useState(false);
 
   // Check if user is logged in and fetch resume status
   useEffect(() => {
@@ -90,13 +93,11 @@ const Opportunities = () => {
         } else if (Array.isArray(response)) {
           setJobs(response);
         } else {
-          // Fallback to mock data if API fails
-          setJobs(getMockJobs());
+          setError("Failed to load opportunities.");
         }
       } catch (err) {
         console.error("Error fetching jobs:", err);
         setError("Failed to load opportunities.");
-        setJobs(getMockJobs());
       } finally {
         setLoading(false);
       }
@@ -129,8 +130,15 @@ const Opportunities = () => {
       navigate("/applicant/resume");
       return;
     }
-    // Navigate to application or show modal
-    alert(`Applying for ${opportunity.title} at ${opportunity.company}...`);
+    setSelectedJob(opportunity);
+    setShowApplyModal(true);
+  };
+
+  const handleApplicationSuccess = (applicationData) => {
+    // Optionally update UI after successful application
+    console.log("Application submitted successfully:", applicationData);
+    setShowApplyModal(false);
+    setSelectedJob(null);
   };
 
   const handleViewDetails = (opportunity) => {
@@ -328,6 +336,18 @@ const Opportunities = () => {
           </div>
         )}
       </main>
+
+      {/* Apply Modal */}
+      {showApplyModal && selectedJob && (
+        <ApplyModal 
+          job={selectedJob}
+          onClose={() => {
+            setShowApplyModal(false);
+            setSelectedJob(null);
+          }}
+          onSuccess={handleApplicationSuccess}
+        />
+      )}
 
       {/* Footer */}
       <Footer />

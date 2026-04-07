@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  FileText, 
   User, 
   Mail, 
   Phone, 
@@ -15,7 +14,6 @@ import {
   Lock
 } from 'lucide-react';
 import Sidebar from '../Components/Applicant Sidebar';
-import CertificatesSection from './ApplicantCertificates';
 import ApplicantChangePassword from '../ForgotPassword/ApplicantChangePassword';
 import DashboardHeader from '../../../Components/DashboardHeader';
 import { api } from '../../../utils/api';
@@ -351,12 +349,6 @@ const ApplicantProfile = () => {
               >
                 <Lock size={14} /> Change Password
               </button>
-              <button 
-                onClick={() => setActiveTab('certificates')}
-                className={`pb-2 text-xs font-medium flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'certificates' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
-              >
-                <FileText size={14} /> Certificates (4)
-              </button>
             </div>
 
             {/* Success/Error Messages */}
@@ -526,9 +518,7 @@ const ApplicantProfile = () => {
               </div>
             ) : activeTab === 'password' ? (
               <ApplicantChangePassword profileData={profileData} />
-            ) : (
-              <CertificatesSection />
-            )}
+            ) : null}
           </div>
         </main>
       </div>

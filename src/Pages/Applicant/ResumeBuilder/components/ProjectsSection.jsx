@@ -13,7 +13,7 @@ const _ProjectsSection = ({ data, onChange, onNext, onBack }) => {
   const addProject = () => {
     onChange([
       ...data,
-      { id: Date.now(), name: "", description: "", link: "" },
+      { id: Date.now(), title: "", description: "", technologies: [] },
     ]);
     setError("");
   };
@@ -30,43 +30,45 @@ const _ProjectsSection = ({ data, onChange, onNext, onBack }) => {
     setError("");
   };
 
-  // Validation: All entries must have name if any exist
+  // Validation: This section is completely optional
   const isFormValid = () => {
-    if (data.length === 0) return true; // Optional section
-    return data.every((proj) => (proj.name || "").trim());
+    return true; // Always valid - section is optional
   };
 
   // Handle next with database save
   const handleNext = async () => {
-    if (!isFormValid()) {
-      setError("Please add a project name for all entries.");
-      return;
-    }
-
+    // No validation needed - section is optional
     setLoading(true);
     setError("");
 
     try {
       // Save only filled project entries to database
-      for (const proj of data) {
-        if ((proj.name || "").trim()) {
-          await api.request("/resume/projects", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: {
-              name: proj.name,
-              description: proj.description || "",
-              link: proj.link || "",
-            },
+      const filledProjects = data.filter((proj) => (proj.title || "").trim());
+      
+      let saveFailed = false;
+      
+      for (const proj of filledProjects) {
+        try {
+          await api.addProject({
+            title: proj.title,
+            description: proj.description || "",
+            link: proj.technologies?.join(", ") || "",
           });
+        } catch (entryError) {
+          console.error("Failed to save project entry:", entryError);
+          saveFailed = true;
+          setError(`Failed to save project: ${entryError.message || "Connection error"}`);
+          break;
         }
       }
-      onNext();
+
+      if (!saveFailed) {
+        onNext();
+      }
     } catch (err) {
       console.error("Error saving projects:", err);
-      setError(err.message || "Failed to save projects. Please try again.");
+      // Don't block progression for optional section
+      onNext();
     } finally {
       setLoading(false);
     }
@@ -118,15 +120,13 @@ const _ProjectsSection = ({ data, onChange, onNext, onBack }) => {
                   </Button>
                 </div>
                 <div>
-                  <Label>Project Name <span className="text-red-500">*</span></Label>
+                  <Label>Project Name</Label>
                   <Input
-                    value={project.name}
-                    onChange={(e) => updateProject(project.id, "name", e.target.value)}
+                    value={project.title}
+                    onChange={(e) => updateProject(project.id, "title", e.target.value)}
                     placeholder="e.g., E-commerce Platform"
                     disabled={loading}
-                    className={!project.name && error ? "border-red-500" : ""}
                   />
-                  {!project.name && error && <p className="text-xs text-red-500 mt-1">Required</p>}
                 </div>
                 <div>
                   <Label>Description</Label>
@@ -142,8 +142,8 @@ const _ProjectsSection = ({ data, onChange, onNext, onBack }) => {
                 <div>
                   <Label>Project Link (optional)</Label>
                   <Input
-                    value={project.link || ""}
-                    onChange={(e) => updateProject(project.id, "link", e.target.value)}
+                    value={project.technologies?.join(", ") || ""}
+                    onChange={(e) => updateProject(project.id, "technologies", e.target.value.split(",").map(t => t.trim()))}
                     placeholder="e.g., github.com/username/project"
                     disabled={loading}
                   />
@@ -162,13 +162,8 @@ const _ProjectsSection = ({ data, onChange, onNext, onBack }) => {
         </Button>
         <Button 
           onClick={handleNext}
-          disabled={loading || !isFormValid()}
-          className={`text-white ${
-            isFormValid() && !loading
-              ? "bg-blue-600 hover:bg-blue-700 cursor-pointer"
-              : "bg-gray-400 cursor-not-allowed"
-          } transition-colors`}
-          title={!isFormValid() ? "Please fill all required fields" : ""}
+          disabled={loading}
+          className="text-white bg-blue-600 hover:bg-blue-700 transition-colors"
         >
           {loading ? (
             <>

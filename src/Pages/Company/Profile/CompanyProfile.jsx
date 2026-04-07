@@ -17,7 +17,12 @@ import {
   Facebook,
   Instagram,
   Linkedin,
-  FileText
+  FileText,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  Download,
+  Loader2
 } from 'lucide-react';
 import CompanySidebar from '../Components/CompanySidebar';
 import CompanyChangePassword from '../ForgotPassword/CompanyChangePassword';
@@ -110,8 +115,11 @@ const CompanyProfile = () => {
   const [editFormData, setEditFormData] = useState({});
   const [loading, setLoading] = useState(false);
   const [uploadingPicture, setUploadingPicture] = useState(false);
+  const [uploadingDocuments, setUploadingDocuments] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
   const fileInputRef = useRef(null);
+  const documentsInputRef = useRef(null);
 
   const companySizeOptions = [
     { value: '1-10', label: '1-10 employees' },
@@ -156,6 +164,9 @@ const CompanyProfile = () => {
                 ...userData,
                 socialMedia: userData.socialMedia || { facebook: '', instagram: '', linkedin: '' }
               });
+              
+              // Fetch verification status
+              await fetchVerificationStatus();
             } catch (error) {
               console.log('Backend profile fetch failed, using localStorage:', error.message);
               // Fallback to localStorage data
@@ -370,6 +381,84 @@ const CompanyProfile = () => {
     }
   };
 
+  const fetchVerificationStatus = async () => {
+    try {
+      const response = await api.getCompanyVerificationStatus();
+      setVerificationStatus(response.data);
+    } catch (error) {
+      console.error('Error fetching verification status:', error);
+    }
+  };
+
+  const handleDocumentsClick = () => {
+    documentsInputRef.current?.click();
+  };
+
+  const handleDocumentsChange = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // Validate files
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    const maxFileSize = 10 * 1024 * 1024; // 10MB
+    const maxFiles = 5;
+
+    if (files.length > maxFiles) {
+      setMessage({ type: 'error', text: `You can upload a maximum of ${maxFiles} documents` });
+      return;
+    }
+
+    for (let file of files) {
+      if (!allowedTypes.includes(file.type)) {
+        setMessage({ type: 'error', text: 'Only PDF, images, and Word documents are allowed' });
+        return;
+      }
+      if (file.size > maxFileSize) {
+        setMessage({ type: 'error', text: `File size must be less than 10MB for ${file.name}` });
+        return;
+      }
+    }
+
+    setUploadingDocuments(true);
+    try {
+      const formData = new FormData();
+      const documentTypes = [];
+      
+      for (let file of files) {
+        formData.append('documents', file);
+        // Determine document type based on filename
+        const fileName = file.name.toLowerCase();
+        if (fileName.includes('registration') || fileName.includes('cert')) {
+          documentTypes.push('registration_certificate');
+        } else if (fileName.includes('license') || fileName.includes('business')) {
+          documentTypes.push('business_license');
+        } else if (fileName.includes('tax') || fileName.includes('tin')) {
+          documentTypes.push('tax_id');
+        } else {
+          documentTypes.push('other');
+        }
+      }
+
+      const response = await api.uploadVerificationDocuments(Array.from(files), documentTypes);
+      
+      setMessage({ type: 'success', text: `Successfully uploaded ${response.data.documents.length} document(s)! Your verification is pending admin review.` });
+      
+      // Refresh verification status
+      await fetchVerificationStatus();
+      
+      setTimeout(() => setMessage({ type: '', text: '' }), 4000);
+    } catch (error) {
+      console.error('Error uploading documents:', error);
+      setMessage({ type: 'error', text: error.message || 'Failed to upload documents' });
+    } finally {
+      setUploadingDocuments(false);
+      // Reset file input
+      if (documentsInputRef.current) {
+        documentsInputRef.current.value = '';
+      }
+    }
+  };
+
   const getProfilePictureUrl = () => {
     if (!profileData?.profilePicture) return null;
     // If it's a relative URL, prepend the base URL
@@ -425,6 +514,12 @@ const CompanyProfile = () => {
                 className={`pb-2 text-xs font-medium flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'profile' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
               >
                 <Building2 size={14} /> Company Information
+              </button>
+              <button 
+                onClick={() => setActiveTab('verification')}
+                className={`pb-2 text-xs font-medium flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'verification' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+              >
+                <FileText size={14} /> Verification Documents
               </button>
               <button 
                 onClick={() => setActiveTab('password')}
@@ -740,6 +835,123 @@ const CompanyProfile = () => {
                   </div>
 
                 </div>
+              </div>
+            ) : activeTab === 'verification' ? (
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <h2 className="text-lg font-semibold text-slate-900 mb-6">Company Verification Documents</h2>
+                
+                {/* Verification Status Alert */}
+                {verificationStatus && (
+                  <div className={`mb-6 p-4 rounded-lg border flex items-start gap-3 ${
+                    verificationStatus.isVerified
+                      ? 'bg-green-50 border-green-200 text-green-700'
+                      : verificationStatus.verificationStatus === 'rejected'
+                      ? 'bg-red-50 border-red-200 text-red-700'
+                      : 'bg-blue-50 border-blue-200 text-blue-700'
+                  }`}>
+                    {verificationStatus.isVerified ? (
+                      <CheckCircle size={20} className="flex-shrink-0 mt-0.5" />
+                    ) : verificationStatus.verificationStatus === 'rejected' ? (
+                      <XCircle size={20} className="flex-shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertCircle size={20} className="flex-shrink-0 mt-0.5" />
+                    )}
+                    <div>
+                      <p className="font-semibold">
+                        {verificationStatus.isVerified
+                          ? 'Company Verified'
+                          : verificationStatus.verificationStatus === 'rejected'
+                          ? 'Verification Rejected'
+                          : 'Verification Pending'}
+                      </p>
+                      {verificationStatus.isVerified && (
+                        <p className="text-sm mt-1">Your company has been verified by our admin team.</p>
+                      )}
+                      {verificationStatus.verificationStatus === 'rejected' && (
+                        <p className="text-sm mt-1">{verificationStatus.rejectionReason}</p>
+                      )}
+                      {verificationStatus.verificationStatus === 'pending' && (
+                        <p className="text-sm mt-1">Your submission is under review. Please wait for admin confirmation.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Uploaded Documents */}
+                {verificationStatus?.documents && verificationStatus.documents.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="font-semibold text-slate-900 mb-4">Uploaded Documents</h3>
+                    <div className="space-y-2">
+                      {verificationStatus.documents.map((doc, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                          <div className="flex items-center gap-3">
+                            <FileText size={20} className="text-orange-600" />
+                            <div>
+                              <p className="font-medium text-slate-900 text-sm">{doc.originalName}</p>
+                              <p className="text-xs text-slate-500">
+                                Type: {doc.documentType?.replace(/_/g, ' ').toUpperCase()}
+                              </p>
+                            </div>
+                          </div>
+                          <a
+                            href={`http://localhost:5000${doc.filePath}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                          >
+                            <Download size={14} /> View
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Document Upload Section */}
+                {!verificationStatus?.isVerified && (
+                  <div className="bg-gradient-to-r from-blue-50 to-slate-50 p-6 rounded-lg border-2 border-dashed border-blue-200">
+                    <h3 className="font-semibold text-slate-900 mb-2">Upload Verification Documents</h3>
+                    <p className="text-sm text-slate-600 mb-4">
+                      Please upload your company registration certificate, business license, tax ID, or other relevant verification documents. 
+                      These documents will be reviewed by our admin team.
+                    </p>
+                    
+                    <div className="mb-4 p-4 bg-white rounded-lg border border-slate-200">
+                      <p className="text-xs text-slate-600 font-medium mb-2">Supported formats:</p>
+                      <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside">
+                        <li>PDF documents</li>
+                        <li>Images (JPEG, PNG)</li>
+                        <li>Microsoft Word documents</li>
+                        <li>Maximum 5 files, 10MB each</li>
+                      </ul>
+                    </div>
+
+                    <button
+                      onClick={handleDocumentsClick}
+                      disabled={uploadingDocuments}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {uploadingDocuments ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" /> Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <FileText size={16} /> Choose Documents to Upload
+                        </>
+                      )}
+                    </button>
+
+                    <input
+                      ref={documentsInputRef}
+                      type="file"
+                      multiple
+                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      onChange={handleDocumentsChange}
+                      className="hidden"
+                    />
+                  </div>
+                )}
               </div>
             ) : (
               <CompanyChangePassword profileData={profileData} />

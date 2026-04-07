@@ -53,23 +53,11 @@ const ApplicantDashboard = () => {
 
   if (!user) return <div className="flex items-center justify-center h-screen">Loading...</div>;
 
-  // Mock Data
+  // Stats Data
   const stats = [
-    { label: "Total Applications", value: "8", icon: <FileText className="text-blue-600" />, color: "border-blue-600" },
-    { label: "Upcoming Interviews", value: "3", icon: <Calendar className="text-blue-600" />, color: "border-blue-600" },
+    { label: "Total Applications", value: "0", icon: <FileText className="text-blue-600" />, color: "border-blue-600" },
+    { label: "Upcoming Interviews", value: "0", icon: <Calendar className="text-blue-600" />, color: "border-blue-600" },
     { label: "Resume Status", value: user.resumeComplete ? "Complete" : "Incomplete", icon: <CheckCircle2 className={user.resumeComplete ? "text-green-600" : "text-slate-300"} />, color: "border-slate-300" },
-  ];
-
-  const applications = [
-    { id: 1, title: 'Frontend Developer Intern', company: 'Leapfrog Technology', type: 'Internship', status: 'Shortlisted', date: '2025-10-15', statusColor: 'bg-blue-100 text-blue-600' },
-    { id: 2, title: 'Data Analyst Intern', company: 'Verisk Nepal', type: 'Internship', status: 'Pending', date: '2025-10-10', statusColor: 'bg-slate-100 text-slate-600' },
-    { id: 3, title: 'Mobile App Developer', company: 'F1Soft International', type: 'Job', status: 'Rejected', date: '2025-09-28', statusColor: 'bg-red-100 text-red-600' },
-  ];
-
-  const interviews = [
-    { id: 1, role: "UI/UX Designer", company: "Yomari", date: "2025-11-25", time: "10:00 AM", type: "Virtual" },
-    { id: 2, role: "Data Analyst Intern", company: "Verisk Nepal", date: "2025-11-28", time: "2:00 PM", type: "In-Person" },
-    { id: 3, role: "UI/UX Designer", company: "Yomari", date: "2025-11-26", time: "3:00 PM", type: "Virtual" },
   ];
 
   return (
