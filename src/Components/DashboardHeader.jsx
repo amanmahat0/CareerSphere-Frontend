@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Menu, ChevronDown } from 'lucide-react';
+import { Menu, ChevronDown } from 'lucide-react';
 import Logo from './Logo/Logo';
+import ApplicantNotification from '../Pages/Applicant/Notifications/ApplicantNotification';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -100,15 +101,8 @@ const DashboardHeader = ({
 
         {/* Profile Section */}
         <div className="flex items-center gap-4">
-          {/* Notifications */}
-          <div className="relative cursor-pointer p-2 hover:bg-slate-100 rounded-full transition-colors">
-            <Bell size={20} className="text-slate-500" />
-            {user.notificationCount > 0 && (
-              <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold">
-                {user.notificationCount}
-              </span>
-            )}
-          </div>
+          {/* Notification Component */}
+          <ApplicantNotification />
 
           {/* Profile Dropdown */}
           <div className="relative">
@@ -116,7 +110,7 @@ const DashboardHeader = ({
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
               className="flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg transition-colors"
             >
-              <div className="h-9 w-9 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-900 flex items-center justify-center text-white font-bold shadow-md">
+              <div className="h-9 w-9 rounded-full overflow-hidden bg-linear-to-br from-blue-500 to-blue-900 flex items-center justify-center text-white font-bold shadow-md">
                 {getProfilePictureUrl() ? (
                   <img src={getProfilePictureUrl()} alt="Profile" className="w-full h-full object-cover" />
                 ) : (

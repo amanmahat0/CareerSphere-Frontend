@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Eye, Check, X, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Search, Filter, Eye, Check, X, Loader2, AlertCircle, RefreshCw, FileText, UserCheck } from 'lucide-react';
 import CompanySidebar from '../Components/CompanySidebar';
 import DashboardHeader from '../../../Components/DashboardHeader';
 import ViewDetails from './ViewDetails';
 import { api } from '../../../utils/api';
+import { toast } from '../../../utils/toast';
+
+// Helper function to get current status based on interviewStep and status
+const getApplicationStatus = (app) => {
+  if (app.interviewStep === 'withdrawn' || app.status === 'withdrawn') return 'withdrawn';
+  if (app.interviewStep === 'rejected' || app.status === 'rejected') return 'rejected';
+  if (app.status !== 'pending' && (app.interviewStep === 'shortlisted' || app.interviewStep === 'test')) return 'shortlisted';
+  return app.status || 'pending';
+};
 
 // Helper function to determine status badge colors
 const getStatusStyles = (status) => {
@@ -16,6 +25,8 @@ const getStatusStyles = (status) => {
       return 'bg-green-100 text-green-700';
     case 'rejected':
       return 'bg-red-100 text-red-700';
+    case 'withdrawn':
+      return 'bg-orange-100 text-orange-700';
     default:
       return 'bg-slate-100 text-slate-700';
   }
@@ -29,7 +40,7 @@ const formatDate = (dateString) => {
   });
 };
 
-export default function Applications() {
+function Applications() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -109,7 +120,7 @@ export default function Applications() {
           app._id === applicationId ? { ...app, status: newStatus } : app
         ));
         setIsDetailsModalOpen(false);
-        alert(`Application ${newStatus} successfully`);
+        toast.success(`Application ${newStatus} successfully`);
       }
     } catch (err) {
       console.error('Error updating application:', err);
@@ -134,7 +145,21 @@ export default function Applications() {
       app.userId?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       app.jobId?.title?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
+    let matchesStatus = false;
+    if (statusFilter === 'all') {
+      matchesStatus = true;
+    } else if (statusFilter === 'shortlisted') {
+      // Show apps where status is not pending and interviewStep is shortlisted or test
+      matchesStatus = app.status !== 'pending' && (app.interviewStep === 'shortlisted' || app.interviewStep === 'test');
+    } else if (statusFilter === 'pending') {
+      matchesStatus = app.status === 'pending';
+    } else if (statusFilter === 'accepted') {
+      matchesStatus = app.status === 'accepted';
+    } else if (statusFilter === 'rejected') {
+      matchesStatus = app.status === 'rejected';
+    } else if (statusFilter === 'withdrawn') {
+      matchesStatus = app.status === 'withdrawn';
+    }
     
     return matchesSearch && matchesStatus;
   });
@@ -163,6 +188,40 @@ export default function Applications() {
             <div>
               <h1 className="text-3xl lg:text-4xl font-bold mb-2">Applications</h1>
               <p className="text-slate-500 text-sm lg:text-base">Review and manage job applicants <span className="font-semibold text-slate-700">({applications.length} total)</span></p>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+              <StatCard 
+                label="Total Applications" 
+                value={applications.length.toString()} 
+                icon={<FileText className="text-blue-600" />} 
+              />
+              <StatCard 
+                label="Pending" 
+                value={applications.filter(app => app.status === 'pending').length.toString()} 
+                icon={<Search className="text-slate-600" />} 
+              />
+              <StatCard 
+                label="Shortlisted" 
+                value={applications.filter(app => app.status !== 'pending' && (app.interviewStep === 'shortlisted' || app.interviewStep === 'test')).length.toString()} 
+                icon={<UserCheck className="text-purple-600" />} 
+              />
+              <StatCard 
+                label="Accepted" 
+                value={applications.filter(app => app.status === 'accepted').length.toString()} 
+                icon={<Check className="text-green-600" />} 
+              />
+              <StatCard 
+                label="Rejected" 
+                value={applications.filter(app => app.status === 'rejected').length.toString()} 
+                icon={<X className="text-red-600" />} 
+              />
+              <StatCard 
+                label="Withdrawn" 
+                value={applications.filter(app => app.status === 'withdrawn').length.toString()} 
+                icon={<AlertCircle className="text-orange-600" />} 
+              />
             </div>
 
             {error && (
@@ -219,6 +278,7 @@ export default function Applications() {
                   <option value="shortlisted">Shortlisted</option>
                   <option value="accepted">Accepted</option>
                   <option value="rejected">Rejected</option>
+                  <option value="withdrawn">Withdrawn</option>
                 </select>
               </div>
             </div>
@@ -261,8 +321,8 @@ export default function Applications() {
                             <td className="px-6 py-4 text-sm text-slate-700">{app.jobId?.title || 'N/A'}</td>
                             <td className="px-6 py-4 text-sm text-slate-600">{formatDate(app.appliedDate)}</td>
                             <td className="px-6 py-4">
-                              <span className={`px-3 py-1.5 text-xs font-semibold rounded-md capitalize ${getStatusStyles(app.status)}`}>
-                                {app.status}
+                              <span className={`px-3 py-1.5 text-xs font-semibold rounded-md capitalize ${getStatusStyles(getApplicationStatus(app))}`}>
+                                {getApplicationStatus(app)}
                               </span>
                             </td>
                             <td className="px-6 py-4">
@@ -304,3 +364,19 @@ export default function Applications() {
     </div>
   );
 }
+
+const StatCard = ({ label, value, icon }) => {
+  return (
+    <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="flex justify-between items-start">
+        <div className="min-w-0 flex-1">
+          <p className="text-slate-500 text-xs mb-1 truncate">{label}</p>
+          <h3 className="text-2xl font-bold tracking-tight">{value}</h3>
+        </div>
+        <div className="p-2 bg-slate-50 rounded-lg ml-2 shrink-0">{icon}</div>
+      </div>
+    </div>
+  );
+};
+
+export default Applications;

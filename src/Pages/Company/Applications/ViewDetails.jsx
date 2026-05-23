@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Mail, Phone, MapPin, Briefcase, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { X, Mail, Phone, MapPin, Briefcase, CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
 import { api } from '../../../utils/api';
+import { toast } from '../../../utils/toast';
 
 const ViewDetails = ({ application, isOpen, onClose, onStatusUpdate }) => {
   const [userDetails, setUserDetails] = useState(null);
@@ -45,7 +46,7 @@ const ViewDetails = ({ application, isOpen, onClose, onStatusUpdate }) => {
         if (onStatusUpdate) {
           onStatusUpdate(application._id, 'shortlisted');
         }
-        alert('✓ Application shortlisted successfully! Candidate will appear in Interview Management.');
+        toast.success('Application shortlisted successfully! Candidate will appear in Interview Management.');
         onClose();
       }
     } catch (err) {
@@ -66,7 +67,7 @@ const ViewDetails = ({ application, isOpen, onClose, onStatusUpdate }) => {
           if (onStatusUpdate) {
             onStatusUpdate(application._id, 'rejected');
           }
-          alert('✓ Application rejected successfully!');
+          toast.success('Application rejected successfully!');
           onClose();
         }
       } catch (err) {
@@ -88,6 +89,8 @@ const ViewDetails = ({ application, isOpen, onClose, onStatusUpdate }) => {
         return 'text-green-600';
       case 'rejected':
         return 'text-red-600';
+      case 'withdrawn':
+        return 'text-orange-600';
       default:
         return 'text-slate-600';
     }
@@ -103,6 +106,8 @@ const ViewDetails = ({ application, isOpen, onClose, onStatusUpdate }) => {
         return 'bg-green-50 border-green-200';
       case 'rejected':
         return 'bg-red-50 border-red-200';
+      case 'withdrawn':
+        return 'bg-orange-50 border-orange-200';
       default:
         return 'bg-slate-50 border-slate-200';
     }
@@ -146,9 +151,38 @@ const ViewDetails = ({ application, isOpen, onClose, onStatusUpdate }) => {
         {/* Content */}
         <div className="overflow-y-auto flex-1 space-y-0">
           
+          {/* Withdrawal Message Banner */}
+          {application.status === 'withdrawn' && (
+            <div className="m-6 p-4 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-3">
+              <AlertCircle size={20} className="text-orange-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-orange-900 font-semibold">Application Withdrawn</p>
+                <p className="text-orange-800 text-sm mt-1">
+                  {userDetails?.fullname || 'The applicant'} has withdrawn this application.
+                </p>
+                {application.withdrawnAt && (
+                  <p className="text-orange-700 text-xs mt-2">
+                    Withdrawn on {new Date(application.withdrawnAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                )}
+                {application.withdrawalReason && (
+                  <p className="text-orange-800 text-sm mt-2">
+                    <span className="font-medium">Reason:</span> {application.withdrawalReason}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+          
           {error && (
             <div className="m-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
-              {error}
+              <p>{error}</p>
             </div>
           )}
 
@@ -396,26 +430,30 @@ const ViewDetails = ({ application, isOpen, onClose, onStatusUpdate }) => {
             Close
           </button>
 
-          {application.status !== 'rejected' && (
-            <button
-              onClick={handleReject}
-              disabled={updating}
-              className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {updating ? <Loader2 size={16} className="animate-spin" /> : <XCircle size={16} />}
-              Reject
-            </button>
-          )}
+          {application.status !== 'withdrawn' && (
+            <>
+              {application.status !== 'rejected' && (
+                <button
+                  onClick={handleReject}
+                  disabled={updating}
+                  className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {updating ? <Loader2 size={16} className="animate-spin" /> : <XCircle size={16} />}
+                  Reject
+                </button>
+              )}
 
-          {application.status !== 'shortlisted' && application.status !== 'accepted' && (
-            <button
-              onClick={handleShortlist}
-              disabled={updating}
-              className="px-4 py-2 text-sm font-medium bg-blue-900 text-white rounded hover:bg-blue-800 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {updating ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
-              Shortlist
-            </button>
+              {application.status !== 'shortlisted' && application.status !== 'accepted' && (
+                <button
+                  onClick={handleShortlist}
+                  disabled={updating}
+                  className="px-4 py-2 text-sm font-medium bg-blue-900 text-white rounded hover:bg-blue-800 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {updating ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                  Shortlist
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>

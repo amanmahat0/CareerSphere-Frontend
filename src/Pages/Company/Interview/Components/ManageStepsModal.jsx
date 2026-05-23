@@ -128,7 +128,7 @@ export default function ManageStepsModal({ steps, onClose, onSave }) {
 
           {/* Info */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
-            <p className="font-medium mb-1">💡 Tip</p>
+            <p className="font-medium mb-1">Tip</p>
             <p>Drag steps to reorder them. The order determines the progression of candidates through the hiring pipeline.</p>
           </div>
         </div>

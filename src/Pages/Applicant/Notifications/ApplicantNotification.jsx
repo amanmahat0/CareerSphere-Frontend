@@ -1,382 +1,285 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Bell, CheckCircle, Clock, XCircle, AlertCircle, Building2, Briefcase,
-  Calendar, TrendingUp, MessageSquare, Loader2
-} from 'lucide-react';
-import Sidebar from '../Components/Applicant Sidebar';
-import DashboardHeader from '../../../Components/DashboardHeader';
-import { api } from '../../../utils/api';
-
-const statusStyles = {
-  pending: {
-    bg: 'bg-yellow-50',
-    border: 'border-yellow-200',
-    text: 'text-yellow-900',
-    badge: 'bg-yellow-100 text-yellow-700',
-    icon: Clock,
-  },
-  shortlisted: {
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    text: 'text-blue-900',
-    badge: 'bg-blue-100 text-blue-700',
-    icon: TrendingUp,
-  },
-  accepted: {
-    bg: 'bg-green-50',
-    border: 'border-green-200',
-    text: 'text-green-900',
-    badge: 'bg-green-100 text-green-700',
-    icon: CheckCircle,
-  },
-  rejected: {
-    bg: 'bg-red-50',
-    border: 'border-red-200',
-    text: 'text-red-900',
-    badge: 'bg-red-100 text-red-700',
-    icon: XCircle,
-  },
-};
-
-const getStatusMessage = (status, interviewStep) => {
-  const messages = {
-    pending: 'Your application is under review',
-    shortlisted: `Great! You\'ve been shortlisted - Currently at ${interviewStep || 'screening'} stage`,
-    accepted: 'Congratulations! Your application has been accepted',
-    rejected: 'Your application was not selected at this time',
-  };
-  return messages[status] || 'Application status unknown';
-};
+import React, { useEffect, useState, useRef } from 'react';
+import io from 'socket.io-client';
+import { CheckCircle2, Calendar, Briefcase, Bell, X } from 'lucide-react';
+import { api } from '../../../utils/api.js';
 
 const ApplicantNotification = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('all'); // 'all', 'pending', 'shortlisted', 'accepted', 'rejected'
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const dropdownRef = useRef(null);
+  const socketRef = useRef(null);
 
-  // Fetch applications to display as notifications
+  // Initialize WebSocket connection
   useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await api.getUserApplications();
-        if (response.success) {
-          // Transform applications into notifications with timestamps
-          const notifData = (response.data || []).map((app) => ({
-            id: app._id,
-            jobTitle: app.jobId?.title,
-            company: app.jobId?.company,
-            status: app.status,
-            interviewStep: app.interviewStep,
-            interviewStatus: app.interviewStatus,
-            appliedDate: app.appliedDate,
-            updatedDate: app.updatedDate,
-            location: app.jobId?.location,
-            jobType: app.jobId?.type,
-            interviewNotes: app.interviewNotes,
-          }));
-          setNotifications(notifData);
-        } else {
-          setError('Failed to load notifications');
+    let userId = localStorage.getItem('userId');
+    const token = localStorage.getItem('token');
+
+    // If userId not found in localStorage, try to extract from user object
+    if (!userId) {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        try {
+          const userObj = JSON.parse(userStr);
+          userId = userObj._id || userObj.id;
+        } catch (e) {
+          console.error('Failed to parse user object:', e);
         }
-      } catch (err) {
-        console.error('Error fetching notifications:', err);
-        setError(err.message || 'Failed to load notifications');
-      } finally {
-        setLoading(false);
+      }
+    }
+
+    if (!userId || !token) {
+      // Silently return if user not authenticated (expected on public pages)
+      return;
+    }
+
+    // Strip /api suffix — Socket.IO connects to the base server, not the API path
+    const socketUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '');
+
+    // Connect to WebSocket server
+    const socket = io(socketUrl, {
+      auth: {
+        token,
+        userId,
+      },
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5,
+    });
+
+    socketRef.current = socket;
+
+    // Handle connection
+    socket.on('connect', () => {
+      setIsConnected(true);
+      socket.emit('join-notifications', userId);
+      fetchNotifications();
+    });
+
+    // Handle new notifications
+    socket.on('new-notification', (notification) => {
+      setNotifications((prev) => [notification, ...prev]);
+      setUnreadCount((prev) => prev + 1);
+    });
+
+    // Handle disconnection
+    socket.on('disconnect', () => {
+      setIsConnected(false);
+    });
+
+    // Handle connection error
+    socket.on('connect_error', (error) => {
+      console.error('WebSocket connection error:', error.message);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  // Fetch notifications from API
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const response = await api.getNotifications();
+      if (response.success) {
+        setNotifications(response.data);
+        setUnreadCount(response.unreadCount);
+      }
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setIsOpen(false);
       }
     };
 
-    fetchNotifications();
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Filter notifications based on active tab
-  const filteredNotifications = notifications.filter((notif) => {
-    if (activeTab === 'all') return true;
-    return notif.status === activeTab;
-  });
-
-  const getStatusIcon = (status) => {
-    const Icon = statusStyles[status]?.icon || AlertCircle;
-    const colorClass = status === 'pending' ? 'text-yellow-600' :
-                       status === 'shortlisted' ? 'text-blue-600' :
-                       status === 'accepted' ? 'text-green-600' :
-                       status === 'rejected' ? 'text-red-600' : 'text-gray-600';
-    return <Icon size={20} className={colorClass} />;
+  // Handle notification click
+  const handleNotificationClick = async (notification) => {
+    if (!notification.read) {
+      try {
+        await api.markNotificationAsRead(notification._id);
+        setNotifications((prev) =>
+          prev.map((notif) =>
+            notif._id === notification._id ? { ...notif, read: true } : notif
+          )
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      } catch (error) {
+        console.error('Failed to mark notification as read:', error);
+      }
+    }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  // Format time
+  const formatTime = (date) => {
+    const now = new Date();
+    const notifDate = new Date(date);
+    const diffMs = now - notifDate;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return notifDate.toLocaleDateString();
   };
 
-  const getNotificationStats = () => {
-    return {
-      total: notifications.length,
-      pending: notifications.filter((n) => n.status === 'pending').length,
-      shortlisted: notifications.filter((n) => n.status === 'shortlisted').length,
-      accepted: notifications.filter((n) => n.status === 'accepted').length,
-      rejected: notifications.filter((n) => n.status === 'rejected').length,
-    };
+  // Get icon based on notification type
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'application_shortlisted':
+        return <CheckCircle2 size={18} className="text-green-600" />;
+      case 'interview_scheduled':
+      case 'interview_reminder':
+        return <Calendar size={18} className="text-blue-600" />;
+      case 'offer_received':
+      case 'hired':
+        return <Briefcase size={18} className="text-purple-600" />;
+      default:
+        return <Bell size={18} className="text-slate-600" />;
+    }
   };
 
-  const stats = getNotificationStats();
+  // Get icon background based on notification type
+  const getIconBgColor = (type) => {
+    switch (type) {
+      case 'application_shortlisted':
+        return 'bg-green-100';
+      case 'interview_scheduled':
+      case 'interview_reminder':
+        return 'bg-blue-100';
+      case 'offer_received':
+      case 'hired':
+        return 'bg-purple-100';
+      default:
+        return 'bg-slate-100';
+    }
+  };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-      <DashboardHeader
-        onMenuClick={() => setSidebarOpen(true)}
-        userRole="Applicant"
-        dashboardPath="/applicant/dashboard"
-        profilePath="/applicant/profile"
-      />
+    <div className="relative" ref={dropdownRef}>
+      {/* Bell Icon Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="relative p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+        title={isConnected ? 'Notifications - Connected' : 'Notifications'}
+      >
+        <Bell size={20} />
 
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="notifications" />
-
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-30"
-            onClick={() => setSidebarOpen(false)}
-          />
+        {/* Connection indicator */}
+        {isConnected && (
+          <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full"></span>
         )}
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8">
-          <div className="max-w-7xl mx-auto space-y-6">
-            {/* Statistics Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-              <div className="bg-white rounded-lg shadow p-4 border-l-4 border-slate-400">
-                <p className="text-slate-600 text-sm font-medium">Total</p>
-                <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
-              </div>
-              <div className="bg-white rounded-lg shadow p-4 border-l-4 border-yellow-400">
-                <p className="text-slate-600 text-sm font-medium">Pending</p>
-                <p className="text-2xl font-bold text-yellow-700">{stats.pending}</p>
-              </div>
-              <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-400">
-                <p className="text-slate-600 text-sm font-medium">Shortlisted</p>
-                <p className="text-2xl font-bold text-blue-700">{stats.shortlisted}</p>
-              </div>
-              <div className="bg-white rounded-lg shadow p-4 border-l-4 border-green-400">
-                <p className="text-slate-600 text-sm font-medium">Accepted</p>
-                <p className="text-2xl font-bold text-green-700">{stats.accepted}</p>
-              </div>
-              <div className="bg-white rounded-lg shadow p-4 border-l-4 border-red-400">
-                <p className="text-slate-600 text-sm font-medium">Rejected</p>
-                <p className="text-2xl font-bold text-red-700">{stats.rejected}</p>
-              </div>
-            </div>
+        {/* Unread badge */}
+        {unreadCount > 0 && (
+          <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
+      </button>
 
-            {/* Filter Tabs */}
-            <div className="bg-white rounded-lg shadow mb-8">
-              <div className="flex overflow-x-auto border-b border-slate-200">
-                {['all', 'pending', 'shortlisted', 'accepted', 'rejected'].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-6 py-3 font-medium text-sm whitespace-nowrap transition-colors ${
-                      activeTab === tab
-                        ? 'text-blue-600 border-b-2 border-blue-600'
-                        : 'text-slate-600 hover:text-slate-900'
+      {/* Dropdown Panel */}
+      {isOpen && (
+        <div className="w-95 bg-white border border-slate-200 rounded-lg shadow-lg z-50 overflow-hidden flex flex-col absolute right-0 mt-2 max-h-96">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+            <h2 className="text-sm font-semibold text-slate-800">Notifications</h2>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="text-slate-500 hover:text-slate-700"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          {/* Notifications List */}
+          <div className="overflow-y-auto flex-1">
+            {loading ? (
+              <div className="flex items-center justify-center p-8">
+                <p className="text-slate-500">Loading...</p>
+              </div>
+            ) : notifications.length === 0 ? (
+              <div className="flex items-center justify-center p-8">
+                <div>
+                  <p className="text-slate-500 text-center">No notifications</p>
+                  <p className="text-xs text-slate-400 text-center mt-2">Check back later for updates</p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col">
+                {notifications.map((notification) => (
+                  <div
+                    key={notification._id}
+                    onClick={() => handleNotificationClick(notification)}
+                    className={`relative flex items-start gap-3 p-4 border-b border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors ${
+                      !notification.read ? 'bg-blue-50' : 'bg-white'
                     }`}
                   >
-                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Loading State */}
-            {loading && (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <Loader2 size={48} className="text-blue-600 animate-spin mx-auto mb-4" />
-                  <p className="text-slate-600 font-medium">Loading notifications...</p>
-                </div>
-              </div>
-            )}
-
-            {/* Error State */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-6 flex items-center gap-3 mb-8">
-                <AlertCircle size={24} className="text-red-600 shrink-0" />
-                <div>
-                  <p className="text-red-900 font-semibold">Error</p>
-                  <p className="text-red-700 text-sm">{error}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Empty State */}
-            {!loading && !error && filteredNotifications.length === 0 && (
-              <div className="text-center py-12 bg-white rounded-lg shadow">
-                <Bell size={48} className="mx-auto text-slate-400 mb-4" />
-                <p className="text-slate-600 font-medium mb-2">No notifications yet</p>
-                <p className="text-slate-500 text-sm">Your application updates will appear here</p>
-              </div>
-            )}
-
-            {/* Notifications List */}
-            {!loading && !error && filteredNotifications.length > 0 && (
-              <div className="space-y-4">
-                {filteredNotifications.map((notification) => {
-                  const styles = statusStyles[notification.status];
-                  const StatusIcon = styles.icon;
-
-                  return (
                     <div
-                      key={notification.id}
-                      className={`rounded-lg shadow-sm border-2 overflow-hidden transition-all hover:shadow-md ${styles.bg} ${styles.border}`}
+                      className={`w-10 h-10 shrink-0 rounded-full ${getIconBgColor(
+                        notification.type
+                      )} flex items-center justify-center mt-0.5`}
                     >
-                      {/* Header with Status */}
-                      <div className="p-6 bg-linear-to-r from-white to-slate-50 border-b border-inherit">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            {/* Company and Job Title */}
-                            <div className="flex items-center gap-3 mb-2">
-                              <Building2 size={18} className={styles.text} />
-                              <h3 className={`text-lg font-bold ${styles.text}`}>
-                                {notification.company || 'Unknown Company'}
-                              </h3>
-                            </div>
-
-                            {/* Job Title */}
-                            <div className="flex items-center gap-3 mb-3">
-                              <Briefcase size={16} className="text-slate-500" />
-                              <p className="text-slate-700 font-semibold">
-                                {notification.jobTitle || 'Unknown Position'}
-                              </p>
-                            </div>
-
-                            {/* Status Badge and Message */}
-                            <div className="flex items-center gap-3 flex-wrap">
-                              <span className={`px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-2 ${styles.badge}`}>
-                                <StatusIcon size={14} />
-                                {notification.status.charAt(0).toUpperCase() + notification.status.slice(1)}
-                              </span>
-                              <p className={`text-sm ${styles.text}`}>
-                                {getStatusMessage(notification.status, notification.interviewStep)}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Status Icon */}
-                          <div className="shrink-0">
-                            {getStatusIcon(notification.status)}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Details Section */}
-                      <div className="p-6 space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {/* Location and Type */}
-                          <div>
-                            <p className="text-xs font-semibold text-slate-600 uppercase mb-1">Location</p>
-                            <p className="text-slate-900">{notification.location || 'Not specified'}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs font-semibold text-slate-600 uppercase mb-1">Job Type</p>
-                            <p className="text-slate-900">{notification.jobType || 'Not specified'}</p>
-                          </div>
-
-                          {/* Applied Date */}
-                          <div>
-                            <p className="text-xs font-semibold text-slate-600 uppercase mb-1">Applied On</p>
-                            <div className="flex items-center gap-2">
-                              <Calendar size={14} className="text-slate-500" />
-                              <p className="text-slate-900">{formatDate(notification.appliedDate)}</p>
-                            </div>
-                          </div>
-
-                          {/* Last Updated */}
-                          <div>
-                            <p className="text-xs font-semibold text-slate-600 uppercase mb-1">Last Updated</p>
-                            <div className="flex items-center gap-2">
-                              <Clock size={14} className="text-slate-500" />
-                              <p className="text-slate-900">{formatDate(notification.updatedDate)}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Interview Status and Stage */}
-                        {notification.status === 'shortlisted' && (
-                          <div className="bg-white rounded-lg p-4 border border-slate-200">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <p className="text-xs font-semibold text-slate-600 uppercase mb-1">Interview Stage</p>
-                                <p className="text-slate-900 font-medium">
-                                  {notification.interviewStep?.charAt(0).toUpperCase() + notification.interviewStep?.slice(1) || 'Screening'}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-xs font-semibold text-slate-600 uppercase mb-1">Interview Status</p>
-                                <p className={`font-medium ${
-                                  notification.interviewStatus === 'completed' ? 'text-green-700' :
-                                  notification.interviewStatus === 'in progress' ? 'text-blue-700' :
-                                  notification.interviewStatus === 'pending' ? 'text-yellow-700' :
-                                  'text-slate-700'
-                                }`}>
-                                  {notification.interviewStatus?.charAt(0).toUpperCase() + notification.interviewStatus?.slice(1) || 'Pending'}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Interview Notes */}
-                        {notification.interviewNotes && (
-                          <div className="bg-white rounded-lg p-4 border border-slate-200">
-                            <div className="flex items-start gap-3">
-                              <MessageSquare size={16} className="text-slate-500 mt-1 shrink-0" />
-                              <div>
-                                <p className="text-xs font-semibold text-slate-600 uppercase mb-2">Company Notes</p>
-                                <p className="text-slate-700 leading-relaxed">{notification.interviewNotes}</p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Status-specific Messages */}
-                        {notification.status === 'rejected' && (
-                          <div className="bg-red-100 rounded-lg p-4 border border-red-300">
-                            <p className="text-red-900 text-sm">
-                              <span className="font-semibold">Feedback:</span> Don't be discouraged! This is a great opportunity to grow. Keep applying and improving your skills.
-                            </p>
-                          </div>
-                        )}
-
-                        {notification.status === 'accepted' && (
-                          <div className="bg-green-100 rounded-lg p-4 border border-green-300">
-                            <p className="text-green-900 text-sm">
-                              <span className="font-semibold">Congratulations!</span> You've been selected! The company will contact you soon with next steps.
-                            </p>
-                          </div>
-                        )}
-
-                        {notification.status === 'pending' && (
-                          <div className="bg-yellow-100 rounded-lg p-4 border border-yellow-300">
-                            <p className="text-yellow-900 text-sm">
-                              <span className="font-semibold">Status:</span> Your application is being reviewed by the company. We'll notify you as soon as there's an update.
-                            </p>
-                          </div>
-                        )}
-                      </div>
+                      {getNotificationIcon(notification.type)}
                     </div>
-                  );
-                })}
+                    <div className="pr-4 flex-1">
+                      <h3 className="text-sm font-medium text-slate-900 mb-1">
+                        {notification.type
+                          .split('_')
+                          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                          .join(' ')}
+                      </h3>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        {notification.message}
+                      </p>
+                      <span className="text-[11px] text-slate-500 mt-2 block">
+                        {formatTime(notification.createdAt)}
+                      </span>
+                    </div>
+                    {/* Unread Dot */}
+                    {!notification.read && (
+                      <div className="absolute right-4 top-4 w-2 h-2 rounded-full bg-blue-600 shrink-0"></div>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </div>
-        </main>
-      </div>
+
+          {/* Footer */}
+          {notifications.length > 0 && (
+            <div className="border-t border-slate-200 p-3 flex justify-center items-center">
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-sm text-blue-500 hover:text-blue-600 font-medium transition-colors"
+              >
+                Close notifications
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

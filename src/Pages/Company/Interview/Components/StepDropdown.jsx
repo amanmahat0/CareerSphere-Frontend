@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { ChevronDown, Check, Zap, Loader2 } from 'lucide-react';
 import { api } from '../../../../utils/api';
+import { toast } from '../../../../utils/toast';
 
 const INTERVIEW_STEPS = [
   { id: 1, name: 'Shortlisted', value: 'shortlisted'},
-  { id: 2, name: 'Test', value: 'test', icon: '✏️' },
-  { id: 3, name: 'Interview', value: 'interview', icon: '🎤' },
-  { id: 4, name: 'Offer', value: 'offer', icon: '📄' },
-  { id: 5, name: 'Hired', value: 'hired', icon: '🎉' },
+  { id: 2, name: 'Test', value: 'test' },
+  { id: 3, name: 'Interview', value: 'interview' },
+  { id: 4, name: 'Offer', value: 'offer' },
+  { id: 5, name: 'Hired', value: 'hired'},
 ];
 
 export default function StepDropdown({ candidate, onStepUpdate, onSkipStep }) {
@@ -32,7 +33,7 @@ export default function StepDropdown({ candidate, onStepUpdate, onSkipStep }) {
       }
     } catch (err) {
       console.error('Error updating step:', err);
-      alert('Failed to update step');
+      toast.error('Failed to update step');
     } finally {
       setIsLoading(false);
     }
@@ -57,7 +58,7 @@ export default function StepDropdown({ candidate, onStepUpdate, onSkipStep }) {
       }
     } catch (err) {
       console.error('Error skipping step:', err);
-      alert('Failed to skip step');
+      toast.error('Failed to skip step');
     } finally {
       setIsLoading(false);
     }

@@ -41,9 +41,19 @@ export const api = {
       if (!response.ok) {
         // Handle 401 - Clear token and redirect to login
         if (response.status === 401) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          window.location.href = "/login";
+          // Auth endpoints (login/signup) return 401 for bad credentials — don't redirect, let the form show the error
+          const isAuthEndpoint = endpoint.startsWith('/auth/');
+          if (!isAuthEndpoint) {
+            let loginPath = "/applicant/login";
+            try {
+              const userData = JSON.parse(localStorage.getItem("user") || "{}");
+              if (userData.userType === "institution") loginPath = "/company/login";
+              else if (userData.userType === "admin") loginPath = "/admin";
+            } catch {}
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            window.location.href = loginPath;
+          }
           throw new Error(data.message || "Session expired. Please login again");
         }
         throw new Error(data.message || "Something went wrong");
@@ -142,28 +152,36 @@ export const api = {
 
   // Admin APIs - Applicant Management
   async getAllApplicants() {
+    const token = localStorage.getItem("token");
     return this.request("/admin/applicants", {
       method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
     });
   },
 
   async createApplicant(applicantData) {
+    const token = localStorage.getItem("token");
     return this.request("/admin/applicants", {
       method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
       body: applicantData,
     });
   },
 
   async updateApplicant(id, applicantData) {
+    const token = localStorage.getItem("token");
     return this.request(`/admin/applicants/${id}`, {
       method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
       body: applicantData,
     });
   },
 
   async deleteApplicant(id) {
+    const token = localStorage.getItem("token");
     return this.request(`/admin/applicants/${id}`, {
       method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
     });
   },
 
@@ -269,6 +287,26 @@ export const api = {
     });
   },
 
+  async getAllApplications() {
+    const token = localStorage.getItem("token");
+    return this.request("/applications", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
+  async getInterviewSchedule() {
+    const token = localStorage.getItem("token");
+    return this.request("/applications/interviews/schedule", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
   async getCompanyApplications(companyName = null) {
     const token = localStorage.getItem("token");
     let company = companyName;
@@ -309,25 +347,21 @@ export const api = {
 
   // Shortlist application
   async shortlistApplication(applicationId) {
+    const token = localStorage.getItem("token");
     return this.request(`/applications/${applicationId}/shortlist`, {
       method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
       body: {},
     });
   },
 
   // Reject application
   async rejectApplication(applicationId) {
+    const token = localStorage.getItem("token");
     return this.request(`/applications/${applicationId}/reject`, {
       method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
       body: {},
-    });
-  },
-
-  // Update interview step
-  async updateInterviewStep(applicationId, interviewData) {
-    return this.request(`/applications/${applicationId}/interview`, {
-      method: "PUT",
-      body: interviewData,
     });
   },
 
@@ -400,48 +434,256 @@ export const api = {
 
   // Admin APIs - Company Management
   async getAllCompanies() {
+    const token = localStorage.getItem("token");
     return this.request("/admin/companies", {
       method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
     });
   },
 
   async getCompanyDetailsAdmin(companyId) {
+    const token = localStorage.getItem("token");
     return this.request(`/admin/companies/${companyId}`, {
       method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
     });
   },
 
   async verifyCompany(companyId, adminId, adminNotes = "") {
+    const token = localStorage.getItem("token");
     return this.request(`/admin/companies/${companyId}/verify`, {
       method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
       body: { adminId, adminNotes },
     });
   },
 
   async rejectCompany(companyId, reason, adminNotes = "") {
+    const token = localStorage.getItem("token");
     return this.request(`/admin/companies/${companyId}/reject`, {
       method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
       body: { reason, adminNotes },
     });
   },
 
   async deleteCompanyAdmin(companyId) {
+    const token = localStorage.getItem("token");
     return this.request(`/admin/companies/${companyId}`, {
       method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
     });
   },
 
   async createCompany(companyData) {
+    const token = localStorage.getItem("token");
     return this.request("/admin/companies", {
       method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
       body: companyData,
     });
   },
 
   async updateCompany(id, companyData) {
+    const token = localStorage.getItem("token");
     return this.request(`/admin/companies/${id}`, {
       method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
       body: companyData,
+    });
+  },
+
+  // Application Management APIs (New step-specific endpoints)
+  async assignTest(applicationId, testData) {
+    const token = localStorage.getItem("token");
+    return this.request(`/applications/${applicationId}/interview/test`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: testData,
+    });
+  },
+
+  async submitTestResult(applicationId, resultData) {
+    const token = localStorage.getItem("token");
+    return this.request(`/applications/${applicationId}/interview/test-result`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: resultData,
+    });
+  },
+
+  async markTestSubmitted(applicationId) {
+    const token = localStorage.getItem("token");
+    return this.request(`/applications/${applicationId}/test-submitted`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: {},
+    });
+  },
+
+  async scheduleInterview(applicationId, interviewData) {
+    const token = localStorage.getItem("token");
+    return this.request(`/applications/${applicationId}/interview/schedule`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: interviewData,
+    });
+  },
+
+  async submitInterviewResult(applicationId, resultData) {
+    const token = localStorage.getItem("token");
+    return this.request(`/applications/${applicationId}/interview/result`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: resultData,
+    });
+  },
+
+  async sendOffer(applicationId, offerData) {
+    const token = localStorage.getItem("token");
+    return this.request(`/applications/${applicationId}/interview/offer`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: offerData,
+    });
+  },
+
+  async respondToOfferWithNegotiation(applicationId, counterData) {
+    const token = localStorage.getItem("token");
+    return this.request(`/applications/${applicationId}/interview/offer-response`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: counterData,
+    });
+  },
+
+  async confirmHire(applicationId, hireData) {
+    const token = localStorage.getItem("token");
+    return this.request(`/applications/${applicationId}/interview/hire`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: hireData,
+    });
+  },
+
+  async withdrawApplication(applicationId, reason) {
+    const token = localStorage.getItem("token");
+    return this.request(`/applications/${applicationId}/withdraw`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: { withdrawalReason: reason },
+    });
+  },
+
+  async getApplicationAuditLog(applicationId) {
+    const token = localStorage.getItem("token");
+    return this.request(`/applications/${applicationId}/audit-log`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
+  async getCompanyAnalytics() {
+    const token = localStorage.getItem("token");
+    return this.request("/applications/company/analytics", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
+  async getScheduleForDate(date) {
+    const token = localStorage.getItem("token");
+    return this.request(`/applications/company/schedule?date=${date}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
+  // Updated updateInterviewStep to call appropriate endpoint
+  async updateInterviewStep(applicationId, interviewData) {
+    const token = localStorage.getItem("token");
+    const { interviewStep } = interviewData;
+    
+    // Route to appropriate endpoint based on step
+    let endpoint = `/applications/${applicationId}/interview`;
+    switch (interviewStep) {
+      case "test":
+        endpoint = `/applications/${applicationId}/interview/test`;
+        break;
+      case "interview":
+        endpoint = `/applications/${applicationId}/interview/schedule`;
+        break;
+      case "offer":
+        endpoint = `/applications/${applicationId}/interview/offer`;
+        break;
+      case "hired":
+        endpoint = `/applications/${applicationId}/interview/hire`;
+        break;
+    }
+
+    return this.request(endpoint, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: interviewData,
+    });
+  },
+
+  // Notification APIs
+  async getNotifications() {
+    const token = localStorage.getItem("token");
+    return this.request("/notifications", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
+  async markNotificationAsRead(notificationId) {
+    const token = localStorage.getItem("token");
+    return this.request(`/notifications/${notificationId}/read`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: {},
+    });
+  },
+
+  async markAllNotificationsAsRead() {
+    const token = localStorage.getItem("token");
+    return this.request("/notifications/read-all", {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: {},
     });
   },
 };

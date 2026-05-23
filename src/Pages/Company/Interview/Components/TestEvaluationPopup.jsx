@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { api } from '../../../../utils/api';
+import { toast } from '../../../../utils/toast';
 
 export default function TestEvaluationPopup({ candidate, onClose, onUpdate, onTestEvaluated }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -9,7 +10,7 @@ export default function TestEvaluationPopup({ candidate, onClose, onUpdate, onTe
 
   const handleCompleteTest = async () => {
     if (!feedback.trim()) {
-      alert('Please provide feedback');
+      toast.error('Please provide feedback');
       return;
     }
 
@@ -24,15 +25,17 @@ export default function TestEvaluationPopup({ candidate, onClose, onUpdate, onTe
       const response = await api.updateInterviewStep(candidate._id, updatePayload);
 
       if (response.success) {
-        const message = testResult === 'pass'
-          ? 'Test result saved! Select next step.'
-          : 'Test result saved! Select next step.';
-        alert(message);
+        if (testResult === 'pass') {
+          toast.success('Test PASSED! Candidate moved to Interview Scheduling.');
+        } else {
+          toast.error('Test FAILED! Candidate application rejected.');
+        }
         onTestEvaluated ? onTestEvaluated(response.data) : onUpdate(response.data);
+        onClose();
       }
     } catch (err) {
       console.error('Error completing test:', err);
-      alert('Failed to complete test evaluation');
+      toast.error('Failed to complete test evaluation');
     } finally {
       setIsLoading(false);
     }

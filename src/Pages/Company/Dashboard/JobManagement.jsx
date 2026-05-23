@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Plus, Search, Edit, Trash2, 
-  Briefcase, Loader2
+  Briefcase, Loader2, CheckCircle2
 } from 'lucide-react';
 import PostJob from './PostJob';
 import { api } from '../../../utils/api';
+import { toast } from '../../../utils/toast';
 import CompanySidebar from '../Components/CompanySidebar';
 import DashboardHeader from '../../../Components/DashboardHeader';
 
@@ -46,7 +47,7 @@ const JobManagement = () => {
       await api.deleteJob(id);
       setJobs(jobs.filter(job => job._id !== id));
     } catch (err) {
-      alert(err.message || 'Failed to delete job');
+      toast.error(err.message || 'Failed to delete job');
     }
   };
 
@@ -141,6 +142,30 @@ const JobManagement = () => {
               >
                 <Plus size={18} /> Post New Opportunity
               </button>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard 
+                label="Total Opportunities" 
+                value={jobs.length.toString()} 
+                icon={<Briefcase className="text-blue-600" />} 
+              />
+              <StatCard 
+                label="Jobs" 
+                value={totalJobs.toString()} 
+                icon={<Briefcase className="text-blue-600" />} 
+              />
+              <StatCard 
+                label="Internships" 
+                value={totalInternships.toString()} 
+                icon={<CheckCircle2 className="text-orange-600" />} 
+              />
+              <StatCard 
+                label="Traineeships" 
+                value={totalTraineeships.toString()} 
+                icon={<CheckCircle2 className="text-emerald-600" />} 
+              />
             </div>
 
             {/* PostJob Modal */}
@@ -290,6 +315,20 @@ const MiniStat = ({ label, value, color = "blue" }) => {
     <div className={`bg-white p-5 lg:p-6 rounded-xl border border-slate-200 border-l-4 ${colorMap[color]} shadow-sm hover:shadow-md transition-shadow duration-200`}>
       <p className="text-slate-500 text-xs lg:text-sm mb-1 uppercase tracking-wider">{label}</p>
       <h2 className="text-2xl lg:text-3xl font-bold tracking-tight">{value}</h2>
+    </div>
+  );
+};
+
+const StatCard = ({ label, value, icon }) => {
+  return (
+    <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="flex justify-between items-start">
+        <div className="min-w-0 flex-1">
+          <p className="text-slate-500 text-xs mb-1 truncate">{label}</p>
+          <h3 className="text-2xl font-bold tracking-tight">{value}</h3>
+        </div>
+        <div className="p-2 bg-slate-50 rounded-lg ml-2 shrink-0">{icon}</div>
+      </div>
     </div>
   );
 };

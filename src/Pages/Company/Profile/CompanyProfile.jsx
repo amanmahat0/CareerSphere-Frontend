@@ -22,7 +22,8 @@ import {
   CheckCircle,
   XCircle,
   Download,
-  Loader2
+  Loader2,
+  Briefcase
 } from 'lucide-react';
 import CompanySidebar from '../Components/CompanySidebar';
 import CompanyChangePassword from '../ForgotPassword/CompanyChangePassword';
@@ -652,6 +653,15 @@ const CompanyProfile = () => {
                           options={companySizeOptions}
                         />
                         <InputField
+                          label="Industry"
+                          name="industry"
+                          type="text"
+                          value={editFormData.industry || ''}
+                          onChange={handleInputChange}
+                          icon={<Briefcase className="text-slate-500" size={16} />}
+                          placeholder="e.g. Software Development, Finance"
+                        />
+                        <InputField
                           label="Location"
                           name="address"
                           type="text"
@@ -687,15 +697,20 @@ const CompanyProfile = () => {
                           label="Company Name" 
                           value={profileData?.companyName || 'Not provided'} 
                         />
-                        <InfoItem 
-                          icon={<Users className="text-slate-500" size={16} />} 
-                          label="Company Size" 
-                          value={getCompanySizeLabel(profileData?.companySize)} 
+                        <InfoItem
+                          icon={<Users className="text-slate-500" size={16} />}
+                          label="Company Size"
+                          value={getCompanySizeLabel(profileData?.companySize)}
                         />
-                        <InfoItem 
-                          icon={<MapPin className="text-purple-500" size={16} />} 
-                          label="Location" 
-                          value={profileData?.address || 'Not provided'} 
+                        <InfoItem
+                          icon={<Briefcase className="text-slate-500" size={16} />}
+                          label="Industry"
+                          value={profileData?.industry || 'Not provided'}
+                        />
+                        <InfoItem
+                          icon={<MapPin className="text-purple-500" size={16} />}
+                          label="Location"
+                          value={profileData?.address || 'Not provided'}
                         />
                         <InfoItem 
                           icon={<Globe className="text-blue-500" size={16} />} 

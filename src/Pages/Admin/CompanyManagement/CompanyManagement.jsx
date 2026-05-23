@@ -8,6 +8,7 @@ import AdminSidebar from '../Components/AdminSidebar';
 import DashboardHeader from '../../../Components/DashboardHeader';
 import CompanyDetailsModal from '../Components/CompanyDetailsModal';
 import { api } from '../../../utils/api';
+import { toast } from '../../../utils/toast';
 
 const CompanyManagement = () => {
   const navigate = useNavigate();
@@ -143,7 +144,7 @@ const CompanyManagement = () => {
         await api.deleteCompanyAdmin(companyId);
         setCompanies(prev => prev.filter(c => c.id !== companyId));
       } catch (err) {
-        alert('Error deleting company: ' + err.message);
+        toast.error('Error deleting company: ' + err.message);
       }
     }
   };
@@ -264,7 +265,6 @@ const CompanyManagement = () => {
                         <th className="px-4 py-4 w-12">S.N</th>
                         <th className="px-4 lg:px-6 py-4">Company</th>
                         <th className="px-4 py-4">Email</th>
-                        <th className="px-4 py-4 hidden md:table-cell">Industry</th>
                         <th className="px-4 py-4 hidden lg:table-cell">Size</th>
                         <th className="px-4 py-4 text-center">Docs</th>
                         <th className="px-4 py-4 text-center">Status</th>
@@ -280,7 +280,6 @@ const CompanyManagement = () => {
                               <p className="font-semibold text-slate-700">{company.companyName}</p>
                             </td>
                             <td className="px-4 py-4 text-slate-600 text-xs">{company.email}</td>
-                            <td className="px-4 py-4 text-slate-600 hidden md:table-cell text-xs">{company.industry || '-'}</td>
                             <td className="px-4 py-4 text-slate-600 hidden lg:table-cell text-xs">{company.companySize || '-'}</td>
                             <td className="px-4 py-4">
                               <div className="flex justify-center">

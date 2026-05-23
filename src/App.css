@@ -9,6 +9,9 @@
   background: #ffffff;
   border-bottom: 1px solid #0000001a;
   box-shadow: 0 1px 2px -1px #0000001a, 0 1px 3px #0000001a;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 .header__inner {
@@ -50,18 +53,18 @@
 
 .header__nav-link {
   font-weight: 700;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 16px;
+  line-height: 24px;
   color: #495565;
   transition: color 0.2s ease;
 }
 
 .header__nav-link:hover {
-  color: #155cfb;
+  color: #155dfc;
 }
 
 .header__nav-link.is-active {
-  color: #155cfb;
+  color: #155dfc;
 }
 
 .header__actions {

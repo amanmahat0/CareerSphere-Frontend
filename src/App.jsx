@@ -1,5 +1,6 @@
 import './App.css'
 import { Routes, Route } from 'react-router-dom';
+import Alert from './Pages/Alert/Alert.jsx';
 import HomePage from './Pages/Home/home.jsx';
 import ApplicantLogin from './Pages/Applicant/Login/ApplicantLogin.jsx';
 import CompanyLogin from './Pages/Company/Login/CompanyLogin.jsx';
@@ -21,17 +22,27 @@ import InterviewManagement from './Pages/Company/Interview/InterviewManagement.j
 import AdminDashboard from './Pages/Admin/Dashboard/AdminDashboard.jsx';
 import ApplicantManagement from './Pages/Admin/ApplicantManagement/ApplicantManagement.jsx';
 import CompanyManagement from './Pages/Admin/CompanyManagement/CompanyManagement.jsx';
+import AdminApplications from './Pages/Admin/ApplicationManagement/Applications.jsx';
+import AdminInterview from './Pages/Admin/Interview/AdminInterview.jsx';
 import ContactPage  from './Components/Contact.jsx';
 import { AboutPage } from './Components/About.jsx';
 import Opportunities from './Pages/Opportunities/Oppotunities.jsx';
 import OpportunityDetails from './Pages/Opportunities/OppotunitiesDetails.jsx';
+import HowItWorks from './Pages/Info/HowItWorks.jsx';
+import HelpCenter from './Pages/Info/HelpCenter.jsx';
+import PrivacyPolicy from './Pages/Info/PrivacyPolicy.jsx';
+import TermsOfService from './Pages/Info/TermsOfService.jsx';
+import CookiePolicy from './Pages/Info/CookiePolicy.jsx';
+import Accessibility from './Pages/Info/Accessibility.jsx';
 
 function App() {
   return (
+    <>
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/applicant/login" element={<ApplicantLogin />} />
       <Route path="/login" element={<ApplicantLogin />} />
+      <Route path="/signin" element={<ApplicantSignup />} />
       <Route path="/company/login" element={<CompanyLogin />} />
       <Route path="/applicant/signup" element={<ApplicantSignup />} />
       <Route path="/company/signup" element={<CompanySignup />} />
@@ -45,26 +56,38 @@ function App() {
       <Route path="/applicant/interviews" element={<InterviewSchedule />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/about" element={<AboutPage />} />
-      
+
       {/* Opportunities Routes */}
       <Route path="/opportunities" element={<Opportunities />} />
       <Route path="/opportunities/:id" element={<OpportunityDetails />} />
       <Route path="/jobs" element={<Opportunities />} />
       <Route path="/internships" element={<Opportunities />} />
-      
+
       {/* Company Routes */}
       <Route path="/company/dashboard" element={<CompanyDashboard />} />
       <Route path="/company/profile" element={<CompanyProfile />} />
       <Route path="/company/jobs" element={<JobManagement />} />
       <Route path="/company/applications" element={<Applications />} />
       <Route path="/company/interviews" element={<InterviewManagement />} />
-      
+
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminDashboard />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/applicants" element={<ApplicantManagement />} />
       <Route path="/admin/companies" element={<CompanyManagement />} />
+      <Route path="/admin/applications" element={<AdminApplications />} />
+      <Route path="/admin/interviews" element={<AdminInterview />} />
+
+      {/* Info / Legal Routes */}
+      <Route path="/how-it-works" element={<HowItWorks />} />
+      <Route path="/help" element={<HelpCenter />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/cookies" element={<CookiePolicy />} />
+      <Route path="/accessibility" element={<Accessibility />} />
     </Routes>
+    <Alert />
+    </>
   );
 }
 

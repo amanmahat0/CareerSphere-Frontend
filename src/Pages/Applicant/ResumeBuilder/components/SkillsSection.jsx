@@ -164,7 +164,7 @@ const _SkillsSection = ({ data, onChange, onNext, onBack }) => {
         
         {data.length > 0 && (
           <p className="text-green-600 text-sm bg-green-50 p-3 rounded-lg font-medium">
-            ✓ Great! You have {data.length} skill{data.length > 1 ? 's' : ''} added.
+            Great! You have {data.length} skill{data.length > 1 ? 's' : ''} added.
           </p>
         )}
       </div>

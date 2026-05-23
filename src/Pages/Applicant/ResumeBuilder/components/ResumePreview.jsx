@@ -5,7 +5,7 @@ const ResumePreview = memo(({ data }) => {
 
   return (
     <div className="bg-white shadow-lg print:shadow-none" id="resume-preview">
-      <div className="p-10">
+      <div className="p-10 pb-16">
         {/* Header */}
         <div className="border-b-2 border-slate-900 pb-4 mb-6">
           <h1 className="text-2xl font-bold text-slate-900 mb-2">
@@ -143,7 +143,7 @@ const ResumePreview = memo(({ data }) => {
 
         {/* Certifications */}
         {certifications.length > 0 && certifications.some((c) => c.title || c.name) && (
-          <div>
+          <div className="mb-0">
             <h2 className="text-sm font-bold text-slate-900 mb-2 uppercase tracking-wide border-b border-slate-300 pb-1">
               Certifications
             </h2>

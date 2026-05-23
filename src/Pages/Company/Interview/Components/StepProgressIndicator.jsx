@@ -2,11 +2,11 @@ import React from 'react';
 import { CheckCircle, Circle } from 'lucide-react';
 
 const INTERVIEW_STEPS = [
-  { id: 1, name: 'Shortlisted', value: 'shortlisted', icon: '✓' },
-  { id: 2, name: 'Test', value: 'test', icon: '✏️' },
-  { id: 3, name: 'Interview', value: 'interview', icon: '🎤' },
-  { id: 4, name: 'Offer', value: 'offer', icon: '📄' },
-  { id: 5, name: 'Hired', value: 'hired', icon: '🎉' },
+  { id: 1, name: 'Shortlisted', value: 'shortlisted', icon: 'Check' },
+  { id: 2, name: 'Test', value: 'test', icon: 'Test' },
+  { id: 3, name: 'Interview', value: 'interview', icon: 'Interview' },
+  { id: 4, name: 'Offer', value: 'offer', icon: 'Offer' },
+  { id: 5, name: 'Hired', value: 'hired', icon: 'Hired' },
 ];
 
 export default function StepProgressIndicator({ currentStep, candidateName }) {

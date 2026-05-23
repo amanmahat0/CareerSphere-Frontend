@@ -25,10 +25,8 @@ const AdminSidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
     { icon: Briefcase, label: 'Company Management', id: 'companies', path: '/admin/companies' },
     { icon: FileText, label: 'Applications', id: 'applications', path: '/admin/applications' },
     { icon: Calendar, label: 'Interviews', id: 'interviews', path: '/admin/interviews' },
-    { icon: FileCheck, label: 'Resumes & Certificates', id: 'documents', path: '/admin/documents' },
     { icon: Bell, label: 'Notifications', id: 'notifications', path: '/admin/notifications' },
-    { icon: BarChart3, label: 'Reports & Analytics', id: 'reports', path: '/admin/reports' },
-    { icon: Megaphone, label: 'Announcements', id: 'announcements', path: '/admin/announcements' },
+    // { icon: BarChart3, label: 'Reports & Analytics', id: 'reports', path: '/admin/reports' },
     { icon: Settings, label: 'Settings', id: 'settings', path: '/admin/settings' },
   ];
 

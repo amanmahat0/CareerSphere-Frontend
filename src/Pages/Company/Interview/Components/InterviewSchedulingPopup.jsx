@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Loader2, AlertTriangle, Check } from 'lucide-react';
 import { api } from '../../../../utils/api';
+import { toast } from '../../../../utils/toast';
 
-export default function InterviewSchedulingPopup({ candidate, onClose, onUpdate }) {
+export default function InterviewSchedulingPopup({ candidate, onClose, onUpdate, onInterviewScheduled }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [checkingConflicts, setCheckingConflicts] = useState(false);
+  const [conflicts, setConflicts] = useState([]);
+  const [showConflictWarning, setShowConflictWarning] = useState(false);
   const [formData, setFormData] = useState({
     interviewType: candidate.interviewType || 'online',
     interviewDate: candidate.interviewDate ? candidate.interviewDate.split('T')[0] : '',
@@ -17,22 +21,61 @@ export default function InterviewSchedulingPopup({ candidate, onClose, onUpdate 
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Check for conflicts when date or time changes
+  useEffect(() => {
+    const checkForConflicts = async () => {
+      if (!formData.interviewDate || !formData.interviewTime) {
+        setConflicts([]);
+        return;
+      }
+
+      setCheckingConflicts(true);
+      try {
+        const dateStr = formData.interviewDate; // YYYY-MM-DD
+        const response = await api.getScheduleForDate(dateStr);
+        
+        if (response.success && response.data) {
+          // Parse the time to get hour
+          const [hours, minutes] = formData.interviewTime.split(':');
+          const selectedHour = parseInt(hours);
+          
+          // Check for conflicts (same date, same hour)
+          const conflictingSchedules = response.data.filter(schedule => {
+            const scheduleTime = new Date(schedule.interviewDate);
+            const scheduleHour = scheduleTime.getHours();
+            return scheduleHour === selectedHour && schedule.applicationId !== candidate._id;
+          });
+
+          setConflicts(conflictingSchedules);
+          setShowConflictWarning(conflictingSchedules.length > 0);
+        }
+      } catch (error) {
+        console.error('Error checking conflicts:', error);
+      } finally {
+        setCheckingConflicts(false);
+      }
+    };
+
+    const debounce = setTimeout(checkForConflicts, 500);
+    return () => clearTimeout(debounce);
+  }, [formData.interviewDate, formData.interviewTime, candidate._id]);
+
   const handleScheduleInterview = async () => {
     // Validation
     if (!formData.interviewDate.trim()) {
-      alert('Please select an interview date');
+      toast.error('Please select an interview date');
       return;
     }
     if (!formData.interviewTime.trim()) {
-      alert('Please enter interview time');
+      toast.error('Please enter interview time');
       return;
     }
     if (formData.interviewType === 'online' && !formData.meetingLink.trim()) {
-      alert('Please provide meeting link for online interview');
+      toast.error('Please provide meeting link for online interview');
       return;
     }
     if (formData.interviewType === 'offline' && !formData.interviewLocation.trim()) {
-      alert('Please provide location for offline interview');
+      toast.error('Please provide location for offline interview');
       return;
     }
 
@@ -52,13 +95,18 @@ export default function InterviewSchedulingPopup({ candidate, onClose, onUpdate 
       const response = await api.updateInterviewStep(candidate._id, updatePayload);
 
       if (response.success) {
-        alert('✓ Interview scheduled successfully!');
-        onUpdate(response.data);
-        onClose();
+        toast.success('Interview scheduled successfully!');
+        // Call the special handler to move to interview result evaluation
+        if (onInterviewScheduled) {
+          onInterviewScheduled(response.data);
+        } else {
+          onUpdate(response.data);
+          onClose();
+        }
       }
     } catch (err) {
       console.error('Error scheduling interview:', err);
-      alert('Failed to schedule interview');
+      toast.error('Failed to schedule interview');
     } finally {
       setIsLoading(false);
     }
@@ -83,6 +131,29 @@ export default function InterviewSchedulingPopup({ candidate, onClose, onUpdate 
 
         {/* Content */}
         <div className="px-6 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
+          
+          {/* Conflict Warning */}
+          {showConflictWarning && conflicts.length > 0 && (
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+              <div className="flex gap-3">
+                <AlertTriangle size={20} className="text-yellow-600 shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-semibold text-yellow-900 mb-1">Schedule Conflicts Detected</p>
+                  <p className="text-yellow-800 mb-2">The following interviews are scheduled at the same time:</p>
+                  <ul className="space-y-1 text-yellow-800 text-xs">
+                    {conflicts.map((conflict, idx) => (
+                      <li key={idx} className="flex items-center gap-2">
+                        <span className="w-1 h-1 bg-yellow-600 rounded-full"></span>
+                        {conflict.userId?.fullname} - {conflict.jobId?.title}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-yellow-800 text-xs mt-2">Consider rescheduling to avoid conflicts.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Interview Type */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">Interview Type</label>
@@ -116,9 +187,13 @@ export default function InterviewSchedulingPopup({ candidate, onClose, onUpdate 
             />
           </div>
 
-          {/* Interview Time */}
+          {/* Interview Time - with loading indicator for conflict check */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Interview Time</label>
+            <label className="text-xs font-bold text-slate-700 mb-1 flex items-center gap-2">
+              Interview Time
+              {checkingConflicts && <Loader2 size={14} className="animate-spin text-blue-600" />}
+              {!checkingConflicts && conflicts.length === 0 && formData.interviewTime && <Check size={14} className="text-green-600" />}
+            </label>
             <input
               type="time"
               value={formData.interviewTime}
@@ -178,7 +253,7 @@ export default function InterviewSchedulingPopup({ candidate, onClose, onUpdate 
           </button>
           <button
             onClick={handleScheduleInterview}
-            disabled={isLoading}
+            disabled={isLoading || (showConflictWarning && conflicts.length > 0 && !window.confirm('Conflicts detected. Continue anyway?'))}
             className="flex-1 px-4 py-2.5 bg-blue-900 text-white rounded-lg text-sm font-semibold hover:bg-blue-950 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}

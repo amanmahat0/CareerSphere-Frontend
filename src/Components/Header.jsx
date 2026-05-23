@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "./Buttons/button";
 import Logo from "./Logo/Logo";
-import { Bell, LogOut, ChevronDown } from "lucide-react";
+import { LogOut, ChevronDown } from "lucide-react";
+import ApplicantNotification from '../Pages/Applicant/Notifications/ApplicantNotification';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -67,18 +68,11 @@ export const Header = ({ isDashboard = false, user = null, onLogout = null }) =>
 
           <div className="header__actions">
             <div className="flex items-center gap-4">
-              <div className="relative cursor-pointer p-2 hover:bg-slate-50 rounded-full transition-colors" onClick={() => navigate("/applicant/notifications")}>
-                <Bell size={20} className="text-slate-400" />
-                {user.notificationCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 bg-red-600 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center border-2 border-white font-bold">
-                    {user.notificationCount}
-                  </span>
-                )}
-              </div>
+              <ApplicantNotification />
               <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
                 <div className="text-right">
-                  <p className="text-sm font-bold leading-tight">{user.name}</p>
-                  <p className="text-xs text-slate-400">{user.role}</p>
+                  <p className="text-base font-bold leading-tight">{user.name}</p>
+                  <p className="text-sm text-slate-400">{user.role}</p>
                 </div>
                 <div className="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold shadow-md">
                   {user.avatar}
@@ -153,13 +147,7 @@ export const Header = ({ isDashboard = false, user = null, onLogout = null }) =>
 
           <div className="header__actions">
             <div className="flex items-center gap-4">
-              {/* Notifications */}
-              <div className="relative cursor-pointer p-2 hover:bg-slate-100 rounded-full transition-colors" onClick={() => navigate("/applicant/notifications")}>
-                <Bell size={20} className="text-slate-500" />
-                <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold">
-                  2
-                </span>
-              </div>
+              <ApplicantNotification />
 
               {/* Profile Dropdown */}
               <div className="relative">
@@ -175,8 +163,8 @@ export const Header = ({ isDashboard = false, user = null, onLogout = null }) =>
                     )}
                   </div>
                   <div className="hidden md:block text-left">
-                    <p className="text-sm font-semibold text-slate-900 leading-tight">{loggedInUser.name || loggedInUser.fullname || "User"}</p>
-                    <p className="text-xs text-slate-500">Applicant</p>
+                    <p className="text-base font-semibold text-slate-900 leading-tight">{loggedInUser.name || loggedInUser.fullname || "User"}</p>
+                    <p className="text-sm text-slate-500">Applicant</p>
                   </div>
                   <ChevronDown size={16} className="text-slate-400 hidden md:block" />
                 </button>

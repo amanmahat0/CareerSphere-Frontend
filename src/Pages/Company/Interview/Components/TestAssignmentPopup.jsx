@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { api } from '../../../../utils/api';
+import { toast } from '../../../../utils/toast';
 
 export default function TestAssignmentPopup({ candidate, onClose, onUpdate }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -26,7 +27,7 @@ export default function TestAssignmentPopup({ candidate, onClose, onUpdate }) {
   const handleAssignTest = async () => {
     // Validation
     if (!formData.testDeadline.trim()) {
-      alert('Please select a deadline');
+      toast.error('Please select a deadline');
       return;
     }
 
@@ -46,13 +47,13 @@ export default function TestAssignmentPopup({ candidate, onClose, onUpdate }) {
       const response = await api.updateInterviewStep(candidate._id, updatePayload);
 
       if (response.success) {
-        alert('✓ Test assigned successfully!');
+        toast.success('Test assigned successfully!');
         onUpdate(response.data);
         onClose();
       }
     } catch (err) {
       console.error('Error assigning test:', err);
-      alert('Failed to assign test');
+      toast.error('Failed to assign test');
     } finally {
       setIsLoading(false);
     }

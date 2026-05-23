@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, AlertCircle, Loader2, Eye, CheckCircle } from 'lucide-react';
+import { Search, Filter, AlertCircle, Loader2, Eye, CheckCircle, Trash2, ChevronRight, Briefcase, UserCheck, Calendar } from 'lucide-react';
 import CompanySidebar from '../Components/CompanySidebar';
 import DashboardHeader from '../../../Components/DashboardHeader';
 import { api } from '../../../utils/api';
+import { toast } from '../../../utils/toast';
 import StepDropdown from './Components/StepDropdown';
 import StepPopup from './Components/StepPopup';
 
@@ -47,6 +48,17 @@ const formatDate = (dateString) => {
   });
 };
 
+const getApplicationStatus = (app) => {
+  // Prioritize explicit status field over interviewStep
+  if (app.status === 'withdrawn') return 'withdrawn';
+  if (app.status === 'rejected') return 'rejected';
+  if (app.status === 'accepted') return 'accepted';
+  if (app.status === 'pending') return 'pending';
+  
+  // If status is something else, use interviewStep
+  return app.interviewStep || 'pending';
+};
+
 export default function InterviewManagement() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [candidates, setCandidates] = useState([]);
@@ -54,6 +66,10 @@ export default function InterviewManagement() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [stepFilter, setStepFilter] = useState('all');
+  
+  // Bulk action states
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
   
   // Popup states
   const [showPopup, setShowPopup] = useState(false);
@@ -70,9 +86,8 @@ export default function InterviewManagement() {
       setError(null);
       const response = await api.getCompanyApplications();
       if (response.success && response.data) {
-        // Filter for shortlisted applications
-        const shortlisted = response.data.filter(app => app.status === 'shortlisted');
-        setCandidates(shortlisted);
+        // Show all applications, not just shortlisted
+        setCandidates(response.data);
       }
     } catch (err) {
       console.error('Error fetching candidates:', err);
@@ -90,16 +105,82 @@ export default function InterviewManagement() {
     setShowPopup(false);
   };
 
+  // Toggle checkbox selection
+  const toggleSelection = (id) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  // Select/deselect all visible candidates
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredCandidates.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredCandidates.map(c => c._id)));
+    }
+  };
+
+  // Bulk reject with sequential calls
+  const handleBulkReject = async () => {
+    if (selectedIds.size === 0) return;
+    
+    if (!window.confirm(`Reject ${selectedIds.size} selected candidates? They will be notified.`)) {
+      return;
+    }
+
+    setBulkActionLoading(true);
+    try {
+      const rejectionReason = prompt('Enter optional rejection feedback for applicants:', '');
+      
+      for (const id of selectedIds) {
+        const candidate = candidates.find(c => c._id === id);
+        if (candidate) {
+          // Use 300ms delay between requests to avoid overwhelming server
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+          await api.updateInterviewStep(id, {
+            interviewStep: 'rejected',
+            interviewFeedback: rejectionReason || '',
+          });
+        }
+      }
+
+      // Refresh data
+      await fetchCandidates();
+      setSelectedIds(new Set());
+      toast.success(`${selectedIds.size} candidates rejected successfully`);
+    } catch (error) {
+      console.error('Error in bulk reject:', error);
+      setError('Failed to reject some candidates: ' + error.message);
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
   // Filter candidates
   const filteredCandidates = candidates.filter(candidate => {
     const matchesSearch = 
       candidate.userId?.fullname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       candidate.jobId?.title?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStep = stepFilter === 'all' || candidate.interviewStep === stepFilter;
+    const currentStatus = getApplicationStatus(candidate);
+    const matchesStep = stepFilter === 'all' || currentStatus === stepFilter;
     
     return matchesSearch && matchesStep;
   });
+
+  // Check for duplicates (same userId + jobId)
+  const getDuplicateWarning = (candidate) => {
+    const duplicateCount = candidates.filter(
+      c => c.userId._id === candidate.userId._id && c.jobId._id === candidate.jobId._id
+    ).length;
+    return duplicateCount > 1 ? duplicateCount : 0;
+  };
 
   if (loading) {
     return (
@@ -143,6 +224,40 @@ export default function InterviewManagement() {
                 <h1 className="text-3xl font-bold text-slate-900">Interview Management</h1>
                 <p className="text-slate-600 mt-1">Track and manage your hiring workflow for shortlisted candidates</p>
               </div>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+              <StatCard 
+                label="Total Candidates" 
+                value={candidates.length.toString()} 
+                icon={<Briefcase className="text-blue-600" />} 
+              />
+              <StatCard 
+                label="Shortlisted" 
+                value={candidates.filter(c => c.interviewStep === 'shortlisted').length.toString()} 
+                icon={<UserCheck className="text-purple-600" />} 
+              />
+              <StatCard 
+                label="Test Phase" 
+                value={candidates.filter(c => c.interviewStep === 'test').length.toString()} 
+                icon={<Briefcase className="text-orange-600" />} 
+              />
+              <StatCard 
+                label="Interview Phase" 
+                value={candidates.filter(c => c.interviewStep === 'interview').length.toString()} 
+                icon={<Calendar className="text-indigo-600" />} 
+              />
+              <StatCard 
+                label="Offer Sent" 
+                value={candidates.filter(c => c.interviewStep === 'offer').length.toString()} 
+                icon={<CheckCircle className="text-amber-600" />} 
+              />
+              <StatCard 
+                label="Hired" 
+                value={candidates.filter(c => c.interviewStep === 'hired').length.toString()} 
+                icon={<CheckCircle className="text-green-600" />} 
+              />
             </div>
 
             {/* Error alert */}
@@ -190,6 +305,14 @@ export default function InterviewManagement() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-slate-200 bg-slate-50">
+                      <th className="px-6 py-3 text-left">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.size === filteredCandidates.length && filteredCandidates.length > 0}
+                          onChange={toggleSelectAll}
+                          className="w-4 h-4 rounded border-slate-300"
+                        />
+                      </th>
                       <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">Candidate</th>
                       <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">Position</th>
                       <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">Applied Date</th>
@@ -201,43 +324,63 @@ export default function InterviewManagement() {
                   <tbody>
                     {filteredCandidates.length === 0 ? (
                       <tr>
-                        <td colSpan="6" className="px-6 py-8 text-center text-slate-500">
-                          {candidates.length === 0 ? 'No shortlisted candidates yet' : 'No candidates match your filters'}
+                        <td colSpan="7" className="px-6 py-8 text-center text-slate-500">
+                          {candidates.length === 0 ? 'No applications yet' : 'No candidates match your filters'}
                         </td>
                       </tr>
                     ) : (
-                      filteredCandidates.map((candidate) => (
-                        <tr key={candidate._id} className="border-b border-slate-200 hover:bg-slate-50 transition-colors">
-                          <td className="px-6 py-4">
-                            <div className="font-medium text-slate-900">{candidate.userId?.fullname}</div>
-                            <div className="text-sm text-slate-600">{candidate.userId?.email}</div>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-600">{candidate.jobId?.title}</td>
-                          <td className="px-6 py-4 text-sm text-slate-600">{formatDate(candidate.appliedDate)}</td>
-                          <td className="px-6 py-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStepColor(candidate.interviewStep)}`}>
-                              {candidate.interviewStep === 'shortlisted' ? '✓ Shortlisted' : candidate.interviewStep?.charAt(0).toUpperCase() + candidate.interviewStep?.slice(1)}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(candidate.interviewStatus)}`}>
-                              {candidate.interviewStatus?.charAt(0).toUpperCase() + candidate.interviewStatus?.slice(1)}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <button
-                              onClick={() => {
-                                setSelectedCandidate(candidate);
-                                setShowPopup(true);
-                              }}
-                              className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
-                            >
-                              <Eye className="w-4 h-4" />
-                              Manage
-                            </button>
-                          </td>
-                        </tr>
-                      ))
+                      filteredCandidates.map((candidate) => {
+                        const duplicateCount = getDuplicateWarning(candidate);
+                        return (
+                          <tr key={candidate._id} className={`border-b border-slate-200 hover:bg-slate-50 transition-colors ${selectedIds.has(candidate._id) ? 'bg-blue-50' : ''}`}>
+                            <td className="px-6 py-4">
+                              <input
+                                type="checkbox"
+                                checked={selectedIds.has(candidate._id)}
+                                onChange={() => toggleSelection(candidate._id)}
+                                className="w-4 h-4 rounded border-slate-300"
+                              />
+                            </td>
+                            <td className="px-6 py-4">
+                              <div>
+                                <div className="font-medium text-slate-900">{candidate.userId?.fullname}</div>
+                                <div className="text-sm text-slate-600">{candidate.userId?.email}</div>
+                                {duplicateCount > 1 && (
+                                  <div className="mt-1">
+                                    <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded">
+                                      Duplicate ({duplicateCount})
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-slate-600">{candidate.jobId?.title}</td>
+                            <td className="px-6 py-4 text-sm text-slate-600">{formatDate(candidate.appliedDate)}</td>
+                            <td className="px-6 py-4">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStepColor(getApplicationStatus(candidate))}`}>
+                                {getApplicationStatus(candidate)?.charAt(0).toUpperCase() + getApplicationStatus(candidate)?.slice(1)}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(candidate.interviewStatus)}`}>
+                                {candidate.interviewStatus?.charAt(0).toUpperCase() + candidate.interviewStatus?.slice(1)}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <button
+                                onClick={() => {
+                                  setSelectedCandidate(candidate);
+                                  setShowPopup(true);
+                                }}
+                                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                              >
+                                <Eye className="w-4 h-4" />
+                                Manage
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -248,6 +391,42 @@ export default function InterviewManagement() {
             <div className="text-sm text-slate-600">
               Showing {filteredCandidates.length} of {candidates.length} candidates
             </div>
+
+            {/* Floating Bulk Action Bar */}
+            {selectedIds.size > 0 && (
+              <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg p-4">
+                <div className="max-w-7xl mx-auto flex items-center justify-between">
+                  <div className="text-sm font-medium text-slate-900">
+                    {selectedIds.size} candidate{selectedIds.size !== 1 ? 's' : ''} selected
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setSelectedIds(new Set())}
+                      className="px-4 py-2 border border-slate-300 hover:border-slate-400 rounded-lg text-sm font-medium text-slate-700 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleBulkReject}
+                      disabled={bulkActionLoading}
+                      className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                    >
+                      {bulkActionLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="w-4 h-4" />
+                          Reject Selected
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </main>
       </div>
@@ -263,6 +442,20 @@ export default function InterviewManagement() {
           onUpdate={handleStepUpdate}
         />
       )}
+    </div>
+  );
+}
+
+const StatCard = ({ label, value, icon }) => {
+  return (
+    <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="flex justify-between items-start">
+        <div className="min-w-0 flex-1">
+          <p className="text-slate-500 text-xs mb-1 truncate">{label}</p>
+          <h3 className="text-2xl font-bold tracking-tight">{value}</h3>
+        </div>
+        <div className="p-2 bg-slate-50 rounded-lg ml-2 shrink-0">{icon}</div>
+      </div>
     </div>
   );
 }

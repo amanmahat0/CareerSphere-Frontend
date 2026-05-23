@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Header } from "../../Components/Header";
 import Footer from "../../Components/Footer";
 import { Button } from "../../ui/button";
-import { Card } from "../../ui/card";
 import { Badge } from "../../ui/badge";
 import { Input } from "../../ui/input";
 import { Alert, AlertDescription } from "../../ui/alert";
 import {
-  ArrowLeft,
   Search,
   MapPin,
   Briefcase,
@@ -16,29 +14,43 @@ import {
   Clock,
   AlertCircle,
   Building2,
-  Loader2
+  Loader2,
+  ArrowRight,
+  DollarSign,
 } from "lucide-react";
+
+const BACKEND_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
+
+const resolveLogoUrl = (url) => {
+  if (!url) return null;
+  if (url.startsWith("/uploads")) return `${BACKEND_URL}${url}`;
+  return url;
+};
 import { api } from "../../utils/api";
+import { toast } from "../../utils/toast";
 import ApplyModal from "./ApplyNow";
 
-// Nepal cities data
-const nepalCities = [
-  { name: "Kathmandu" },
-  { name: "Pokhara" },
-  { name: "Lalitpur" },
-  { name: "Bhaktapur" },
-  { name: "Biratnagar" },
-  { name: "Birgunj" },
-  { name: "Dharan" },
-  { name: "Butwal" },
-  { name: "Hetauda" },
-  { name: "Chitwan" },
-];
+
+const typeBadge = (type) => {
+  if (!type) return "bg-gray-100 text-gray-600 border-gray-200";
+  const t = type.toLowerCase();
+  if (t === "internship") return "bg-green-50 text-green-700 border-green-200";
+  if (t === "traineeship") return "bg-purple-50 text-purple-700 border-purple-200";
+  return "bg-blue-50 text-blue-700 border-blue-200";
+};
+
+const pathToType = (path) => {
+  if (path === "/jobs") return "Job";
+  if (path === "/internships") return "Internship";
+  return "all";
+};
 
 const Opportunities = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState("all");
+  const [filterType, setFilterType] = useState(() => pathToType(location.pathname));
   const [filterLocation, setFilterLocation] = useState("all");
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,7 +60,10 @@ const Opportunities = () => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
 
-  // Check if user is logged in and fetch resume status
+  useEffect(() => {
+    setFilterType(pathToType(location.pathname));
+  }, [location.pathname]);
+
   useEffect(() => {
     const loadUserAndResumeStatus = async () => {
       const storedUser = localStorage.getItem("user");
@@ -56,38 +71,29 @@ const Opportunities = () => {
         try {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
-          
-          // Fetch resume completion status from API
           try {
             const resumeResponse = await api.getResume();
-            const isResumeComplete = resumeResponse.success && resumeResponse.data && resumeResponse.data.isComplete;
-            setResumeCompleted(isResumeComplete);
-            
-            // Store in localStorage for fallback
-            localStorage.setItem('resumeComplete', JSON.stringify(isResumeComplete));
-          } catch (error) {
-            console.error("Error fetching resume status:", error);
-            // Fall back to localStorage
-            const storedResumeComplete = localStorage.getItem('resumeComplete');
-            setResumeCompleted(storedResumeComplete ? JSON.parse(storedResumeComplete) : false);
+            const isComplete = resumeResponse.success && resumeResponse.data?.isComplete;
+            setResumeCompleted(isComplete);
+            localStorage.setItem("resumeComplete", JSON.stringify(isComplete));
+          } catch {
+            const stored = localStorage.getItem("resumeComplete");
+            setResumeCompleted(stored ? JSON.parse(stored) : false);
           }
-        } catch (error) {
-          console.error("Error parsing user data:", error);
+        } catch {
+          // ignore parse errors
         }
       }
     };
-    
     loadUserAndResumeStatus();
   }, []);
 
-  // Fetch jobs from API
   useEffect(() => {
     const fetchJobs = async () => {
       try {
         setLoading(true);
         setError(null);
         const response = await api.getAllJobs();
-        // Backend returns { success: true, count: ..., jobs: [...] }
         if (response.success && response.jobs) {
           setJobs(response.jobs);
         } else if (Array.isArray(response)) {
@@ -95,38 +101,32 @@ const Opportunities = () => {
         } else {
           setError("Failed to load opportunities.");
         }
-      } catch (err) {
-        console.error("Error fetching jobs:", err);
+      } catch {
         setError("Failed to load opportunities.");
       } finally {
         setLoading(false);
       }
     };
-
     fetchJobs();
   }, []);
 
+  const locationOptions = [...new Set(jobs.map((j) => j.location).filter(Boolean))].sort();
 
-  // Filter opportunities based on search and filters
-  const filteredOpportunities = jobs.filter(opp => {
+  const filteredOpportunities = jobs.filter((opp) => {
+    const q = searchQuery.toLowerCase();
     const matchesSearch =
-      opp.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      opp.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (opp.skills && opp.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase())));
-
+      opp.title?.toLowerCase().includes(q) ||
+      opp.company?.toLowerCase().includes(q) ||
+      opp.skills?.some((s) => s.toLowerCase().includes(q));
     const matchesType = filterType === "all" || opp.type === filterType;
     const matchesLocation = filterLocation === "all" || opp.location === filterLocation;
-
     return matchesSearch && matchesType && matchesLocation;
   });
 
   const handleApply = (opportunity) => {
-    if (!user) {
-      navigate("/applicant/login");
-      return;
-    }
+    if (!user) { navigate("/applicant/login"); return; }
     if (!resumeCompleted) {
-      alert("Please complete your resume before applying.");
+      toast.warning("Please complete your resume before applying.");
       navigate("/applicant/resume");
       return;
     }
@@ -134,9 +134,7 @@ const Opportunities = () => {
     setShowApplyModal(true);
   };
 
-  const handleApplicationSuccess = (applicationData) => {
-    // Optionally update UI after successful application
-    console.log("Application submitted successfully:", applicationData);
+  const handleApplicationSuccess = () => {
     setShowApplyModal(false);
     setSelectedJob(null);
   };
@@ -145,214 +143,238 @@ const Opportunities = () => {
     navigate(`/opportunities/${opportunity._id || opportunity.id}`);
   };
 
+  const pageTitle =
+    filterType === "Job" ? "Jobs" :
+    filterType === "Internship" ? "Internships" :
+    "All Opportunities";
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
       <Header />
 
-      {/* Search Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          {/* Search and Filters */}
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input
-                placeholder="Search by title, company, or skills..."
+      {/* ── Page Hero / Search ── */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">{pageTitle}</h1>
+          <p className="text-sm text-gray-500 mb-6">
+            {loading ? "Loading…" : `${filteredOpportunities.length} opportunit${filteredOpportunities.length === 1 ? "y" : "ies"} found`}
+          </p>
+
+          {/* Search row */}
+          <div className="flex flex-col md:flex-row gap-3">
+            {/* Search — dominant */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search by title, company, or skill…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="w-full h-11 pl-10 pr-4 rounded-lg border border-gray-300 bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
             </div>
 
-            <div className="flex gap-3">
-              <div className="relative">
-                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none z-10" />
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  className="h-10 w-[150px] pl-9 pr-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
-                >
-                  <option value="all">All Types</option>
-                  <option value="Job">Jobs</option>
-                  <option value="Internship">Internships</option>
-                </select>
-              </div>
+            {/* Type filter */}
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="h-11 w-44 pl-9 pr-4 rounded-lg border border-gray-300 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer transition"
+              >
+                <option value="all">All Types</option>
+                <option value="Job">Jobs</option>
+                <option value="Internship">Internships</option>
+              </select>
+            </div>
 
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none z-10" />
-                <select
-                  value={filterLocation}
-                  onChange={(e) => setFilterLocation(e.target.value)}
-                  className="h-10 w-[150px] pl-9 pr-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
-                >
-                  <option value="all">All Locations</option>
-                  {nepalCities.map(city => (
-                    <option key={city.name} value={city.name}>
-                      {city.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            {/* Location filter */}
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+              <select
+                value={filterLocation}
+                onChange={(e) => setFilterLocation(e.target.value)}
+                className="h-11 w-44 pl-9 pr-4 rounded-lg border border-gray-300 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer transition"
+              >
+                <option value="all">All Locations</option>
+                {locationOptions.map((loc) => (
+                  <option key={loc} value={loc}>{loc}</option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* Main Content */}
+      {/* ── Main Content ── */}
       <main className="flex-1 max-w-7xl mx-auto px-6 py-8 w-full">
-        {/* Resume Warning */}
+
+        {/* Banners */}
         {user && !resumeCompleted && (
           <Alert className="mb-6 border-amber-200 bg-amber-50">
-            <AlertCircle className="h-5 w-5 text-amber-600" />
-            <AlertDescription className="text-base text-amber-900">
-              <strong>Complete Your Resume First!</strong><br />
-              You need to complete your resume before you can apply for opportunities.{" "}
-              <button
-                onClick={() => navigate("/applicant/resume")}
-                className="underline hover:text-amber-700 font-medium"
-              >
-                Build your resume now
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-sm text-amber-900">
+              <strong>Complete your resume first.</strong>{" "}
+              <button onClick={() => navigate("/applicant/resume")} className="underline hover:text-amber-700 font-medium">
+                Build it now →
               </button>
             </AlertDescription>
           </Alert>
         )}
-
-        {/* Not logged in warning */}
         {!user && (
           <Alert className="mb-6 border-blue-200 bg-blue-50">
-            <AlertCircle className="h-5 w-5 text-blue-600" />
-            <AlertDescription className="text-base text-blue-900">
-              <strong>Login to Apply!</strong><br />
-              Please login or create an account to apply for opportunities.{" "}
-              <button
-                onClick={() => navigate("/applicant/login")}
-                className="underline hover:text-blue-700 font-medium"
-              >
-                Login now
+            <AlertCircle className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-sm text-blue-900">
+              <strong>Login to apply.</strong>{" "}
+              <button onClick={() => navigate("/applicant/login")} className="underline hover:text-blue-700 font-medium">
+                Login now →
               </button>
             </AlertDescription>
           </Alert>
         )}
-
-        {/* Error Message */}
         {error && (
-          <Alert className="mb-6 border-amber-200 bg-amber-50">
-            <AlertCircle className="h-5 w-5 text-amber-600" />
-            <AlertDescription className="text-amber-900">
-              {error}
-            </AlertDescription>
+          <Alert className="mb-6 border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-sm text-red-900">{error}</AlertDescription>
           </Alert>
         )}
 
-        {/* Loading State */}
+        {/* Grid */}
         {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-            <span className="ml-3 text-gray-600">Loading opportunities...</span>
+          <div className="flex items-center justify-center py-24">
+            <Loader2 className="w-7 h-7 animate-spin text-blue-600" />
+            <span className="ml-3 text-gray-500 text-sm">Loading opportunities…</span>
           </div>
         ) : filteredOpportunities.length === 0 ? (
-          <Card className="p-12">
-            <div className="text-center">
-              <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No opportunities found</h3>
-              <p className="text-gray-600">Try adjusting your search or filters</p>
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+              <Briefcase className="w-8 h-8 text-gray-300" />
             </div>
-          </Card>
+            <h3 className="text-lg font-semibold text-gray-800 mb-1">No opportunities found</h3>
+            <p className="text-sm text-gray-500">Try adjusting your search or filters</p>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filteredOpportunities.map(opportunity => (
-              <Card
-                key={opportunity._id || opportunity.id}
-                className="p-5 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="text-3xl flex items-center justify-center w-12 h-12 bg-gray-100 rounded-lg">
-                    {opportunity.logo || <Building2 className="w-6 h-6 text-gray-400" />}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">{opportunity.title}</h3>
-                    <p className="text-sm text-gray-600 mb-2">{opportunity.company}</p>
-                    <div className="flex items-center gap-3 text-xs text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {opportunity.location}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {opportunity.duration}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <p className="text-sm text-gray-600 mb-3 line-clamp-2">{opportunity.description}</p>
-
-                {opportunity.skills && opportunity.skills.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {opportunity.skills.slice(0, 3).map((skill, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {skill}
-                      </Badge>
-                    ))}
-                    {opportunity.skills.length > 3 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{opportunity.skills.length - 3} more
-                      </Badge>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between mb-4 pb-3 border-t pt-3">
-                  <div className="flex items-center gap-2">
-                    <Badge className={opportunity.type === "Job" ? "bg-blue-600" : "bg-green-600"}>
-                      {opportunity.type}
-                    </Badge>
-                    <span className="text-sm text-gray-700">{opportunity.salary}</span>
-                  </div>
-                  {opportunity.deadline && (
-                    <span className="text-xs text-gray-500">Deadline: {opportunity.deadline}</span>
-                  )}
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => handleApply(opportunity)}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 h-9"
-                    disabled={user && !resumeCompleted}
-                  >
-                    Apply Now
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="h-9"
-                    onClick={() => handleViewDetails(opportunity)}
-                  >
-                    View Details
-                  </Button>
-                </div>
-              </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {filteredOpportunities.map((opp) => (
+              <OpportunityCard
+                key={opp._id || opp.id}
+                opp={opp}
+                user={user}
+                resumeCompleted={resumeCompleted}
+                onApply={handleApply}
+                onViewDetails={handleViewDetails}
+              />
             ))}
           </div>
         )}
       </main>
 
-      {/* Apply Modal */}
       {showApplyModal && selectedJob && (
-        <ApplyModal 
+        <ApplyModal
           job={selectedJob}
-          onClose={() => {
-            setShowApplyModal(false);
-            setSelectedJob(null);
-          }}
+          onClose={() => { setShowApplyModal(false); setSelectedJob(null); }}
           onSuccess={handleApplicationSuccess}
         />
       )}
 
-      {/* Footer */}
       <Footer />
     </div>
   );
 };
+
+const OpportunityCard = ({ opp, user, resumeCompleted, onApply, onViewDetails }) => (
+  <div className="group bg-white border border-gray-200 rounded-2xl p-5 flex flex-col hover:border-blue-300 hover:shadow-lg transition-all duration-200">
+    {/* Top row */}
+    <div className="flex items-start gap-3 mb-4">
+      <div className="shrink-0 w-11 h-11 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden flex items-center justify-center group-hover:border-blue-200 transition-colors">
+        {resolveLogoUrl(opp.companyLogo || opp.logo) ? (
+          <img
+            src={resolveLogoUrl(opp.companyLogo || opp.logo)}
+            alt={opp.company}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <Building2 className="w-5 h-5 text-gray-400" />
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <h3 className="font-semibold text-gray-900 text-base leading-snug truncate group-hover:text-blue-700 transition-colors">
+          {opp.title}
+        </h3>
+        <p className="text-sm text-gray-500 truncate mt-0.5">{opp.company}</p>
+      </div>
+      <span className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full border ${typeBadge(opp.type)}`}>
+        {opp.type}
+      </span>
+    </div>
+
+    {/* Meta */}
+    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mb-4">
+      {opp.location && (
+        <span className="flex items-center gap-1">
+          <MapPin className="w-3 h-3" /> {opp.location}
+        </span>
+      )}
+      {opp.duration && (
+        <span className="flex items-center gap-1">
+          <Clock className="w-3 h-3" /> {opp.duration}
+        </span>
+      )}
+      {opp.salary && (
+        <span className="flex items-center gap-1">
+          <DollarSign className="w-3 h-3" /> {opp.salary}
+        </span>
+      )}
+    </div>
+
+    {/* Description */}
+    {opp.description && (
+      <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 mb-4">
+        {opp.description}
+      </p>
+    )}
+
+    {/* Skills */}
+    {opp.skills && opp.skills.length > 0 && (
+      <div className="flex flex-wrap gap-1.5 mb-4">
+        {opp.skills.slice(0, 3).map((skill, i) => (
+          <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2.5 py-0.5 rounded-full border border-gray-200">
+            {skill}
+          </span>
+        ))}
+        {opp.skills.length > 3 && (
+          <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-0.5 rounded-full border border-gray-200">
+            +{opp.skills.length - 3}
+          </span>
+        )}
+      </div>
+    )}
+
+    {/* Deadline */}
+    {opp.deadline && (
+      <p className="text-xs text-gray-400 mb-4">Deadline: {opp.deadline}</p>
+    )}
+
+    {/* Spacer */}
+    <div className="flex-1" />
+
+    {/* Actions */}
+    <div className="flex gap-2 pt-4 border-t border-gray-100">
+      <Button
+        onClick={() => onApply(opp)}
+        disabled={user && !resumeCompleted}
+        className="flex-1 h-9 text-sm font-medium"
+      >
+        Apply Now
+      </Button>
+      <button
+        onClick={() => onViewDetails(opp)}
+        className="flex items-center gap-1 px-3 h-9 text-sm text-gray-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-200 transition-colors font-medium"
+      >
+        Details <ArrowRight className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  </div>
+);
 
 export default Opportunities;

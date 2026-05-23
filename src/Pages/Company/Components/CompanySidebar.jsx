@@ -7,7 +7,8 @@ import {
   Users, 
   Calendar, 
   Bell, 
-  LogOut
+  LogOut,
+  BarChart3
 } from 'lucide-react';
 
 const CompanySidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
@@ -18,7 +19,7 @@ const CompanySidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
     { icon: Briefcase, label: 'Job Management', id: 'jobs', path: '/company/jobs' },
     { icon: Users, label: 'Applications', id: 'applications', path: '/company/applications' },
     { icon: Calendar, label: 'Interviews', id: 'interviews', path: '/company/interviews' },
-    //{ icon: Award, label: 'Offers & Certificates', id: 'offers' },
+    { icon: BarChart3, label: 'Analytics', id: 'analytics', path: '/company/analytics' },
     { icon: Bell, label: 'Notifications', id: 'notifications', path: '/company/notifications' },
     { icon: Building2, label: 'Profile', id: 'profile', path: '/company/profile' },
   ];

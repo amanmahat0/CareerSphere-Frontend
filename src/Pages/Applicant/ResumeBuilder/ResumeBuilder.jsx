@@ -17,6 +17,7 @@ import {
 import Sidebar from "../Components/Applicant Sidebar";
 import DashboardHeader from "../../../Components/DashboardHeader";
 import { api } from "../../../utils/api";
+import { toast } from "../../../utils/toast";
 
 // Import section components
 import PersonalInfoSection from "./components/PersonalInfoSection";
@@ -219,14 +220,14 @@ const ResumeBuilder = () => {
       if (response.success) {
         if (isComplete) {
           localStorage.setItem("resumeComplete", "true");
-          alert("✓ Resume saved successfully!\n\nAll sections have been saved to the database.");
+          toast.success("Resume saved successfully!");
         } else {
-          alert("✓ Resume saved!\n\nNote: Some required fields are still incomplete:\n- Personal Info (name, email, phone)\n- At least one Education entry\n- At least one Experience entry\n- At least one Skill\n\nPlease complete these to finalize your resume.");
+          toast.warning("Resume saved! Please complete all required sections (personal info, education, experience, skills) to finalize.");
         }
       }
     } catch (error) {
       console.error("Error saving resume:", error);
-      alert("✗ Error saving resume:\n" + (error.message || "Please check your connection and try again."));
+      toast.error("Error saving resume: " + (error.message || "Please check your connection and try again."));
     }
   };
 
@@ -316,57 +317,23 @@ const ResumeBuilder = () => {
         );
       case 7:
         return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">Review & Save</h3>
-              <p className="text-sm text-slate-500">Review your complete resume on the right and save when ready</p>
-            </div>
-            
-            <div className="space-y-3 text-sm">
-              <div className={`flex items-start gap-3 p-3 rounded-lg ${resumeData.personalInfo.name && resumeData.personalInfo.email && resumeData.personalInfo.phone ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
-                <span className={resumeData.personalInfo.name && resumeData.personalInfo.email && resumeData.personalInfo.phone ? 'text-green-600' : 'text-yellow-600'}>✓</span>
-                <span className={resumeData.personalInfo.name && resumeData.personalInfo.email && resumeData.personalInfo.phone ? 'text-green-700' : 'text-yellow-700'}>Personal Information: {resumeData.personalInfo.name ? 'Complete' : 'Incomplete'}</span>
-              </div>
-              
-              <div className={`flex items-start gap-3 p-3 rounded-lg ${resumeData.education.filter(e => e.degree && e.institution).length > 0 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
-                <span className={resumeData.education.filter(e => e.degree && e.institution).length > 0 ? 'text-green-600' : 'text-yellow-600'}>✓</span>
-                <span className={resumeData.education.filter(e => e.degree && e.institution).length > 0 ? 'text-green-700' : 'text-yellow-700'}>Education: {resumeData.education.filter(e => e.degree && e.institution).length} entry(ies)</span>
-              </div>
-              
-              <div className={`flex items-start gap-3 p-3 rounded-lg ${resumeData.experience.filter(e => e.company && e.title).length > 0 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
-                <span className={resumeData.experience.filter(e => e.company && e.title).length > 0 ? 'text-green-600' : 'text-yellow-600'}>✓</span>
-                <span className={resumeData.experience.filter(e => e.company && e.title).length > 0 ? 'text-green-700' : 'text-yellow-700'}>Experience: {resumeData.experience.filter(e => e.company && e.title).length} entry(ies)</span>
-              </div>
-              
-              <div className={`flex items-start gap-3 p-3 rounded-lg ${resumeData.skills.filter(s => s && s.trim()).length > 0 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
-                <span className={resumeData.skills.filter(s => s && s.trim()).length > 0 ? 'text-green-600' : 'text-yellow-600'}>✓</span>
-                <span className={resumeData.skills.filter(s => s && s.trim()).length > 0 ? 'text-green-700' : 'text-yellow-700'}>Skills: {resumeData.skills.filter(s => s && s.trim()).length} skill(s)</span>
-              </div>
-              
-              <div className={`flex items-start gap-3 p-3 rounded-lg ${resumeData.projects.filter(p => p.name && p.name.trim()).length > 0 ? 'bg-blue-50 border border-blue-200' : 'bg-slate-50 border border-slate-200'}`}>
-                <span className={resumeData.projects.filter(p => p.name && p.name.trim()).length > 0 ? 'text-blue-600' : 'text-slate-400'}>•</span>
-                <span className={resumeData.projects.filter(p => p.name && p.name.trim()).length > 0 ? 'text-blue-700' : 'text-slate-600'}>Projects: {resumeData.projects.filter(p => p.name && p.name.trim()).length} entry(ies) (optional)</span>
-              </div>
-              
-              <div className={`flex items-start gap-3 p-3 rounded-lg ${resumeData.certifications.filter(c => c.name && c.name.trim()).length > 0 ? 'bg-blue-50 border border-blue-200' : 'bg-slate-50 border border-slate-200'}`}>
-                <span className={resumeData.certifications.filter(c => c.name && c.name.trim()).length > 0 ? 'text-blue-600' : 'text-slate-400'}>•</span>
-                <span className={resumeData.certifications.filter(c => c.name && c.name.trim()).length > 0 ? 'text-blue-700' : 'text-slate-600'}>Certifications: {resumeData.certifications.filter(c => c.name && c.name.trim()).length} entry(ies) (optional)</span>
+          <div className="space-y-4">
+            {/* Resume Status */}
+            <div className={`p-4 rounded-lg border-2 flex items-center gap-3 ${isComplete ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
+              <div className={`w-3 h-3 rounded-full ${isComplete ? 'bg-green-600' : 'bg-yellow-600'}`}></div>
+              <div>
+                <p className={`font-semibold ${isComplete ? 'text-green-900' : 'text-yellow-900'}`}>
+                  {isComplete ? 'Resume Completed' : 'Resume Incomplete'}
+                </p>
+                <p className={`text-sm ${isComplete ? 'text-green-800' : 'text-yellow-800'}`}>
+                  {isComplete ? 'Your resume is ready to be used for applications.' : 'Please complete all required sections to finalize your resume.'}
+                </p>
               </div>
             </div>
 
-            <div className="space-y-3">
-              <Button onClick={handleSave} className="w-full bg-green-600 hover:bg-green-700 text-white h-12">
-                <Save className="w-5 h-5 mr-2" />
-                Save
-              </Button>
-              <Button variant="outline" onClick={handleDownloadPDF} className="w-full h-12">
-                <Download className="w-5 h-5 mr-2" />
-                Download as PDF
-              </Button>
-              <Button variant="outline" onClick={() => setCurrentStep(1)} className="w-full h-12">
-                <ArrowLeft className="w-5 h-5 mr-2" />
-                Edit Resume
-              </Button>
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Resume Preview</h3>
+              <p className="text-sm text-slate-500">Your complete resume</p>
             </div>
           </div>
         );
@@ -480,21 +447,24 @@ const ResumeBuilder = () => {
 
           {/* Content Area */}
           <div className="flex flex-1 overflow-hidden">
-            {/* Left Side - Form */}
-            <div className="w-1/2 overflow-y-auto p-6 bg-white border-r border-slate-200">
-              <div className="max-w-2xl mx-auto">{renderCurrentSection()}</div>
-            </div>
-
-            {/* Right Side - Live Preview (always visible) */}
-            <div className="w-1/2 overflow-y-auto p-6 bg-slate-100 print:w-full print:p-0">
-              <div className="max-w-3xl mx-auto">
-                <div className="mb-4 print:hidden">
-                  <h2 className="text-lg font-semibold text-slate-900 mb-1">Live Preview</h2>
-                  <p className="text-sm text-slate-500">Your resume updates in real-time</p>
+            {currentStep === 7 ? (
+              // Preview Section - Full Width
+              <div className="w-full overflow-y-auto p-6 bg-slate-100 print:w-full print:p-0">
+                <div className="max-w-3xl mx-auto">
+                  <div className="mb-4 print:hidden">
+                    <h2 className="text-lg font-semibold text-slate-900 mb-1">Resume Preview</h2>
+                    <p className="text-sm text-slate-500">Your complete resume</p>
+                  </div>
+                  <ResumePreview data={memoizedResumeData} />
+                  <div className="h-8"></div>
                 </div>
-                <ResumePreview data={memoizedResumeData} />
               </div>
-            </div>
+            ) : (
+              // Form Sections - Full Width
+              <div className="w-full overflow-y-auto p-6 bg-white">
+                <div className="max-w-2xl mx-auto">{renderCurrentSection()}</div>
+              </div>
+            )}
           </div>
         </main>
       </div>

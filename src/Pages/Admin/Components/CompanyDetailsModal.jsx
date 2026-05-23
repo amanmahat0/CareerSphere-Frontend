@@ -4,6 +4,7 @@ import {
   MapPin, PhoneIcon, Mail, Globe, Eye
 } from 'lucide-react';
 import { api } from '../../../utils/api';
+import { toast } from '../../../utils/toast';
 
 const CompanyDetailsModal = ({ company, onClose, onVerify, onReject }) => {
   const [isVerifying, setIsVerifying] = useState(false);
@@ -50,7 +51,7 @@ const CompanyDetailsModal = ({ company, onClose, onVerify, onReject }) => {
       onClose();
     } catch (error) {
       console.error('Error verifying company:', error);
-      alert('Failed to verify company: ' + error.message);
+      toast.error('Failed to verify company: ' + error.message);
     } finally {
       setIsVerifying(false);
     }
@@ -58,7 +59,7 @@ const CompanyDetailsModal = ({ company, onClose, onVerify, onReject }) => {
 
   const handleReject = async () => {
     if (!fullCompanyData || !fullCompanyData.id || !rejectionReason.trim()) {
-      alert('Please provide a rejection reason');
+      toast.error('Please provide a rejection reason');
       return;
     }
     
@@ -69,7 +70,7 @@ const CompanyDetailsModal = ({ company, onClose, onVerify, onReject }) => {
       onClose();
     } catch (error) {
       console.error('Error rejecting company:', error);
-      alert('Failed to reject company: ' + error.message);
+      toast.error('Failed to reject company: ' + error.message);
     } finally {
       setIsRejecting(false);
     }

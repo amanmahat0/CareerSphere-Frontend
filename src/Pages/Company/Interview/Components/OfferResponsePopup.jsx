@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { X, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { api } from '../../../../utils/api';
+import { toast } from '../../../../utils/toast';
 
-export default function OfferResponsePopup({ candidate, onClose, onUpdate }) {
+export default function OfferResponsePopup({ candidate, onClose, onUpdate, onOfferResponseCompleted }) {
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState(candidate.offerResponse || 'accepted');
   const [notes, setNotes] = useState(candidate.offerResponseNotes || '');
@@ -27,13 +28,18 @@ export default function OfferResponsePopup({ candidate, onClose, onUpdate }) {
         const message = response === 'accepted'
           ? 'Offer accepted! Moving to hiring confirmation.'
           : 'Offer rejected by candidate.';
-        alert(message);
-        onUpdate(response_data.data);
-        onClose();
+        toast.success(message);
+        // Call the special handler instead of just onUpdate
+        if (onOfferResponseCompleted) {
+          onOfferResponseCompleted(response_data.data);
+        } else {
+          onUpdate(response_data.data);
+          onClose();
+        }
       }
     } catch (err) {
       console.error('Error recording offer response:', err);
-      alert('Failed to record offer response');
+      toast.error('Failed to record offer response');
     } finally {
       setIsLoading(false);
     }

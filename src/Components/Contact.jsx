@@ -73,8 +73,7 @@ const ContactPage = () => {
                   </div>
                   <div>
                     <h3 className="text-gray-900 mb-1">Email</h3>
-                    <p className="text-sm text-gray-600">support@careersphere.com.np</p>
-                    <p className="text-sm text-gray-600">info@careersphere.com.np</p>
+                    <p className="text-sm text-gray-600">careersphere67@gmail.com</p>
                   </div>
                 </div>
 
@@ -85,7 +84,6 @@ const ContactPage = () => {
                   <div>
                     <h3 className="text-gray-900 mb-1">Phone</h3>
                     <p className="text-sm text-gray-600">+977 01-4567890</p>
-                    <p className="text-sm text-gray-600">+977 01-4567891</p>
                   </div>
                 </div>
 
@@ -123,25 +121,25 @@ const ContactPage = () => {
                 <div className="space-y-2 text-sm">
                   <button 
                     onClick={() => navigate("/about")}
-                    className="block text-primary hover:underline w-full text-left"
+                    className="block text-blue-600 hover:underline w-full text-left"
                   >
                     About CareerSphere
                   </button>
-                  <button 
-                    onClick={() => navigate("/faq")}
-                    className="block text-primary hover:underline w-full text-left"
+                  <button
+                    onClick={() => navigate("/help")}
+                    className="block text-blue-600 hover:underline w-full text-left"
                   >
                     FAQs
                   </button>
-                  <button 
-                    onClick={() => navigate("/privacy")}
-                    className="block text-primary hover:underline w-full text-left"
+                  <button
+                    onClick={() => navigate("/privacy-policy")}
+                    className="block text-blue-600 hover:underline w-full text-left"
                   >
                     Privacy Policy
                   </button>
                   <button 
                     onClick={() => navigate("/terms")}
-                    className="block text-primary hover:underline w-full text-left"
+                    className="block text-blue-600 hover:underline w-full text-left"
                   >
                     Terms of Service
                   </button>
@@ -156,7 +154,7 @@ const ContactPage = () => {
                 
                 {submitSuccess && (
                   <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-md">
-                    <p className="text-green-800">✓ Thank you for contacting us! We'll get back to you soon.</p>
+                    <p className="text-green-800">Thank you for contacting us! We'll get back to you soon.</p>
                   </div>
                 )}
 
@@ -234,9 +232,8 @@ const ContactPage = () => {
                     />
                   </div>
 
-                  <Button 
-                    type="submit" 
-                    className="bg-primary hover:bg-primary/90"
+                  <Button
+                    type="submit"
                     size="lg"
                     disabled={isSubmitting}
                   >

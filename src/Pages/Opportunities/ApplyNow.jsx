@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { api } from '../../utils/api';
+import { toast } from '../../utils/toast';
 
 const ApplyModal = ({ job, onClose, onSuccess }) => {
   const [coverLetter, setCoverLetter] = useState('');
@@ -84,7 +85,7 @@ const ApplyModal = ({ job, onClose, onSuccess }) => {
 
       if (response.success) {
         setError(null);
-        alert('✓ Application submitted successfully!');
+        toast.success('Application submitted successfully!');
         if (onSuccess) {
           onSuccess(response.data);
         }
