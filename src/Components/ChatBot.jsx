@@ -27,15 +27,26 @@ const ChatBot = () => {
     }
   }, [isOpen]);
 
-  // Only render for logged-in applicants
-  const user = (() => {
+  const getUser = () => {
     try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
-  })();
-  if (!user.id || user.userType !== 'applicant') return null;
+  };
 
   const sendMessage = async () => {
     const text = input.trim();
     if (!text || loading) return;
+
+    const user = getUser();
+
+    // Show friendly message if not logged in as applicant
+    if (!user.id || user.userType !== 'applicant') {
+      setMessages(prev => [
+        ...prev,
+        { role: 'user', content: text },
+        { role: 'assistant', content: 'Please log in as an applicant to use CareerSphere AI. The chatbot is available to job seekers only.' },
+      ]);
+      setInput('');
+      return;
+    }
 
     const userMsg = { role: 'user', content: text };
     setMessages(prev => [...prev, userMsg]);
@@ -52,7 +63,6 @@ const ChatBot = () => {
         },
         body: JSON.stringify({
           message: text,
-          // Send conversation history (exclude welcome message, keep last 8)
           history: messages.slice(1).slice(-8),
         }),
       });
@@ -69,7 +79,6 @@ const ChatBot = () => {
         },
       ]);
     } catch {
-      toast.error('Connection error. Please check your internet and try again.');
       setMessages(prev => [
         ...prev,
         { role: 'assistant', content: 'Something went wrong. Please check your connection and try again.' },
