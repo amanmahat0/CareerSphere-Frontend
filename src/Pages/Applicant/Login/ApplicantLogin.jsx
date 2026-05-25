@@ -255,12 +255,6 @@ const ApplicantLogin = () => {
         </div>
       </div>
 
-      {/* Chat Button */}
-      <div className="fixed bottom-6 right-6">
-        <button className="w-12 h-12 rounded-full bg-[#1f3a8a] text-white flex items-center justify-center shadow-lg hover:bg-[#1a2f73] transition-colors">
-          Chat
-        </button>
-      </div>
       <div><Footer /></div>
     </div>
   );
