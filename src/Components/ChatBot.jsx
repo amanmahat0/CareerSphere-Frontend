@@ -217,7 +217,7 @@ const ChatBot = () => {
               </button>
             </div>
             <p className="text-center text-slate-400 mt-1.5" style={{ fontSize: '10px' }}>
-              Powered by Gemini 2.0 Flash · Free tier
+              Powered by GROQ · Llama 3.1
             </p>
           </div>
         </div>

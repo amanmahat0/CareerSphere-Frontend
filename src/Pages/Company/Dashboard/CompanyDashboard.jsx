@@ -108,38 +108,35 @@ const CompanyDashboard = () => {
   }), [jobs, applications]);
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-      <DashboardHeader
-        onMenuClick={() => setSidebarOpen(!sidebarOpen)}
-        userRole="Company"
-        dashboardPath="/company/dashboard"
-        profilePath="/company/profile"
-      />
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <CompanySidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="dashboard" />
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
+      )}
 
-      <div className="flex flex-1 overflow-hidden">
-        <CompanySidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="dashboard" />
-
-        {sidebarOpen && (
-          <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
-        )}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <DashboardHeader
+          onMenuClick={() => setSidebarOpen(prev => !prev)}
+          userRole="Company"
+          dashboardPath="/company/dashboard"
+          profilePath="/company/profile"
+        />
 
         <main className="flex-1 overflow-y-auto p-4 lg:p-8">
           <div className="max-w-7xl mx-auto space-y-6">
 
-            {/* ── Banner ── */}
-            <div className="bg-linear-to-r from-blue-900 to-blue-700 rounded-2xl px-6 py-4 text-white flex items-center justify-between gap-4 shadow-md">
+            {/* ── Header ── */}
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <h1 className="text-lg font-bold">Company Dashboard</h1>
-                <p className="text-blue-200 text-xs mt-0.5">Manage your recruitment and placement activities.</p>
+                <h1 className="text-2xl font-bold text-slate-900">Company Dashboard</h1>
+                <p className="text-slate-500 text-xs mt-0.5">Manage your recruitment and placement activities.</p>
               </div>
-              <div className="hidden sm:flex gap-2 shrink-0">
-                <button
-                  onClick={() => navigate('/company/jobs')}
-                  className="bg-white text-blue-800 text-xs font-semibold px-4 py-2 rounded-lg hover:bg-blue-50 transition"
-                >
-                  Post a Job
-                </button>
-              </div>
+              <button
+                onClick={() => navigate('/company/jobs')}
+                className="hidden sm:inline-flex bg-blue-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-950 transition"
+              >
+                Post a Job
+              </button>
             </div>
 
             {/* ── Stat Pills ── */}
@@ -155,9 +152,9 @@ const CompanyDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
               {/* Donut */}
-              <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100">
-                  <h2 className="text-sm font-bold text-slate-900">Application Status Distribution</h2>
+              <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b border-slate-100">
+                  <h2 className="text-lg font-bold text-slate-800">Application Status Distribution</h2>
                   <p className="text-xs text-slate-400 mt-0.5">Breakdown of all incoming applications by stage</p>
                 </div>
                 {loading ? (
@@ -221,9 +218,9 @@ const CompanyDashboard = () => {
               </div>
 
               {/* Hiring Pipeline Funnel */}
-              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100">
-                  <h2 className="text-sm font-bold text-slate-900">Hiring Funnel</h2>
+              <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b border-slate-100">
+                  <h2 className="text-lg font-bold text-slate-800">Hiring Details</h2>
                   <p className="text-xs text-slate-400 mt-0.5">Candidate progression through stages</p>
                 </div>
                 <div className="p-4 space-y-2.5">
@@ -244,10 +241,10 @@ const CompanyDashboard = () => {
             </div>
 
             {/* ── Recent Applications ── */}
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                 <div>
-                  <h2 className="text-sm font-bold text-slate-900">Recent Applications</h2>
+                  <h2 className="text-lg font-bold text-slate-800">Recent Applications</h2>
                   <p className="text-xs text-slate-400 mt-0.5">{applications.length} total received</p>
                 </div>
                 <button
@@ -272,11 +269,11 @@ const CompanyDashboard = () => {
                   <table className="w-full text-sm">
                     <thead className="bg-slate-50 border-b border-slate-200 sticky top-0">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 w-10">S.N.</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">Candidate</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">Position</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">Applied</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">Status</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500 w-10">S.N.</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Candidate</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Position</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Applied</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -305,10 +302,10 @@ const CompanyDashboard = () => {
             </div>
 
             {/* ── Upcoming Interviews ── */}
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                 <div>
-                  <h2 className="text-sm font-bold text-slate-900">Upcoming Interviews & Tests</h2>
+                  <h2 className="text-lg font-bold text-slate-800">Upcoming Interviews & Tests</h2>
                   <p className="text-xs text-slate-400 mt-0.5">Scheduled within the coming days</p>
                 </div>
                 <button
@@ -353,7 +350,7 @@ const CompanyDashboard = () => {
                           </span>
                           <button
                             onClick={() => navigate('/company/interviews')}
-                            className="text-xs font-semibold bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition"
+                            className="text-xs font-semibold bg-blue-900 text-white px-3 py-1.5 rounded-lg hover:bg-blue-950 transition"
                           >
                             Manage
                           </button>
@@ -374,7 +371,7 @@ const CompanyDashboard = () => {
                 <div
                   key={label}
                   onClick={() => navigate(path)}
-                  className="bg-white border border-slate-200 rounded-2xl p-5 flex items-center gap-4 cursor-pointer hover:border-blue-300 hover:shadow-md transition-all group"
+                  className="bg-white border border-slate-200 rounded-xl p-5 flex items-center gap-4 cursor-pointer hover:border-blue-300 hover:shadow-md transition-all group"
                 >
                   <div className={`${accent} p-3 rounded-xl shrink-0 group-hover:scale-105 transition-transform`}>
                     <Icon size={20} className={iconColor} />

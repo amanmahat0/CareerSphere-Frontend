@@ -101,36 +101,27 @@ const JobManagement = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-      {/* Dashboard Header Component */}
-      <DashboardHeader 
-        onMenuClick={() => setSidebarOpen(!sidebarOpen)} 
-        userRole="Company"
-        dashboardPath="/company/dashboard"
-        profilePath="/company/profile"
-      />
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <CompanySidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="jobs" />
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
+      )}
 
-      {/* Main Content Section */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar Component */}
-        <CompanySidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="jobs" />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <DashboardHeader
+          onMenuClick={() => setSidebarOpen(prev => !prev)}
+          userRole="Company"
+          dashboardPath="/company/dashboard"
+          profilePath="/company/profile"
+        />
 
-        {/* Mobile Overlay */}
-        {sidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-30"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
-        {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
           <div className="p-4 lg:p-8 space-y-8">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold mb-2">Job & Internship Management</h1>
-                <p className="text-slate-500 text-sm lg:text-base">Post and manage job opportunities</p>
+                <h1 className="text-2xl font-bold text-slate-900">Job & Internship Management</h1>
+                <p className="text-slate-500 text-xs mt-0.5">Post and manage job opportunities</p>
               </div>
               <button 
                 type="button"
@@ -234,15 +225,15 @@ const JobManagement = () => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead className="bg-slate-50/50 border-b border-slate-100">
-                      <tr className="text-slate-400 text-[11px] uppercase tracking-widest">
-                        <th className="px-6 py-4 font-semibold">Position</th>
-                        <th className="px-6 py-4 font-semibold">Company</th>
-                        <th className="px-6 py-4 font-semibold">Type</th>
-                        <th className="px-6 py-4 font-semibold">Location</th>
-                        <th className="px-6 py-4 font-semibold">Duration</th>
-                        <th className="px-6 py-4 font-semibold">Deadline</th>
-                        <th className="px-6 py-4 font-semibold">Salary</th>
-                        <th className="px-6 py-4 font-semibold">Actions</th>
+                      <tr>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Position</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Company</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Type</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Location</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Duration</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Deadline</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Salary</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -321,7 +312,7 @@ const MiniStat = ({ label, value, color = "blue" }) => {
 
 const StatCard = ({ label, value, icon }) => {
   return (
-    <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
       <div className="flex justify-between items-start">
         <div className="min-w-0 flex-1">
           <p className="text-slate-500 text-xs mb-1 truncate">{label}</p>

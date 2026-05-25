@@ -1,5 +1,6 @@
 import './App.css'
 import { Routes, Route } from 'react-router-dom';
+import ChatBot from './Components/ChatBot';
 import Alert from './Pages/Alert/Alert.jsx';
 import HomePage from './Pages/Home/home.jsx';
 import ApplicantLogin from './Pages/Applicant/Login/ApplicantLogin.jsx';
@@ -14,6 +15,7 @@ import ResumeBuilder from './Pages/Applicant/ResumeBuilder/ResumeBuilder.jsx';
 import MyApplication from './Pages/Applicant/My Applications/MyApplication.jsx';
 import ApplicantNotification from './Pages/Applicant/Notifications/ApplicantNotification.jsx';
 import InterviewSchedule from './Pages/Applicant/InterviewSchedule/InterviewSchedule.jsx';
+import SavedJobs from './Pages/Applicant/SavedJobs/SavedJobs.jsx';
 import CompanyDashboard from './Pages/Company/Dashboard/CompanyDashboard.jsx';
 import CompanyProfile from './Pages/Company/Profile/CompanyProfile.jsx';
 import JobManagement from './Pages/Company/Dashboard/JobManagement.jsx';
@@ -54,6 +56,7 @@ function App() {
       <Route path="/applicant/applications" element={<MyApplication />} />
       <Route path="/applicant/notifications" element={<ApplicantNotification />} />
       <Route path="/applicant/interviews" element={<InterviewSchedule />} />
+      <Route path="/applicant/saved-jobs" element={<SavedJobs />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/about" element={<AboutPage />} />
 
@@ -87,6 +90,7 @@ function App() {
       <Route path="/accessibility" element={<Accessibility />} />
     </Routes>
     <Alert />
+    <ChatBot />
     </>
   );
 }

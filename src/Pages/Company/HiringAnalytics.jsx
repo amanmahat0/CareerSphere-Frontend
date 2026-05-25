@@ -33,10 +33,13 @@ export default function HiringAnalytics() {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-screen bg-slate-50">
-        <DashboardHeader onMenuClick={() => setSidebarOpen(true)} userRole="Company" />
-        <div className="flex items-center justify-center flex-1">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="flex h-screen bg-slate-50">
+        <CompanySidebar isOpen={false} onClose={() => {}} activePage="analytics" />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <DashboardHeader onMenuClick={() => {}} userRole="Company" />
+          <div className="flex items-center justify-center flex-1">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          </div>
         </div>
       </div>
     );
@@ -62,34 +65,26 @@ export default function HiringAnalytics() {
   ] : [];
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans">
-      {/* Header */}
-      <DashboardHeader
-        onMenuClick={() => setSidebarOpen(true)}
-        userRole="Company"
-        dashboardPath="/company/dashboard"
-        profilePath="/company/profile"
-      />
+    <div className="flex h-screen bg-slate-50 font-sans">
+      <CompanySidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="analytics" />
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
+      )}
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <CompanySidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="analytics" />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <DashboardHeader
+          onMenuClick={() => setSidebarOpen(prev => !prev)}
+          userRole="Company"
+          dashboardPath="/company/dashboard"
+          profilePath="/company/profile"
+        />
 
-        {/* Mobile overlay */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 lg:hidden z-30"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
-        {/* Main content */}
         <main className="flex-1 overflow-auto">
           <div className="p-6 space-y-6">
             {/* Page header */}
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">Hiring Analytics</h1>
-              <p className="text-slate-600 mt-1">View your hiring funnel and recruitment metrics</p>
+              <h1 className="text-2xl font-bold text-slate-900">Hiring Analytics</h1>
+              <p className="text-slate-500 text-xs mt-0.5">View your hiring funnel and recruitment metrics</p>
             </div>
 
             {/* Error alert */}
@@ -104,37 +99,37 @@ export default function HiringAnalytics() {
             {analytics && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                     <p className="text-xs font-medium text-slate-500 mb-2">Total Applications</p>
                     <p className="text-3xl font-bold text-slate-900">{analytics.totalApplications}</p>
                     <p className="text-xs text-slate-600 mt-2">All time</p>
                   </div>
 
-                  <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                     <p className="text-xs font-medium text-slate-500 mb-2">Shortlist Rate</p>
                     <p className="text-3xl font-bold" style={{ color: STAGE_COLORS.Shortlisted }}>{analytics.shortlistedRate.toFixed(1)}%</p>
                     <p className="text-xs text-slate-600 mt-2">{analytics.byStep.shortlisted} shortlisted</p>
                   </div>
 
-                  <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                     <p className="text-xs font-medium text-slate-500 mb-2">Test Pass Rate</p>
                     <p className="text-3xl font-bold" style={{ color: STAGE_COLORS.Test }}>{analytics.testPassRate.toFixed(1)}%</p>
                     <p className="text-xs text-slate-600 mt-2">Of test takers</p>
                   </div>
 
-                  <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                     <p className="text-xs font-medium text-slate-500 mb-2">Interview to Offer</p>
                     <p className="text-3xl font-bold" style={{ color: STAGE_COLORS.Interview }}>{analytics.interviewToOfferRate.toFixed(1)}%</p>
                     <p className="text-xs text-slate-600 mt-2">Move to offer stage</p>
                   </div>
 
-                  <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                     <p className="text-xs font-medium text-slate-500 mb-2">Offer Acceptance Rate</p>
                     <p className="text-3xl font-bold" style={{ color: STAGE_COLORS.Hired }}>{analytics.offerAcceptanceRate.toFixed(1)}%</p>
                     <p className="text-xs text-slate-600 mt-2">{analytics.byStep.hired} accepted</p>
                   </div>
 
-                  <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                     <p className="text-xs font-medium text-slate-500 mb-2">Avg Time to Hire</p>
                     <p className="text-3xl font-bold text-slate-900">{analytics.avgTimeToHireInDays.toFixed(0)}</p>
                     <p className="text-xs text-slate-600 mt-2">Days from application</p>
@@ -142,8 +137,8 @@ export default function HiringAnalytics() {
                 </div>
 
                 {/* Funnel Chart */}
-                <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
-                  <h2 className="text-lg font-bold text-slate-900 mb-4">Hiring Funnel</h2>
+                <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                  <h2 className="text-lg font-bold text-slate-800 mb-4">Hiring Funnel</h2>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart
                       data={funnelData}
@@ -169,7 +164,7 @@ export default function HiringAnalytics() {
                 </div>
 
                 {/* Conversion Rates */}
-                <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+                <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4">Pipeline Summary</h2>
                   <div className="space-y-3">
                     {[

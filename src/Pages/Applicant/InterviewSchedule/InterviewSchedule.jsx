@@ -103,7 +103,7 @@ const InterviewDashboard = () => {
   if (loading) {
     return (
       <div className="flex flex-col h-screen bg-slate-50">
-        <DashboardHeader onMenuClick={() => setSidebarOpen(true)} userRole="Applicant" />
+        <DashboardHeader onMenuClick={() => setSidebarOpen(prev => !prev)} userRole="Applicant" />
         <div className="flex items-center justify-center flex-1">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
         </div>
@@ -112,28 +112,28 @@ const InterviewDashboard = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-      <DashboardHeader
-        onMenuClick={() => setSidebarOpen(true)}
-        userRole="Applicant"
-        dashboardPath="/applicant/dashboard"
-        profilePath="/applicant/profile"
-      />
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="interviews" />
 
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="interviews" />
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
+      )}
 
-        {sidebarOpen && (
-          <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
-        )}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <DashboardHeader
+          onMenuClick={() => setSidebarOpen(prev => !prev)}
+          userRole="Applicant"
+          dashboardPath="/applicant/dashboard"
+          profilePath="/applicant/profile"
+        />
 
         <main className="flex-1 overflow-y-auto p-4 lg:p-8">
           <div className="max-w-7xl mx-auto space-y-6">
 
-            {/* ── Banner ── */}
-            <div className="bg-linear-to-r from-blue-900 to-blue-700 rounded-2xl px-6 py-5 text-white shadow-md">
-              <h1 className="text-xl font-bold mb-0.5">Interview Schedule</h1>
-              <p className="text-blue-200 text-sm">Your tests, upcoming interviews, and past interviews in one place.</p>
+            {/* ── Header ── */}
+            <div className="mb-2">
+              <h1 className="text-2xl font-bold text-slate-900">Interview Schedule</h1>
+              <p className="text-slate-500 text-xs mt-0.5">Your tests, upcoming interviews, and past interviews in one place.</p>
             </div>
 
             {error && (
@@ -143,18 +143,11 @@ const InterviewDashboard = () => {
               </div>
             )}
 
-            {/* ── Stat Pills ── */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <StatPill label="Pending Tests"      value={testApps.length}     icon={FileText}    accent="bg-amber-500" />
-              <StatPill label="Upcoming Interviews" value={upcomingApps.length} icon={Calendar}    accent="bg-blue-600" />
-              <StatPill label="Past Interviews"     value={pastApps.length}     icon={CheckCircle2} accent="bg-slate-500" />
-            </div>
-
             {/* ── Bar Chart ── */}
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100">
-                <h2 className="text-sm font-bold text-slate-900">Interview Activity Overview</h2>
-                <p className="text-xs text-slate-400 mt-0.5">Summary of your tests and interview stages</p>
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-100">
+                <h2 className="text-lg font-bold text-slate-800">Interview Activity Overview</h2>
+                <p className="text-xs text-slate-500 mt-0.5">Summary of your tests and interview stages</p>
               </div>
 
               {applications.length === 0 ? (
@@ -220,10 +213,10 @@ const InterviewDashboard = () => {
             </div>
 
             {/* ── Test Schedule ── */}
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100 flex items-center gap-2">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
                 <FileText size={16} className="text-amber-500" />
-                <h2 className="text-sm font-bold text-slate-900">Pending Tests</h2>
+                <h2 className="text-lg font-bold text-slate-800">Pending Tests</h2>
                 <span className="ml-auto text-xs font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
                   {testApps.length}
                 </span>
@@ -317,10 +310,10 @@ const InterviewDashboard = () => {
             </div>
 
             {/* ── Upcoming Interviews ── */}
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100 flex items-center gap-2">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
                 <Calendar size={16} className="text-blue-600" />
-                <h2 className="text-sm font-bold text-slate-900">Upcoming Interviews</h2>
+                <h2 className="text-lg font-bold text-slate-800">Upcoming Interviews</h2>
                 <span className="ml-auto text-xs font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
                   {upcomingApps.length}
                 </span>
@@ -363,7 +356,7 @@ const InterviewDashboard = () => {
                               <>
                                 <a
                                   href={app.meetingLink} target="_blank" rel="noopener noreferrer"
-                                  className="text-xs font-semibold bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition flex items-center gap-1"
+                                  className="text-xs font-semibold bg-blue-900 text-white px-3 py-1.5 rounded-lg hover:bg-blue-950 transition flex items-center gap-1"
                                 >
                                   <Video size={12} /> Join
                                 </a>
@@ -390,10 +383,10 @@ const InterviewDashboard = () => {
             </div>
 
             {/* ── Past Interviews ── */}
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100 flex items-center gap-2">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-slate-400" />
-                <h2 className="text-sm font-bold text-slate-900">Past Interviews</h2>
+                <h2 className="text-lg font-bold text-slate-800">Past Interviews</h2>
                 <span className="ml-auto text-xs font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
                   {pastApps.length}
                 </span>

@@ -1,33 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Briefcase, 
-  FileText, 
-  Calendar, 
-  Bell, 
-  BarChart3, 
-  Settings, 
-  ShieldCheck, 
-  CheckSquare, 
-  Megaphone, 
-  FileCheck,
-  LogOut
+import {
+  LayoutDashboard, Users, Briefcase, FileText, Calendar,
+  Bell, Settings, LogOut, ChevronLeft, ChevronRight, X,
 } from 'lucide-react';
+import Logo from '../../../Components/Logo/Logo';
 
-const AdminSidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
+const AdminSidebar = ({ isOpen, onClose, onOpen = () => {}, activePage = 'dashboard' }) => {
   const navigate = useNavigate();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const expanded = !isCollapsed || isHovered;
 
   const navigationItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard', path: '/admin/dashboard' },
-    { icon: Users, label: 'Applicant Management', id: 'applicants', path: '/admin/applicants' },
-    { icon: Briefcase, label: 'Company Management', id: 'companies', path: '/admin/companies' },
-    { icon: FileText, label: 'Applications', id: 'applications', path: '/admin/applications' },
-    { icon: Calendar, label: 'Interviews', id: 'interviews', path: '/admin/interviews' },
-    { icon: Bell, label: 'Notifications', id: 'notifications', path: '/admin/notifications' },
-    // { icon: BarChart3, label: 'Reports & Analytics', id: 'reports', path: '/admin/reports' },
-    { icon: Settings, label: 'Settings', id: 'settings', path: '/admin/settings' },
+    { icon: LayoutDashboard, label: 'Dashboard',            id: 'dashboard',     path: '/admin/dashboard' },
+    { icon: Users,           label: 'Applicant Management', id: 'applicants',    path: '/admin/applicants' },
+    { icon: Briefcase,       label: 'Company Management',   id: 'companies',     path: '/admin/companies' },
+    { icon: FileText,        label: 'Applications',         id: 'applications',  path: '/admin/applications' },
+    { icon: Calendar,        label: 'Interviews',           id: 'interviews',    path: '/admin/interviews' },
+    { icon: Bell,            label: 'Notifications',        id: 'notifications', path: '/admin/notifications' },
+    { icon: Settings,        label: 'Settings',             id: 'settings',      path: '/admin/settings' },
   ];
 
   const handleNavigation = (path) => {
@@ -43,44 +36,102 @@ const AdminSidebar = ({ isOpen, onClose, activePage = 'dashboard' }) => {
   };
 
   return (
-    <aside className={`fixed lg:static w-64 h-screen bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 z-40 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-      
-      <nav className="flex-1 px-4 space-y-1 overflow-y-auto pt-6">
+    <aside
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`
+        fixed lg:static h-screen bg-white border-r border-slate-200 flex flex-col z-40
+        transition-all duration-300
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${expanded ? 'w-64' : 'w-16'}
+      `}
+    >
+      {/* Logo row */}
+      <div className="h-16 flex items-center border-b border-slate-200 shrink-0 overflow-hidden px-3 gap-2">
+        <div className="shrink-0 cursor-pointer" onClick={() => navigate('/')}>
+          <Logo width={32} height={32} />
+        </div>
+
+        <span
+          className={`text-lg font-bold text-slate-900 whitespace-nowrap cursor-pointer flex-1 transition-all duration-300 overflow-hidden ${
+            expanded ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+          }`}
+          onClick={() => navigate('/')}
+        >
+          CareerSphere
+        </span>
+
+        <button
+          onClick={() => setIsCollapsed(prev => !prev)}
+          className={`hidden lg:flex shrink-0 p-1 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600 ${
+            expanded ? '' : 'mx-auto'
+          }`}
+          aria-label="Toggle sidebar"
+        >
+          {expanded ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+        </button>
+
+        <button
+          onClick={onClose}
+          className="lg:hidden shrink-0 p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-500"
+          aria-label="Close menu"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 px-2 space-y-1 overflow-y-auto pt-4">
         {navigationItems.map((item) => (
-          <NavItem 
+          <NavItem
             key={item.id}
-            icon={<item.icon size={20}/>} 
+            icon={<item.icon size={20} />}
             label={item.label}
             active={item.id === activePage}
+            expanded={expanded}
             onClick={() => handleNavigation(item.path)}
           />
         ))}
       </nav>
 
-      <div className="p-4 mb-16 mt-auto border-t border-slate-200">
-        <button 
+      {/* Logout */}
+      <div className="p-2 mb-0.5 mt-auto border-t border-slate-100">
+        <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 bg-red-100 text-slate-600 hover:bg-red-200 rounded-lg transition-colors text-sm font-medium"
+          className={`flex items-center bg-red-100 text-slate-600 hover:bg-red-200 rounded-lg transition-all duration-300 text-sm font-medium ${
+            expanded ? 'w-full gap-3 px-3 py-2.5' : 'w-10 h-10 mx-auto justify-center'
+          }`}
         >
-          <LogOut size={20} className="text-red-600" />
-          <span>Logout</span>
+          <LogOut size={20} className="text-red-600 shrink-0" />
+          <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${
+            expanded ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+          }`}>
+            Logout
+          </span>
         </button>
       </div>
     </aside>
   );
 };
 
-const NavItem = ({ icon, label, active = false, onClick }) => (
-  <button 
-    onClick={onClick} 
-    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium ${
-      active 
-        ? 'bg-blue-900 text-white shadow-md' 
+const NavItem = ({ icon, label, active, expanded, onClick }) => (
+  <button
+    onClick={onClick}
+    title={!expanded ? label : undefined}
+    className={`flex items-center rounded-lg transition-all duration-200 text-sm font-medium ${
+      expanded ? 'w-full gap-3 px-3 py-2.5' : 'w-10 h-10 mx-auto justify-center'
+    } ${
+      active
+        ? 'bg-blue-900 text-white shadow-md'
         : 'text-slate-600 hover:bg-slate-100 active:bg-slate-200'
     }`}
   >
-    {icon}
-    <span>{label}</span>
+    <span className="shrink-0">{icon}</span>
+    <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${
+      expanded ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0'
+    }`}>
+      {label}
+    </span>
   </button>
 );
 

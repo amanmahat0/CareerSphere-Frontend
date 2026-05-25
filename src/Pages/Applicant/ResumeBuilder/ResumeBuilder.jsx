@@ -343,29 +343,24 @@ const ResumeBuilder = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-      {/* Dashboard Header */}
-      <DashboardHeader
-        onMenuClick={() => setSidebarOpen(true)}
-        userRole="Applicant"
-        dashboardPath="/applicant/dashboard"
-        profilePath="/applicant/profile"
-      />
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="resume" />
 
-      {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="resume" />
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-30"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-        {/* Mobile Overlay */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-30"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <DashboardHeader
+          onMenuClick={() => setSidebarOpen(prev => !prev)}
+          userRole="Applicant"
+          dashboardPath="/applicant/dashboard"
+          profilePath="/applicant/profile"
+        />
 
-        {/* Main Area */}
         <main className="flex-1 flex flex-col overflow-hidden">
           {/* Sub Header with Actions */}
           <div className="bg-white border-b border-slate-200 px-6 py-4">

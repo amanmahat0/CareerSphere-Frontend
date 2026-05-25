@@ -186,10 +186,6 @@ const ApplicantNotification = () => {
       >
         <Bell size={20} />
 
-        {/* Connection indicator */}
-        {isConnected && (
-          <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full"></span>
-        )}
 
         {/* Unread badge */}
         {unreadCount > 0 && (

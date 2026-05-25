@@ -304,29 +304,24 @@ const ApplicantProfile = () => {
   if (!user) return <div className="flex items-center justify-center h-screen">Loading...</div>;
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-      {/* Dashboard Header Component */}
-      <DashboardHeader 
-        onMenuClick={() => setSidebarOpen(true)} 
-        userRole="Applicant"
-        dashboardPath="/applicant/dashboard"
-        profilePath="/applicant/profile"
-      />
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="profile" />
 
-      {/* Main Content Section */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar Component */}
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="profile" />
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-30"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-        {/* Mobile Overlay */}
-        {sidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-30"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <DashboardHeader
+          onMenuClick={() => setSidebarOpen(prev => !prev)}
+          userRole="Applicant"
+          dashboardPath="/applicant/dashboard"
+          profilePath="/applicant/profile"
+        />
 
-        {/* Profile Content */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-8">
           <div className="max-w-7xl mx-auto">
             {/* Page Header */}

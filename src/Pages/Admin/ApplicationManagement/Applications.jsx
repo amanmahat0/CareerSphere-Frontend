@@ -105,16 +105,15 @@ const Applications = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-        <DashboardHeader 
-          onMenuClick={() => setSidebarOpen(!sidebarOpen)} 
-          userRole="Admin"
-          dashboardPath="/admin/dashboard"
-        />
-        <div className="flex flex-1 items-center justify-center">
-          <div className="text-center">
-            <Loader2 size={48} className="mx-auto text-blue-600 animate-spin mb-4" />
-            <p className="text-slate-600 font-medium">Loading applications...</p>
+      <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+        <AdminSidebar isOpen={false} onClose={() => {}} activePage="applications" />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <DashboardHeader onMenuClick={() => {}} userRole="Admin" dashboardPath="/admin/dashboard" />
+          <div className="flex flex-1 items-center justify-center">
+            <div className="text-center">
+              <Loader2 size={48} className="mx-auto text-blue-600 animate-spin mb-4" />
+              <p className="text-slate-600 font-medium">Loading applications...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -122,39 +121,30 @@ const Applications = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-      {/* Dashboard Header Component */}
-      <DashboardHeader 
-        onMenuClick={() => setSidebarOpen(!sidebarOpen)} 
-        userRole="Admin"
-        dashboardPath="/admin/dashboard"
-      />
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="applications" />
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
+      )}
 
-      {/* Main Content Section */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar Component */}
-        <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="applications" />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <DashboardHeader
+          onMenuClick={() => setSidebarOpen(prev => !prev)}
+          userRole="Admin"
+          dashboardPath="/admin/dashboard"
+        />
 
-        {/* Mobile Overlay */}
-        {sidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-10" 
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
-        {/* Main Panel */}
         <main className="flex-1 overflow-auto">
           <div className="p-6 max-w-7xl mx-auto w-full">
             {/* Header */}
             <div className="mb-8">
-              <h1 className="text-4xl font-bold mb-2">Applications Management</h1>
-              <p className="text-slate-600">View and manage all applications from applicants</p>
+              <h1 className="text-2xl font-bold text-slate-900">Applications Management</h1>
+              <p className="text-slate-500 text-xs mt-0.5">View and manage all applications from applicants</p>
             </div>
 
             {/* Statistics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-slate-600 text-sm font-medium">Total Applications</p>
@@ -163,7 +153,7 @@ const Applications = () => {
                   <FileText size={28} className="text-blue-500" />
                 </div>
               </div>
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-slate-600 text-sm font-medium">Applied</p>
@@ -176,7 +166,7 @@ const Applications = () => {
             </div>
 
             {/* Search and Filters */}
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-6">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {/* Search */}
                 <div className="md:col-span-2">
@@ -273,7 +263,7 @@ const Applications = () => {
             )}
 
             {/* Applications Table */}
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
               {filteredApplications.length === 0 ? (
                 <div className="p-8 text-center">
                   <FileText size={48} className="mx-auto text-slate-400 mb-4" />
@@ -285,13 +275,13 @@ const Applications = () => {
                   <table className="w-full">
                     <thead className="bg-slate-50 border-b border-slate-200">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Company</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Applicant</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Email</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Job Position</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Applied Date</th>
-                        <th className="px-6 py-3 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">Action</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Company</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Applicant</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Email</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Job Position</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Status</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Applied Date</th>
+                        <th className="px-5 py-3 text-center text-xs font-medium text-slate-500">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200">

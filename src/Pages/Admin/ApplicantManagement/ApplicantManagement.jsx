@@ -138,28 +138,19 @@ const ApplicantManagement = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-      {/* Dashboard Header Component */}
-      <DashboardHeader 
-        onMenuClick={() => setSidebarOpen(!sidebarOpen)} 
-        userRole="Admin"
-        dashboardPath="/admin/dashboard"
-      />
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="applicants" />
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
+      )}
 
-      {/* Main Content Section */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar Component */}
-        <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="applicants" />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <DashboardHeader
+          onMenuClick={() => setSidebarOpen(prev => !prev)}
+          userRole="Admin"
+          dashboardPath="/admin/dashboard"
+        />
 
-        {/* Mobile Overlay */}
-        {sidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-30"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
-        {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
 
           <div className="p-4 lg:p-8">
@@ -167,7 +158,7 @@ const ApplicantManagement = () => {
               {/* Header */}
               <div className="flex flex-col lg:flex-row justify-between lg:items-start mb-6 gap-4">
                 <div>
-                  <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">Applicant Management</h1>
+                  <h1 className="text-2xl font-bold text-slate-900">Applicant Management</h1>
                   <p className="text-slate-500 text-sm mt-0.5">Manage applicant profiles and placement status</p>
                 </div>
                 <div className="flex gap-3 flex-wrap">
@@ -214,13 +205,13 @@ const ApplicantManagement = () => {
                   ) : (
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-slate-50/50 text-[13px] uppercase tracking-wider text-slate-500 font-bold border-b border-slate-100">
-                        <th className="px-4 py-4 w-12">S.N</th>
-                        <th className="px-4 lg:px-6 py-4">Name</th>
-                        <th className="px-4 py-4">Email</th>
-                        <th className="px-4 py-4 hidden md:table-cell">Phone</th>
-                        <th className="px-4 py-4 hidden lg:table-cell">Resume Status</th>
-                        <th className="px-4 lg:px-6 py-4 text-right">Actions</th>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500 w-12">S.N</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Name</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Email</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500 hidden md:table-cell">Phone</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500 hidden lg:table-cell">Resume Status</th>
+                        <th className="px-5 py-3 text-right text-xs font-medium text-slate-500">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">

@@ -60,7 +60,7 @@ const Badge = ({ meta, size = 'sm' }) => (
 );
 
 const SortTh = ({ col, label, sortKey, sortDir, onSort }) => (
-  <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 cursor-pointer select-none hover:text-slate-700 whitespace-nowrap" onClick={() => onSort(col)}>
+  <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 cursor-pointer select-none hover:text-slate-700 whitespace-nowrap" onClick={() => onSort(col)}>
     <span className="inline-flex items-center gap-0.5">
       {label}
       {sortKey === col
@@ -84,7 +84,7 @@ const Pagination = ({ page, total, pageSize, onChange }) => {
           const p = pages <= 5 ? i + 1 : page <= 3 ? i + 1 : page >= pages - 2 ? pages - 4 + i : page - 2 + i;
           return (
             <button key={p} onClick={() => onChange(p)}
-              className={`w-6 h-6 rounded text-xs font-semibold transition ${p === page ? 'bg-blue-600 text-white' : 'hover:bg-slate-100 text-slate-600'}`}>
+              className={`w-6 h-6 rounded text-xs font-semibold transition ${p === page ? 'bg-blue-900 text-white' : 'hover:bg-slate-100 text-slate-600'}`}>
               {p}
             </button>
           );
@@ -313,37 +313,34 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-      <DashboardHeader
-        onMenuClick={() => setSidebarOpen(!sidebarOpen)}
-        userRole="Admin"
-        dashboardPath="/admin/dashboard"
-        profilePath="/admin/profile"
-      />
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="dashboard" />
+      {sidebarOpen && <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />}
 
-      <div className="flex flex-1 overflow-hidden">
-        <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="dashboard" />
-        {sidebarOpen && <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <DashboardHeader
+          onMenuClick={() => setSidebarOpen(prev => !prev)}
+          userRole="Admin"
+          dashboardPath="/admin/dashboard"
+          profilePath="/admin/profile"
+        />
 
         <main className="flex-1 overflow-y-auto p-4 lg:p-8">
           <div className="max-w-7xl mx-auto space-y-6">
 
-            {/* ── Banner ── */}
-            <div className="bg-linear-to-r from-slate-900 to-slate-700 rounded-2xl px-6 py-4 text-white flex flex-wrap items-center justify-between gap-3 shadow-md">
-              <div className="flex items-center gap-3">
-                <Shield size={20} className="text-slate-300 shrink-0" />
-                <div>
-                  <h1 className="text-lg font-bold">Admin Dashboard</h1>
-                  <p className="text-slate-400 text-xs mt-0.5">Platform-wide placement & internship management.</p>
-                </div>
+            {/* ── Header ── */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900">Admin Dashboard</h1>
+                <p className="text-slate-500 text-xs mt-0.5">Platform-wide placement & internship management.</p>
               </div>
               <div className="flex items-center gap-2">
                 {stats.pending > 0 && (
-                  <span className="flex items-center gap-1.5 text-xs font-semibold bg-amber-500 text-white px-3 py-1.5 rounded-lg animate-pulse">
+                  <span className="flex items-center gap-1.5 text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200 px-3 py-1.5 rounded-lg">
                     <AlertTriangle size={12} /> {stats.pending} pending approval{stats.pending > 1 ? 's' : ''}
                   </span>
                 )}
-                <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold bg-white/10 border border-white/20 px-3 py-1.5 rounded-lg">
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg">
                   <TrendingUp size={12} />
                   Hire rate: {loading ? '…' : stats.applications > 0 ? `${((stats.hired / stats.applications) * 100).toFixed(1)}%` : '0%'}
                 </span>
@@ -376,9 +373,9 @@ const AdminDashboard = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
                   {/* Donut — type distribution */}
-                  <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                    <div className="p-4 border-b border-slate-100">
-                      <h2 className="text-sm font-bold text-slate-900">Applications by Type</h2>
+                  <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                    <div className="px-5 py-4 border-b border-slate-100">
+                      <h2 className="text-lg font-bold text-slate-800">Applications by Type</h2>
                       <p className="text-xs text-slate-400 mt-0.5">Job · Internship · Traineeship</p>
                     </div>
                     {typeDonut.length === 0 ? (
@@ -431,9 +428,9 @@ const AdminDashboard = () => {
                   </div>
 
                   {/* Bar — hiring pipeline */}
-                  <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                    <div className="p-4 border-b border-slate-100">
-                      <h2 className="text-sm font-bold text-slate-900">Hiring Pipeline</h2>
+                  <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                    <div className="px-5 py-4 border-b border-slate-100">
+                      <h2 className="text-lg font-bold text-slate-800">Hiring Pipeline</h2>
                       <p className="text-xs text-slate-400 mt-0.5">Candidates at each stage</p>
                     </div>
                     <div className="p-4">
@@ -477,9 +474,9 @@ const AdminDashboard = () => {
                   </div>
 
                   {/* Area — applications trend */}
-                  <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                    <div className="p-4 border-b border-slate-100">
-                      <h2 className="text-sm font-bold text-slate-900">Application Trend</h2>
+                  <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                    <div className="px-5 py-4 border-b border-slate-100">
+                      <h2 className="text-lg font-bold text-slate-800">Application Trend</h2>
                       <p className="text-xs text-slate-400 mt-0.5">Daily applications (last 14 days)</p>
                     </div>
                     <div className="p-4 h-52">
@@ -518,7 +515,7 @@ const AdminDashboard = () => {
 
                 {/* ── Pending Approvals Alert ── */}
                 {stats.pending > 0 && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
                     <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-amber-900">
@@ -536,7 +533,7 @@ const AdminDashboard = () => {
                 )}
 
                 {/* ── Management Tables ── */}
-                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
                   {/* Tab bar */}
                   <div className="flex items-center gap-1 px-4 pt-4 border-b border-slate-100 overflow-x-auto">
                     {TABS.map(({ key, label, count }) => (
@@ -611,14 +608,14 @@ const AdminDashboard = () => {
                         <table className="w-full text-sm">
                           <thead className="bg-slate-50 border-b border-slate-200">
                             <tr>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 w-10">S.N.</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 w-10">S.N.</th>
                               <SortTh col="name"   label="Candidate"  sortKey={sortCfg.key} sortDir={sortCfg.dir} onSort={handleSort} />
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Position</th>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Company</th>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Type</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Position</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Company</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Type</th>
                               <SortTh col="date"   label="Applied"    sortKey={sortCfg.key} sortDir={sortCfg.dir} onSort={handleSort} />
                               <SortTh col="status" label="Status"     sortKey={sortCfg.key} sortDir={sortCfg.dir} onSort={handleSort} />
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Actions</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Actions</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100">
@@ -656,14 +653,14 @@ const AdminDashboard = () => {
                         <table className="w-full text-sm">
                           <thead className="bg-slate-50 border-b border-slate-200">
                             <tr>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 w-10">S.N.</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 w-10">S.N.</th>
                               <SortTh col="title" label="Job Title"  sortKey={sortCfg.key} sortDir={sortCfg.dir} onSort={handleSort} />
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Company</th>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Type</th>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Location</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Company</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Type</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Location</th>
                               <SortTh col="date"  label="Posted"    sortKey={sortCfg.key} sortDir={sortCfg.dir} onSort={handleSort} />
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Deadline</th>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Actions</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Deadline</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Actions</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100">
@@ -710,14 +707,14 @@ const AdminDashboard = () => {
                         <table className="w-full text-sm">
                           <thead className="bg-slate-50 border-b border-slate-200">
                             <tr>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 w-10">S.N.</th>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Company</th>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Industry</th>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Size</th>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Email</th>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Joined</th>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Status</th>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Actions</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 w-10">S.N.</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Company</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Industry</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Size</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Email</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Joined</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Status</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Actions</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100">
@@ -784,12 +781,12 @@ const AdminDashboard = () => {
                         <table className="w-full text-sm">
                           <thead className="bg-slate-50 border-b border-slate-200">
                             <tr>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500 w-10">S.N.</th>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Name</th>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Email</th>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Type</th>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Joined</th>
-                              <th className="px-3 py-3 text-left text-xs font-semibold text-slate-500">Actions</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 w-10">S.N.</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Name</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Email</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Type</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Joined</th>
+                              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500">Actions</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100">
@@ -827,10 +824,10 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* ── Recent Activity Feed ── */}
-                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                  <div className="p-4 border-b border-slate-100 flex items-center gap-2">
+                <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                  <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
                     <Bell size={15} className="text-slate-500" />
-                    <h2 className="text-sm font-bold text-slate-900">Recent Activity</h2>
+                    <h2 className="text-lg font-bold text-slate-800">Recent Activity</h2>
                     <span className="ml-auto text-xs text-slate-400">{recentActivity.length} events</span>
                   </div>
                   {recentActivity.length === 0 ? (

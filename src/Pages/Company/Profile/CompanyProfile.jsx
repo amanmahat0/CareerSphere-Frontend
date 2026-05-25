@@ -477,27 +477,19 @@ const CompanyProfile = () => {
   if (!user) return <div className="flex items-center justify-center h-screen">Loading...</div>;
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-      {/* Dashboard Header Component */}
-      <DashboardHeader 
-        onMenuClick={() => setSidebarOpen(true)} 
-        userRole="Company"
-        dashboardPath="/company/dashboard"
-        profilePath="/company/profile"
-      />
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <CompanySidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="profile" />
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
+      )}
 
-      {/* Main Content Section */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar Component */}
-        <CompanySidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="profile" />
-
-        {/* Mobile Overlay */}
-        {sidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-30"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <DashboardHeader
+          onMenuClick={() => setSidebarOpen(prev => !prev)}
+          userRole="Company"
+          dashboardPath="/company/dashboard"
+          profilePath="/company/profile"
+        />
 
         {/* Profile Content */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-8">

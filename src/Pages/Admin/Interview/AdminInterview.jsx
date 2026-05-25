@@ -203,49 +203,40 @@ export default function AdminInterview() {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-screen bg-slate-50">
-        <DashboardHeader 
-          onMenuClick={() => setSidebarOpen(true)} 
-          userRole="Admin"
-          dashboardPath="/admin/dashboard"
-        />
-        <div className="flex items-center justify-center flex-1">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="flex h-screen bg-slate-50">
+        <AdminSidebar isOpen={false} onClose={() => {}} activePage="interviews" />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <DashboardHeader onMenuClick={() => {}} userRole="Admin" dashboardPath="/admin/dashboard" />
+          <div className="flex items-center justify-center flex-1">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-      {/* Header */}
-      <DashboardHeader
-        onMenuClick={() => setSidebarOpen(true)}
-        userRole="Admin"
-        dashboardPath="/admin/dashboard"
-        profilePath="/admin/profile"
-      />
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="interviews" />
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
+      )}
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="interviews" />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <DashboardHeader
+          onMenuClick={() => setSidebarOpen(prev => !prev)}
+          userRole="Admin"
+          dashboardPath="/admin/dashboard"
+          profilePath="/admin/profile"
+        />
 
-        {/* Mobile overlay */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-30"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
-        {/* Main content */}
         <main className="flex-1 overflow-auto">
           <div className="p-6 space-y-6">
             {/* Page header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-slate-900">Interview Management</h1>
-                <p className="text-slate-600 mt-1">Track and manage the hiring workflow for all candidates across all companies</p>
+                <h1 className="text-2xl font-bold text-slate-900">Interview Management</h1>
+                <p className="text-slate-500 text-xs mt-0.5">Track and manage the hiring workflow for all candidates across all companies</p>
               </div>
             </div>
 
@@ -292,7 +283,7 @@ export default function AdminInterview() {
             )}
 
             {/* Controls */}
-            <div className="bg-white rounded-lg border border-slate-200 p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full">
                 {/* Search */}
                 <div className="relative flex-1 max-w-sm">
@@ -335,12 +326,12 @@ export default function AdminInterview() {
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-slate-200 bg-slate-50">
-                      <th className="px-6 py-3 text-left">
+                      <th className="px-5 py-3 text-left">
                         <input
                           type="checkbox"
                           checked={selectedIds.size === filteredCandidates.length && filteredCandidates.length > 0}
@@ -348,13 +339,13 @@ export default function AdminInterview() {
                           className="w-4 h-4 rounded border-slate-300"
                         />
                       </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">Candidate</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">Position</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">Company</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">Applied Date</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">Current Step</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">Interview Status</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-slate-700">Action</th>
+                      <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Candidate</th>
+                      <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Position</th>
+                      <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Company</th>
+                      <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Applied Date</th>
+                      <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Current Step</th>
+                      <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Interview Status</th>
+                      <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -409,7 +400,7 @@ export default function AdminInterview() {
                                   setSelectedCandidate(candidate);
                                   setShowPopup(true);
                                 }}
-                                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                                className="px-3 py-2 bg-blue-900 hover:bg-blue-950 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
                               >
                                 <Eye className="w-4 h-4" />
                                 Manage
@@ -485,7 +476,7 @@ export default function AdminInterview() {
 
 const StatCard = ({ label, value, icon }) => {
   return (
-    <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
       <div className="flex justify-between items-start">
         <div className="min-w-0 flex-1">
           <p className="text-slate-500 text-xs mb-1 truncate">{label}</p>

@@ -271,7 +271,7 @@ export function AIChatbot() {
               </button>
             </div>
             <p className="text-center text-slate-400 mt-1.5" style={{ fontSize: "10px" }}>
-              Powered by Gemini 2.0 Flash · Free tier
+              Powered by GROQ AI. Your data is private and secure.
             </p>
           </div>
         </>

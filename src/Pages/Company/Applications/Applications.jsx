@@ -165,29 +165,25 @@ function Applications() {
   });
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-      <DashboardHeader 
-        onMenuClick={() => setSidebarOpen(!sidebarOpen)} 
-        userRole="Company"
-        dashboardPath="/company/dashboard"
-        profilePath="/company/profile"
-      />
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <CompanySidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="applications" />
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
+      )}
 
-      <div className="flex flex-1 overflow-hidden">
-        <CompanySidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="applications" />
-
-        {sidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-30"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <DashboardHeader
+          onMenuClick={() => setSidebarOpen(prev => !prev)}
+          userRole="Company"
+          dashboardPath="/company/dashboard"
+          profilePath="/company/profile"
+        />
 
         <main className="flex-1 overflow-y-auto p-4 lg:p-8">
           <div className="max-w-7xl mx-auto space-y-6">
             <div>
-              <h1 className="text-3xl lg:text-4xl font-bold mb-2">Applications</h1>
-              <p className="text-slate-500 text-sm lg:text-base">Review and manage job applicants <span className="font-semibold text-slate-700">({applications.length} total)</span></p>
+              <h1 className="text-2xl font-bold text-slate-900">Applications</h1>
+              <p className="text-slate-500 text-xs mt-0.5">Review and manage job applicants ({applications.length} total)</p>
             </div>
 
             {/* Stats Cards */}
@@ -294,11 +290,11 @@ function Applications() {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-slate-200 bg-slate-50">
-                        <th className="px-6 py-4 text-sm font-semibold text-slate-700">Applicant</th>
-                        <th className="px-6 py-4 text-sm font-semibold text-slate-700">Job Position</th>
-                        <th className="px-6 py-4 text-sm font-semibold text-slate-700">Applied Date</th>
-                        <th className="px-6 py-4 text-sm font-semibold text-slate-700">Status</th>
-                        <th className="px-6 py-4 text-sm font-semibold text-slate-700">Actions</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Applicant</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Job Position</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Applied Date</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Status</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -367,7 +363,7 @@ function Applications() {
 
 const StatCard = ({ label, value, icon }) => {
   return (
-    <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
       <div className="flex justify-between items-start">
         <div className="min-w-0 flex-1">
           <p className="text-slate-500 text-xs mb-1 truncate">{label}</p>

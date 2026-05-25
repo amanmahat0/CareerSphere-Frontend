@@ -168,16 +168,15 @@ const CompanyManagement = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-        <DashboardHeader 
-          onMenuClick={() => setSidebarOpen(!sidebarOpen)} 
-          userRole="Admin"
-          dashboardPath="/admin/dashboard"
-        />
-        <div className="flex flex-1 items-center justify-center">
-          <div className="text-center">
-            <Loader2 size={48} className="mx-auto text-blue-600 animate-spin mb-4" />
-            <p className="text-slate-600 font-medium">Loading companies...</p>
+      <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+        <AdminSidebar isOpen={false} onClose={() => {}} activePage="companies" />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <DashboardHeader onMenuClick={() => {}} userRole="Admin" dashboardPath="/admin/dashboard" />
+          <div className="flex flex-1 items-center justify-center">
+            <div className="text-center">
+              <Loader2 size={48} className="mx-auto text-blue-600 animate-spin mb-4" />
+              <p className="text-slate-600 font-medium">Loading companies...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -185,26 +184,18 @@ const CompanyManagement = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-      {/* Dashboard Header Component */}
-      <DashboardHeader 
-        onMenuClick={() => setSidebarOpen(!sidebarOpen)} 
-        userRole="Admin"
-        dashboardPath="/admin/dashboard"
-      />
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="companies" />
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
+      )}
 
-      {/* Main Content Section */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar Component */}
-        <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="companies" />
-
-        {/* Mobile Overlay */}
-        {sidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-30"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <DashboardHeader
+          onMenuClick={() => setSidebarOpen(prev => !prev)}
+          userRole="Admin"
+          dashboardPath="/admin/dashboard"
+        />
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
@@ -213,7 +204,7 @@ const CompanyManagement = () => {
               {/* Header */}
               <div className="flex flex-col lg:flex-row justify-between lg:items-start mb-6 gap-4">
                 <div>
-                  <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">Company Management</h1>
+                  <h1 className="text-2xl font-bold text-slate-900">Company Management</h1>
                   <p className="text-slate-500 text-sm mt-0.5">Manage registered companies and verify their documents</p>
                 </div>
                 <div className="flex gap-3 flex-wrap">
@@ -261,14 +252,14 @@ const CompanyManagement = () => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-slate-50/50 text-[11px] uppercase tracking-wider text-slate-500 font-bold border-b border-slate-100">
-                        <th className="px-4 py-4 w-12">S.N</th>
-                        <th className="px-4 lg:px-6 py-4">Company</th>
-                        <th className="px-4 py-4">Email</th>
-                        <th className="px-4 py-4 hidden lg:table-cell">Size</th>
-                        <th className="px-4 py-4 text-center">Docs</th>
-                        <th className="px-4 py-4 text-center">Status</th>
-                        <th className="px-4 lg:px-6 py-4 text-right">Actions</th>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500 w-12">S.N</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Company</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Email</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500 hidden lg:table-cell">Size</th>
+                        <th className="px-5 py-3 text-center text-xs font-medium text-slate-500">Docs</th>
+                        <th className="px-5 py-3 text-center text-xs font-medium text-slate-500">Status</th>
+                        <th className="px-5 py-3 text-right text-xs font-medium text-slate-500">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">

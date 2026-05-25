@@ -106,6 +106,16 @@ const OpportunityDetails = () => {
   }, []);
 
   useEffect(() => {
+    const stored = localStorage.getItem('savedJobs');
+    if (stored) {
+      try {
+        const jobs = JSON.parse(stored);
+        setIsBookmarked(jobs.some((j) => j.id === id));
+      } catch {}
+    }
+  }, [id]);
+
+  useEffect(() => {
     if (!id) return;
     const fetchJobDetails = async () => {
       try {
@@ -136,6 +146,33 @@ const OpportunityDetails = () => {
       return;
     }
     setShowApplyModal(true);
+  };
+
+  const handleBookmark = () => {
+    let savedJobs = [];
+    try {
+      const stored = localStorage.getItem('savedJobs');
+      savedJobs = stored ? JSON.parse(stored) : [];
+    } catch {}
+
+    if (isBookmarked) {
+      savedJobs = savedJobs.filter((j) => j.id !== id);
+      toast.success('Removed from saved jobs');
+    } else {
+      savedJobs.push({
+        id,
+        title: job.title,
+        company: job.company,
+        type: job.type,
+        location: job.location,
+        deadline: job.deadline,
+        logo: job.companyLogo || job.logo || null,
+        savedAt: new Date().toISOString(),
+      });
+      toast.success('Job saved!');
+    }
+    localStorage.setItem('savedJobs', JSON.stringify(savedJobs));
+    setIsBookmarked(!isBookmarked);
   };
 
   const handleShare = () => {
@@ -309,7 +346,7 @@ const OpportunityDetails = () => {
 
               <div className="flex gap-2 mb-4">
                 <button
-                  onClick={() => setIsBookmarked(!isBookmarked)}
+                  onClick={handleBookmark}
                   className={`flex-1 flex items-center justify-center gap-2 h-9 text-sm rounded-lg border transition-colors font-medium
                     ${isBookmarked
                       ? "bg-blue-50 text-blue-700 border-blue-200"

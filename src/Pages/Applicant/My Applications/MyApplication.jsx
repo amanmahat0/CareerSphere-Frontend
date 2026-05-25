@@ -135,7 +135,7 @@ const EmptyState = ({ filtered, onClear }) => (
             <p className="text-xs text-slate-400 mb-2">Start applying to track your progress here.</p>
             <a
               href="/opportunities"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-950 px-4 py-2 rounded-lg transition"
             >
               Browse Opportunities <ArrowUpRight size={12} />
             </a>
@@ -244,7 +244,7 @@ const MyApplication = () => {
 
   const ThCell = ({ col, label }) => (
     <th
-      className="px-4 py-3 text-left text-xs font-semibold text-slate-500 cursor-pointer select-none hover:text-slate-700 transition"
+      className="px-5 py-3 text-left text-xs font-medium text-slate-500 cursor-pointer select-none hover:text-slate-700 transition"
       onClick={() => handleSort(col)}
     >
       <span className="inline-flex items-center">
@@ -254,34 +254,34 @@ const MyApplication = () => {
   );
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-900">
-      <DashboardHeader
-        onMenuClick={() => setSidebarOpen(true)}
-        userRole="Applicant"
-        dashboardPath="/applicant/dashboard"
-        profilePath="/applicant/profile"
-      />
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="applications" />
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
+      )}
 
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} activePage="applications" />
-        {sidebarOpen && (
-          <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
-        )}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <DashboardHeader
+          onMenuClick={() => setSidebarOpen(prev => !prev)}
+          userRole="Applicant"
+          dashboardPath="/applicant/dashboard"
+          profilePath="/applicant/profile"
+        />
 
         <main className="flex-1 overflow-y-auto p-4 lg:p-8">
           <div className="max-w-7xl mx-auto space-y-5">
 
-            {/* ── Banner ── */}
-            <div className="bg-linear-to-r from-blue-900 to-blue-700 rounded-2xl px-6 py-4 text-white flex items-center justify-between gap-4 shadow-md">
+            {/* ── Header ── */}
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <h1 className="text-lg font-bold">My Applications</h1>
-                <p className="text-blue-200 text-xs mt-0.5">
+                <h1 className="text-2xl font-bold text-slate-900">My Applications</h1>
+                <p className="text-slate-500 text-xs mt-0.5">
                   {loading ? 'Loading…' : `${applications.length} application${applications.length !== 1 ? 's' : ''} tracked`}
                 </p>
               </div>
               <a
                 href="/opportunities"
-                className="shrink-0 hidden sm:inline-flex items-center gap-1.5 bg-white text-blue-800 text-xs font-semibold px-4 py-2 rounded-lg hover:bg-blue-50 transition"
+                className="shrink-0 hidden sm:inline-flex items-center gap-1.5 bg-blue-900 text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-blue-950 transition"
               >
                 Browse Jobs <ArrowUpRight size={12} />
               </a>
@@ -298,9 +298,9 @@ const MyApplication = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
               {/* Donut chart */}
-              <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100">
-                  <h2 className="text-sm font-bold text-slate-900">Application Status Overview</h2>
+              <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b border-slate-100">
+                  <h2 className="text-lg font-bold text-slate-800">Application Status Overview</h2>
                   <p className="text-xs text-slate-400 mt-0.5">Breakdown of all applications by current status</p>
                 </div>
                 {applications.length === 0 ? (
@@ -360,9 +360,9 @@ const MyApplication = () => {
               </div>
 
               {/* Pipeline funnel */}
-              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-slate-100">
-                  <h2 className="text-sm font-bold text-slate-900">Pipeline Funnel</h2>
+              <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b border-slate-100">
+                  <h2 className="text-lg font-bold text-slate-800">Application Status</h2>
                   <p className="text-xs text-slate-400 mt-0.5">How far your applications have progressed</p>
                 </div>
                 <div className="p-4 space-y-2.5">
@@ -391,12 +391,12 @@ const MyApplication = () => {
             </div>
 
             {/* ── Applications Table ── */}
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
 
               {/* Table header row */}
-              <div className="p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+              <div className="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-sm font-bold text-slate-900">Applications</h2>
+                  <h2 className="text-lg font-bold text-slate-800">Applications</h2>
                   <p className="text-xs text-slate-400 mt-0.5">
                     {isFiltered ? `${filtered.length} of ${applications.length} shown` : `${applications.length} total`}
                   </p>
@@ -422,7 +422,7 @@ const MyApplication = () => {
                     onClick={() => setActiveTab(key)}
                     className={`text-xs px-3 py-1 rounded-full font-semibold border transition-all ${
                       activeTab === key
-                        ? 'bg-blue-600 text-white border-blue-600'
+                        ? 'bg-blue-900 text-white border-blue-900'
                         : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:text-blue-600'
                     }`}
                   >
@@ -447,16 +447,16 @@ const MyApplication = () => {
                   <table className="w-full text-sm">
                     <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 w-10">S.N.</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500 w-10">S.N.</th>
                         <ThCell col="title"   label="Job Title" />
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">Type</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Type</th>
                         <ThCell col="company" label="Company" />
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">Location</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Location</th>
                         <ThCell col="date"    label="Applied" />
                         <ThCell col="status"  label="Status" />
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">Progress</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">Next Step</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">Actions</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Progress</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Next Step</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
