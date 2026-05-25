@@ -5,7 +5,7 @@ import {
   ArrowUpRight, Briefcase, Info,
 } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import Sidebar from '../Components/Applicant Sidebar';
+import Sidebar from '../Components/ApplicantSidebar';
 import DashboardHeader from '../../../Components/DashboardHeader';
 import ApplicationDetailsModal from './ApplicationDetails';
 import { api } from '../../../utils/api';

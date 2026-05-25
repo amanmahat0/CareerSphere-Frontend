@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bookmark, Building2, MapPin, Briefcase, Calendar, Trash2, ArrowRight } from 'lucide-react';
-import Sidebar from '../Components/Applicant Sidebar';
+import Sidebar from '../Components/ApplicantSidebar';
 import DashboardHeader from '../../../Components/DashboardHeader';
 
 const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';

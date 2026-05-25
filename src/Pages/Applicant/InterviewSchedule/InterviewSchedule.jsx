@@ -9,7 +9,7 @@ import {
   Tooltip, Cell, ResponsiveContainer,
 } from 'recharts';
 import { toast } from '../../../utils/toast';
-import Sidebar from '../Components/Applicant Sidebar';
+import Sidebar from '../Components/ApplicantSidebar';
 import DashboardHeader from '../../../Components/DashboardHeader';
 import { api } from '../../../utils/api';
 

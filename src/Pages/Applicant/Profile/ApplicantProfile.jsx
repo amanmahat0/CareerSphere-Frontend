@@ -13,7 +13,7 @@ import {
   Trash2,
   Lock
 } from 'lucide-react';
-import Sidebar from '../Components/Applicant Sidebar';
+import Sidebar from '../Components/ApplicantSidebar';
 import ApplicantChangePassword from '../ForgotPassword/ApplicantChangePassword';
 import DashboardHeader from '../../../Components/DashboardHeader';
 import { api } from '../../../utils/api';

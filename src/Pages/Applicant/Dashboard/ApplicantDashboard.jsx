@@ -12,7 +12,7 @@ import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
-import Sidebar from '../Components/Applicant Sidebar';
+import Sidebar from '../Components/ApplicantSidebar';
 import DashboardHeader from '../../../Components/DashboardHeader';
 import { api } from '../../../utils/api';
 
