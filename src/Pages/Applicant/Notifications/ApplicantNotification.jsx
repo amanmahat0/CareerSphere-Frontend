@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
-import { CheckCircle2, Calendar, Briefcase, Bell, X } from 'lucide-react';
+import { CheckCircle2, Calendar, Briefcase, Bell, X, Award } from 'lucide-react';
 import { api } from '../../../utils/api.js';
 
 const ApplicantNotification = () => {
@@ -111,6 +111,17 @@ const ApplicantNotification = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Handle mark all as read
+  const handleMarkAllAsRead = async () => {
+    try {
+      await api.markAllNotificationsAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
+  };
+
   // Handle notification click
   const handleNotificationClick = async (notification) => {
     if (!notification.read) {
@@ -155,6 +166,8 @@ const ApplicantNotification = () => {
       case 'offer_received':
       case 'hired':
         return <Briefcase size={18} className="text-purple-600" />;
+      case 'certificate_issued':
+        return <Award size={18} className="text-amber-600" />;
       default:
         return <Bell size={18} className="text-slate-600" />;
     }
@@ -171,6 +184,8 @@ const ApplicantNotification = () => {
       case 'offer_received':
       case 'hired':
         return 'bg-purple-100';
+      case 'certificate_issued':
+        return 'bg-amber-100';
       default:
         return 'bg-slate-100';
     }
@@ -241,10 +256,16 @@ const ApplicantNotification = () => {
                     </div>
                     <div className="pr-4 flex-1">
                       <h3 className="text-sm font-medium text-slate-900 mb-1">
-                        {notification.type
-                          .split('_')
-                          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                          .join(' ')}
+                        {notification.type === 'admin_notification'
+                          ? 'Message from Admin'
+                          : notification.type === 'company_notification'
+                          ? 'Message from Company'
+                          : notification.type === 'certificate_issued'
+                          ? 'Certificate Issued'
+                          : notification.type
+                              .split('_')
+                              .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                              .join(' ')}
                       </h3>
                       <p className="text-xs text-slate-600 leading-relaxed">
                         {notification.message}
@@ -265,12 +286,22 @@ const ApplicantNotification = () => {
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="border-t border-slate-200 p-3 flex justify-center items-center">
+            <div className="border-t border-slate-200 p-3 flex justify-between items-center">
+              {unreadCount > 0 ? (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="text-sm text-slate-500 hover:text-slate-700 font-medium transition-colors"
+                >
+                  Mark all as read
+                </button>
+              ) : (
+                <span />
+              )}
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-sm text-blue-500 hover:text-blue-600 font-medium transition-colors"
               >
-                Close notifications
+                Close
               </button>
             </div>
           )}

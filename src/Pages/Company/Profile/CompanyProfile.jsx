@@ -119,6 +119,7 @@ const CompanyProfile = () => {
   const [uploadingDocuments, setUploadingDocuments] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [stagedFiles, setStagedFiles] = useState([]); // [{ file, documentName, documentType }]
   const fileInputRef = useRef(null);
   const documentsInputRef = useRef(null);
 
@@ -395,21 +396,14 @@ const CompanyProfile = () => {
     documentsInputRef.current?.click();
   };
 
-  const handleDocumentsChange = async (e) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+  const handleDocumentsChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
 
-    // Validate files
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    const maxFileSize = 10 * 1024 * 1024; // 10MB
-    const maxFiles = 5;
+    const maxFileSize = 10 * 1024 * 1024;
 
-    if (files.length > maxFiles) {
-      setMessage({ type: 'error', text: `You can upload a maximum of ${maxFiles} documents` });
-      return;
-    }
-
-    for (let file of files) {
+    for (const file of files) {
       if (!allowedTypes.includes(file.type)) {
         setMessage({ type: 'error', text: 'Only PDF, images, and Word documents are allowed' });
         return;
@@ -420,43 +414,43 @@ const CompanyProfile = () => {
       }
     }
 
+    if (stagedFiles.length + files.length > 5) {
+      setMessage({ type: 'error', text: 'You can upload a maximum of 5 documents' });
+      return;
+    }
+
+    const guessType = (name) => {
+      const n = name.toLowerCase();
+      if (n.includes('registration') || n.includes('cert')) return 'registration_certificate';
+      if (n.includes('license') || n.includes('business')) return 'business_license';
+      if (n.includes('tax') || n.includes('tin')) return 'tax_id';
+      return 'other';
+    };
+
+    setStagedFiles(prev => [
+      ...prev,
+      ...files.map(f => ({ file: f, documentName: '', documentType: guessType(f.name) })),
+    ]);
+    if (documentsInputRef.current) documentsInputRef.current.value = '';
+  };
+
+  const handleUploadStaged = async () => {
+    if (!stagedFiles.length) return;
     setUploadingDocuments(true);
     try {
-      const formData = new FormData();
-      const documentTypes = [];
-      
-      for (let file of files) {
-        formData.append('documents', file);
-        // Determine document type based on filename
-        const fileName = file.name.toLowerCase();
-        if (fileName.includes('registration') || fileName.includes('cert')) {
-          documentTypes.push('registration_certificate');
-        } else if (fileName.includes('license') || fileName.includes('business')) {
-          documentTypes.push('business_license');
-        } else if (fileName.includes('tax') || fileName.includes('tin')) {
-          documentTypes.push('tax_id');
-        } else {
-          documentTypes.push('other');
-        }
-      }
-
-      const response = await api.uploadVerificationDocuments(Array.from(files), documentTypes);
-      
+      const response = await api.uploadVerificationDocuments(
+        stagedFiles.map(s => s.file),
+        stagedFiles.map(s => s.documentType),
+        stagedFiles.map(s => s.documentName.trim()),
+      );
       setMessage({ type: 'success', text: `Successfully uploaded ${response.data.documents.length} document(s)! Your verification is pending admin review.` });
-      
-      // Refresh verification status
+      setStagedFiles([]);
       await fetchVerificationStatus();
-      
       setTimeout(() => setMessage({ type: '', text: '' }), 4000);
     } catch (error) {
-      console.error('Error uploading documents:', error);
       setMessage({ type: 'error', text: error.message || 'Failed to upload documents' });
     } finally {
       setUploadingDocuments(false);
-      // Reset file input
-      if (documentsInputRef.current) {
-        documentsInputRef.current.value = '';
-      }
     }
   };
 
@@ -935,18 +929,10 @@ const CompanyProfile = () => {
 
                     <button
                       onClick={handleDocumentsClick}
-                      disabled={uploadingDocuments}
+                      disabled={uploadingDocuments || stagedFiles.length >= 5}
                       className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      {uploadingDocuments ? (
-                        <>
-                          <Loader2 size={16} className="animate-spin" /> Uploading...
-                        </>
-                      ) : (
-                        <>
-                          <FileText size={16} /> Choose Documents to Upload
-                        </>
-                      )}
+                      <FileText size={16} /> Choose Documents
                     </button>
 
                     <input
@@ -957,6 +943,54 @@ const CompanyProfile = () => {
                       onChange={handleDocumentsChange}
                       className="hidden"
                     />
+
+                    {/* Staged files — enter document name before uploading */}
+                    {stagedFiles.length > 0 && (
+                      <div className="mt-4 space-y-3">
+                        <p className="text-xs font-semibold text-slate-700">Add a name for each document before uploading:</p>
+                        {stagedFiles.map((s, i) => (
+                          <div key={i} className="bg-white border border-slate-200 rounded-lg p-3 space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs font-medium text-slate-800 truncate flex-1">{s.file.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => setStagedFiles(prev => prev.filter((_, j) => j !== i))}
+                                className="text-slate-400 hover:text-red-500 shrink-0"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="Document name (e.g. Company Registration Certificate 2024) *"
+                              value={s.documentName}
+                              onChange={e => setStagedFiles(prev => prev.map((f, j) => j === i ? { ...f, documentName: e.target.value } : f))}
+                              className="w-full px-3 py-1.5 border border-slate-200 rounded text-xs focus:outline-none focus:border-blue-400"
+                            />
+                            <select
+                              value={s.documentType}
+                              onChange={e => setStagedFiles(prev => prev.map((f, j) => j === i ? { ...f, documentType: e.target.value } : f))}
+                              className="w-full px-3 py-1.5 border border-slate-200 rounded text-xs focus:outline-none focus:border-blue-400"
+                            >
+                              <option value="registration_certificate">Registration Certificate</option>
+                              <option value="business_license">Business License</option>
+                              <option value="tax_id">Tax ID / PAN</option>
+                              <option value="other">Other</option>
+                            </select>
+                          </div>
+                        ))}
+                        <button
+                          onClick={handleUploadStaged}
+                          disabled={uploadingDocuments || stagedFiles.some(s => !s.documentName.trim())}
+                          className="w-full py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          {uploadingDocuments
+                            ? <><Loader2 size={14} className="animate-spin" /> Uploading...</>
+                            : <><FileText size={14} /> Upload {stagedFiles.length} Document{stagedFiles.length !== 1 ? 's' : ''}</>
+                          }
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

@@ -12,6 +12,7 @@ import {
   Gift,
   Trophy,
   Loader2,
+  MessageSquare,
 } from "lucide-react";
 import { api } from "../../utils/api";
 import { toast } from "../../utils/toast";
@@ -33,7 +34,9 @@ import {
 const InterviewProgressTimeline = ({ application, onUpdate }) => {
   const [offerNotes, setOfferNotes] = useState("");
   const [loadingAction, setLoadingAction] = useState(false);
-  const [modalState, setModalState] = useState(null); // "accept" | "reject" | null
+  const [modalState, setModalState] = useState(null); // "accept" | "reject" | "negotiate" | null
+  // FIX 8: Negotiation form state
+  const [negotiateForm, setNegotiateForm] = useState({ salary: '', joiningDate: '', notes: '' });
 
   const steps = [
     { name: "pending", label: "Pending", icon: "" },
@@ -72,9 +75,34 @@ const InterviewProgressTimeline = ({ application, onUpdate }) => {
       if (result.success) {
         setModalState(null);
         setOfferNotes("");
-        if (onUpdate) {
-          onUpdate(result.data);
-        }
+        if (onUpdate) onUpdate(result.data);
+      }
+    } catch (error) {
+      toast.error("Error: " + error.message);
+    } finally {
+      setLoadingAction(false);
+    }
+  };
+
+  // FIX 8: Handle negotiation submission
+  const handleNegotiate = async () => {
+    if (!negotiateForm.notes.trim() && !negotiateForm.salary) {
+      toast.error("Please enter a proposed salary or note.");
+      return;
+    }
+    setLoadingAction(true);
+    try {
+      const result = await api.negotiateOffer(application._id, {
+        offerResponseNotes:     negotiateForm.notes,
+        counterOfferSalary:     negotiateForm.salary ? Number(negotiateForm.salary) : undefined,
+        counterOfferJoiningDate: negotiateForm.joiningDate || undefined,
+        counterOfferMessage:    negotiateForm.notes,
+      });
+      if (result.success) {
+        setModalState(null);
+        setNegotiateForm({ salary: '', joiningDate: '', notes: '' });
+        if (onUpdate) onUpdate(result.data);
+        toast.success("Counter-offer sent!");
       }
     } catch (error) {
       toast.error("Error: " + error.message);
@@ -383,118 +411,141 @@ const InterviewProgressTimeline = ({ application, onUpdate }) => {
 
               {step.name === "offer" && (
                 <div className="space-y-4">
-                  {(application?.offerResponse === "pending" ||
-                    application?.offerResponse === "accepted" ||
-                    application?.offerResponse === "rejected") && (
-                    <div className="bg-yellow-50 border-2 border-yellow-300 p-6 rounded-lg">
-                      <h4 className="text-lg font-bold text-gray-900 mb-4">
-                        Job Offer
-                      </h4>
+                  {/* Offer details card */}
+                  <div className="bg-yellow-50 border-2 border-yellow-300 p-6 rounded-lg">
+                    <h4 className="text-lg font-bold text-gray-900 mb-4">
+                      {application?.offerStatus === 'revised' ? 'Revised Job Offer' : 'Job Offer'}
+                    </h4>
 
-                      <div className="space-y-4">
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">
-                            Salary
-                          </label>
-                          <p className="text-2xl font-bold text-gray-900">
-                            {formatSalary(application?.salary, application?.currency)}
-                          </p>
-                        </div>
-
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">
-                            Joining Date
-                          </label>
-                          <p className="text-gray-900">
-                            {formatDate(application?.joiningDate, "long")}
-                          </p>
-                        </div>
-
-                        {application?.benefits && (
-                          <div>
-                            <label className="text-sm font-medium text-gray-700 mb-2">
-                              Benefits
-                            </label>
-                            <div className="flex flex-wrap gap-2">
-                              {application.benefits.split(",").map((benefit, idx) => (
-                                <span
-                                  key={idx}
-                                  className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full"
-                                >
-                                  {benefit.trim()}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Salary</label>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {formatSalary(application?.salary, application?.currency)}
+                        </p>
                       </div>
-
-                      {application?.offerResponse === "pending" && (
-                        <div className="mt-6 space-y-4 border-t pt-4">
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">
-                              Add a note (optional)
-                            </label>
-                            <textarea
-                              value={offerNotes}
-                              onChange={(e) => setOfferNotes(e.target.value)}
-                              placeholder="Share any questions or notes..."
-                              maxLength={500}
-                              rows={3}
-                              className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                            />
-                            <p className="text-xs text-gray-500 mt-1">
-                              {offerNotes.length}/500
-                            </p>
-                          </div>
-
-                          <div className="flex gap-3">
-                            <button
-                              onClick={() => setModalState("accept")}
-                              disabled={loadingAction}
-                              className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-                            >
-                              {loadingAction && modalState === "accept" ? (
-                                <Loader2 size={16} className="animate-spin" />
-                              ) : null}
-                              Accept Offer
-                            </button>
-                            <button
-                              onClick={() => setModalState("reject")}
-                              disabled={loadingAction}
-                              className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-                            >
-                              {loadingAction && modalState === "reject" ? (
-                                <Loader2 size={16} className="animate-spin" />
-                              ) : null}
-                              Decline Offer
-                            </button>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Joining Date</label>
+                        <p className="text-gray-900">{formatDate(application?.joiningDate, "long")}</p>
+                      </div>
+                      {application?.benefits && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 mb-2">Benefits</label>
+                          <div className="flex flex-wrap gap-2">
+                            {application.benefits.split(",").map((benefit, idx) => (
+                              <span key={idx} className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
+                                {benefit.trim()}
+                              </span>
+                            ))}
                           </div>
                         </div>
                       )}
-
-                      {application?.offerResponse === "accepted" && (
-                        <div className="mt-4 flex items-center gap-2 text-green-700 bg-green-100 p-3 rounded">
-                          <CheckCircle2 size={18} />
-                          <span className="font-medium">Offer accepted</span>
-                        </div>
-                      )}
-
-                      {application?.offerResponse === "rejected" && (
-                        <div className="mt-4 flex items-center gap-2 text-gray-700 bg-gray-100 p-3 rounded">
-                          <XCircle size={18} />
-                          <span className="font-medium">Offer declined</span>
-                        </div>
-                      )}
-
-                      {application?.offerResponseNotes && (
-                        <div className="mt-4 bg-white p-3 rounded border border-gray-200">
-                          <p className="text-sm text-gray-600 mb-1">Your note:</p>
-                          <p className="text-gray-800">{application.offerResponseNotes}</p>
-                        </div>
+                      {application?.offerExpiryDate && (
+                        <p className="text-xs text-amber-600 font-medium">
+                          Offer expires: {formatDate(application.offerExpiryDate, "short")}
+                        </p>
                       )}
                     </div>
-                  )}
+
+                    {/* FIX 8: Negotiation thread */}
+                    {(application?.offerNegotiation?.length > 0) && (
+                      <div className="mt-4 border-t pt-4">
+                        <p className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                          <MessageSquare size={14} /> Negotiation History
+                        </p>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {application.offerNegotiation.map((entry, i) => (
+                            <div key={i} className={`rounded-lg p-3 text-xs ${entry.from === 'applicant' ? 'bg-blue-50 border border-blue-200' : 'bg-slate-50 border border-slate-200'}`}>
+                              <p className="font-semibold text-gray-700 mb-0.5">{entry.from === 'applicant' ? 'You' : 'Company'}</p>
+                              {entry.proposedSalary && <p>Proposed: {formatSalary(entry.proposedSalary, application?.currency)}</p>}
+                              {entry.proposedJoiningDate && <p>Joining: {formatDate(entry.proposedJoiningDate, 'short')}</p>}
+                              {entry.notes && <p className="italic text-gray-600 mt-0.5">"{entry.notes}"</p>}
+                              <p className="text-gray-400 mt-0.5">{formatDate(entry.date, 'short')}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Actions based on offerStatus */}
+                    {(application?.offerResponse === "pending" || application?.offerStatus === 'revised') && (
+                      <div className="mt-6 space-y-4 border-t pt-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Add a note (optional)</label>
+                          <textarea
+                            value={offerNotes}
+                            onChange={(e) => setOfferNotes(e.target.value)}
+                            placeholder="Share any questions or notes..."
+                            maxLength={500}
+                            rows={3}
+                            className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">{offerNotes.length}/500</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setModalState("accept")}
+                            disabled={loadingAction}
+                            className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm"
+                          >
+                            {loadingAction && modalState === "accept" && <Loader2 size={14} className="animate-spin" />}
+                            Accept
+                          </button>
+                          {/* FIX 8: Negotiate button */}
+                          <button
+                            onClick={() => setModalState("negotiate")}
+                            disabled={loadingAction}
+                            className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm"
+                          >
+                            <MessageSquare size={14} /> Negotiate
+                          </button>
+                          <button
+                            onClick={() => setModalState("reject")}
+                            disabled={loadingAction}
+                            className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm"
+                          >
+                            {loadingAction && modalState === "reject" && <Loader2 size={14} className="animate-spin" />}
+                            Decline
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Negotiation pending state */}
+                    {application?.offerStatus === 'negotiation' && application?.offerResponse === 'negotiating' && (
+                      <div className="mt-4 flex items-center gap-2 text-amber-700 bg-amber-50 p-3 rounded border border-amber-200">
+                        <Clock size={16} />
+                        <span className="font-medium text-sm">Counter-offer sent. Awaiting company response.</span>
+                      </div>
+                    )}
+
+                    {/* Expired */}
+                    {application?.offerStatus === 'expired' && (
+                      <div className="mt-4 flex items-center gap-2 text-red-700 bg-red-50 p-3 rounded">
+                        <XCircle size={16} />
+                        <span className="font-medium">Offer expired</span>
+                      </div>
+                    )}
+
+                    {application?.offerResponse === "accepted" && (
+                      <div className="mt-4 flex items-center gap-2 text-green-700 bg-green-100 p-3 rounded">
+                        <CheckCircle2 size={18} /><span className="font-medium">Offer accepted</span>
+                      </div>
+                    )}
+
+                    {application?.offerResponse === "rejected" && (
+                      <div className="mt-4 flex items-center gap-2 text-gray-700 bg-gray-100 p-3 rounded">
+                        <XCircle size={18} /><span className="font-medium">Offer declined</span>
+                      </div>
+                    )}
+
+                    {application?.offerResponseNotes && (
+                      <div className="mt-4 bg-white p-3 rounded border border-gray-200">
+                        <p className="text-sm text-gray-600 mb-1">Your note:</p>
+                        <p className="text-gray-800">{application.offerResponseNotes}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -648,24 +699,72 @@ const InterviewProgressTimeline = ({ application, onUpdate }) => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Decline Offer</h3>
-            <p className="text-gray-700 mb-4">
-              Are you sure you want to decline this offer?
-            </p>
+            <p className="text-gray-700 mb-4">Are you sure you want to decline this offer?</p>
             <div className="flex gap-3">
-              <button
-                onClick={() => setModalState(null)}
-                disabled={loadingAction}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-              >
+              <button onClick={() => setModalState(null)} disabled={loadingAction}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                 Cancel
               </button>
-              <button
-                onClick={() => handleOfferResponse("rejected")}
-                disabled={loadingAction}
-                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-              >
-                {loadingAction ? <Loader2 size={16} className="animate-spin" /> : null}
+              <button onClick={() => handleOfferResponse("rejected")} disabled={loadingAction}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
+                {loadingAction && <Loader2 size={16} className="animate-spin" />}
                 Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FIX 8: Negotiate modal */}
+      {modalState === "negotiate" && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+              <MessageSquare size={18} className="text-amber-500" /> Counter-Offer
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">Propose your preferred terms. The company will review and respond.</p>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700">Proposed Salary ({application?.currency || 'NPR'})</label>
+                <input
+                  type="number"
+                  value={negotiateForm.salary}
+                  onChange={e => setNegotiateForm(p => ({ ...p, salary: e.target.value }))}
+                  placeholder={`e.g. ${application?.salary || ''}`}
+                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Preferred Joining Date</label>
+                <input
+                  type="date"
+                  value={negotiateForm.joiningDate}
+                  onChange={e => setNegotiateForm(p => ({ ...p, joiningDate: e.target.value }))}
+                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Note to Company *</label>
+                <textarea
+                  value={negotiateForm.notes}
+                  onChange={e => setNegotiateForm(p => ({ ...p, notes: e.target.value }))}
+                  placeholder="Explain your counter-offer..."
+                  rows={3}
+                  maxLength={500}
+                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none text-sm"
+                />
+                <p className="text-xs text-gray-400 mt-0.5">{negotiateForm.notes.length}/500</p>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-4">
+              <button onClick={() => setModalState(null)} disabled={loadingAction}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                Cancel
+              </button>
+              <button onClick={handleNegotiate} disabled={loadingAction || (!negotiateForm.salary && !negotiateForm.notes.trim())}
+                className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
+                {loadingAction && <Loader2 size={16} className="animate-spin" />}
+                Send Counter-Offer
               </button>
             </div>
           </div>

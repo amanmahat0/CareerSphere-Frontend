@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import io from 'socket.io-client';
 import {
   Calendar, Clock, Video, MapPin, Copy,
   CheckCircle2, Loader2, AlertCircle, FileText,
@@ -33,11 +34,40 @@ const InterviewDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [markingSubmitted, setMarkingSubmitted] = useState(null);
+  const socketRef = useRef(null);
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
+
+    // FIX 11: Socket.io replaces 30s polling
+    const token  = localStorage.getItem('token');
+    let userId   = localStorage.getItem('userId');
+    if (!userId) {
+      try { userId = JSON.parse(localStorage.getItem('user') || '{}')._id; } catch (_) {}
+    }
+    if (token && userId) {
+      const socketUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '');
+      const socket = io(socketUrl, {
+        auth: { token, userId },
+        reconnection: true,
+        reconnectionAttempts: 5,
+      });
+      socketRef.current = socket;
+      socket.on('connect', () => socket.emit('join-notifications', userId));
+      socket.on('pipeline_update', (payload) => {
+        setApplications(prev =>
+          prev.map(a =>
+            String(a._id) === String(payload.applicationId)
+              ? { ...a, ...payload }
+              : a
+          )
+        );
+      });
+    }
+
+    return () => {
+      if (socketRef.current) { socketRef.current.disconnect(); socketRef.current = null; }
+    };
   }, []);
 
   const fetchData = async () => {
@@ -51,13 +81,19 @@ const InterviewDashboard = () => {
 
   const today = (() => { const d = new Date(); d.setHours(0,0,0,0); return d; })();
 
-  const testApps      = applications.filter(a => a.interviewStep === 'test');
-  const upcomingApps  = applications.filter(a =>
+  const testApps     = applications.filter(a => a.interviewStep === 'test' && !a.testSubmittedAt);
+  const upcomingApps = applications.filter(a =>
     a.interviewDate && new Date(a.interviewDate) >= today && a.interviewStep === 'interview'
   ).sort((a, b) => new Date(a.interviewDate) - new Date(b.interviewDate));
-  const pastApps      = applications.filter(a =>
+  const pastApps     = applications.filter(a =>
     a.interviewStep === 'interview' && a.interviewDate && new Date(a.interviewDate) < today
   ).sort((a, b) => new Date(b.interviewDate) - new Date(a.interviewDate));
+
+  // FIX 12: Awaiting results — submitted but not yet evaluated
+  const awaitingResultApps = applications.filter(a =>
+    (a.interviewStep === 'test' && a.testSubmittedAt && !a.testResult) ||
+    (a.interviewStep === 'interview' && a.interviewDate && new Date(a.interviewDate) < today && !a.interviewResult)
+  );
 
   const chartData = [
     { label: 'Pending Tests',   value: testApps.length,     fill: '#F59E0B' },
@@ -308,6 +344,51 @@ const InterviewDashboard = () => {
                 </div>
               )}
             </div>
+
+            {/* ── FIX 12: Awaiting Results ── */}
+            {awaitingResultApps.length > 0 && (
+              <div className="bg-white border border-amber-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b border-amber-100 flex items-center gap-2">
+                  <Clock size={16} className="text-amber-500" />
+                  <h2 className="text-lg font-bold text-slate-800">Awaiting Results</h2>
+                  <span className="ml-auto text-xs font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                    {awaitingResultApps.length}
+                  </span>
+                </div>
+                <div className="divide-y divide-amber-50">
+                  {awaitingResultApps.map((app) => {
+                    const isTest      = app.interviewStep === 'test';
+                    const statusLabel = isTest
+                      ? 'Test submitted — awaiting evaluation'
+                      : 'Interview completed — awaiting result';
+                    return (
+                      <div key={app._id} className="px-5 py-4 bg-amber-50/40">
+                        <div className="flex items-start gap-3">
+                          <div className="shrink-0 w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                            <Clock size={18} className="text-amber-600" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm text-slate-900">{app.jobId?.title || '—'}</p>
+                            <p className="text-xs text-slate-500 mb-1">{app.jobId?.company || '—'}</p>
+                            <p className="text-xs text-amber-700 font-medium">{statusLabel}</p>
+                            {isTest && app.testSubmittedAt && (
+                              <p className="text-xs text-slate-400 mt-0.5">
+                                Submitted: {formatDate(app.testSubmittedAt)}
+                              </p>
+                            )}
+                            {!isTest && app.interviewDate && (
+                              <p className="text-xs text-slate-400 mt-0.5">
+                                Interview date: {formatDate(app.interviewDate)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* ── Upcoming Interviews ── */}
             <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">

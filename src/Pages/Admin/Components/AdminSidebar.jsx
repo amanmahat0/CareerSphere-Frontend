@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Briefcase, FileText, Calendar,
-  Bell, Settings, LogOut, ChevronLeft, ChevronRight, X,
+  Bell, Settings, LogOut, ChevronLeft, ChevronRight, X, Award,
 } from 'lucide-react';
 import Logo from '../../../Components/Logo/Logo';
 
@@ -19,6 +19,7 @@ const AdminSidebar = ({ isOpen, onClose, onOpen = () => {}, activePage = 'dashbo
     { icon: Briefcase,       label: 'Company Management',   id: 'companies',     path: '/admin/companies' },
     { icon: FileText,        label: 'Applications',         id: 'applications',  path: '/admin/applications' },
     { icon: Calendar,        label: 'Interviews',           id: 'interviews',    path: '/admin/interviews' },
+    { icon: Award,           label: 'Certificates',         id: 'certificates',  path: '/admin/certificates' },
     { icon: Bell,            label: 'Notifications',        id: 'notifications', path: '/admin/notifications' },
     { icon: Settings,        label: 'Settings',             id: 'settings',      path: '/admin/settings' },
   ];

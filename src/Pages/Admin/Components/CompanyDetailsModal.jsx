@@ -271,11 +271,14 @@ const CompanyDetailsModal = ({ company, onClose, onVerify, onReject }) => {
                       className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
                     >
                       <div className="flex items-center gap-3 flex-1">
-                        <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
                           <FileText size={20} className="text-orange-600" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-slate-900 truncate">{doc.originalName}</p>
+                          {doc.documentName ? (
+                            <p className="font-semibold text-slate-900 truncate">{doc.documentName}</p>
+                          ) : null}
+                          <p className={`truncate ${doc.documentName ? 'text-xs text-slate-500' : 'font-medium text-slate-900'}`}>{doc.originalName}</p>
                           <p className="text-xs text-slate-500">
                             Type: {doc.documentType?.replace(/_/g, ' ').toUpperCase()}
                           </p>
@@ -341,11 +344,23 @@ const CompanyDetailsModal = ({ company, onClose, onVerify, onReject }) => {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <p className="text-blue-900 font-semibold text-sm">
-                      Review Status: {fullCompanyData?.documents?.length === 0 ? 'No documents uploaded' : 'Documents ready for review'}
-                    </p>
-                  </div>
+                  {(!fullCompanyData?.documents || fullCompanyData.documents.length === 0) ? (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
+                      <AlertCircle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-amber-900 font-semibold text-sm">No documents uploaded</p>
+                        <p className="text-amber-800 text-xs mt-1">
+                          This company cannot be verified until they upload their verification documents (e.g. registration certificate, business license, tax ID). Ask them to upload documents from their Company Profile page first.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                      <p className="text-blue-900 font-semibold text-sm">
+                        {fullCompanyData.documents.length} document{fullCompanyData.documents.length !== 1 ? 's' : ''} uploaded — ready for review
+                      </p>
+                    </div>
+                  )}
 
                   {/* Verify Section */}
                   <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
@@ -367,7 +382,7 @@ const CompanyDetailsModal = ({ company, onClose, onVerify, onReject }) => {
                       </div>
                       <button
                         onClick={handleVerify}
-                        disabled={isVerifying}
+                        disabled={isVerifying || !fullCompanyData?.documents?.length}
                         className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         {isVerifying ? (
@@ -440,7 +455,7 @@ const CompanyDetailsModal = ({ company, onClose, onVerify, onReject }) => {
 
       {/* Document Viewer Modal */}
       {viewerOpen && selectedDocument && (
-        <div className="fixed inset-0 bg-black/40 bg-opacity-20 flex items-center justify-center z-[60] p-4">
+        <div className="fixed inset-0 bg-black/40 bg-opacity-20 flex items-center justify-center z-60 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             {/* Viewer Header */}
             <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-white">

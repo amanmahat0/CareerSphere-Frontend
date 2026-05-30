@@ -80,7 +80,7 @@ const CompanyDashboard = () => {
   const donutData = useMemo(() => {
     const c = {};
     applications.forEach(a => {
-      const s = a.interviewStep || a.status || 'pending';
+      const s = a.status === 'pending' ? 'pending' : (a.interviewStep || a.status || 'pending');
       c[s] = (c[s]||0) + 1;
     });
     return Object.entries(c).map(([s, v]) => ({ status: s, name: smeta(s).label, value: v, fill: smeta(s).color }));
@@ -88,7 +88,7 @@ const CompanyDashboard = () => {
 
   /* pipeline funnel bars */
   const pipeline = useMemo(() => {
-    const get = (...keys) => applications.filter(a => keys.includes(a.interviewStep || a.status)).length;
+    const get = (...keys) => applications.filter(a => a.status !== 'pending' && keys.includes(a.interviewStep || a.status)).length;
     return [
       { label: 'Applied',     value: applications.length,      fill: '#3B82F6' },
       { label: 'Shortlisted', value: get('shortlisted'),        fill: '#8B5CF6' },
@@ -102,9 +102,9 @@ const CompanyDashboard = () => {
   const counts = useMemo(() => ({
     jobs:        jobs.length,
     apps:        applications.length,
-    shortlisted: applications.filter(a => ['shortlisted','test'].includes(a.interviewStep)).length,
-    interview:   applications.filter(a => ['interview','offer'].includes(a.interviewStep)).length,
-    hired:       applications.filter(a => a.interviewStep === 'hired').length,
+    shortlisted: applications.filter(a => a.status !== 'pending' && ['shortlisted','test'].includes(a.interviewStep)).length,
+    interview:   applications.filter(a => a.status !== 'pending' && ['interview','offer'].includes(a.interviewStep)).length,
+    hired:       applications.filter(a => a.status !== 'pending' && a.interviewStep === 'hired').length,
   }), [jobs, applications]);
 
   return (
@@ -137,15 +137,6 @@ const CompanyDashboard = () => {
               >
                 Post a Job
               </button>
-            </div>
-
-            {/* ── Stat Pills ── */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-              <StatPill label="Total Jobs"       value={counts.jobs}        icon={Briefcase}   accent="bg-blue-600" />
-              <StatPill label="Applications"     value={counts.apps}        icon={Users}       accent="bg-purple-600" />
-              <StatPill label="Shortlisted"      value={counts.shortlisted} icon={UserCheck}   accent="bg-cyan-600" />
-              <StatPill label="In Interview"     value={counts.interview}   icon={Calendar}    accent="bg-amber-500" />
-              <StatPill label="Hired"            value={counts.hired}       icon={UserCheck}   accent="bg-emerald-600" />
             </div>
 
             {/* ── Analytics: Donut + Pipeline ── */}
@@ -278,7 +269,7 @@ const CompanyDashboard = () => {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {applications.slice(0, 8).map((app, idx) => {
-                        const m = smeta(app.interviewStep || app.status);
+                        const m = smeta(app.status === 'pending' ? 'pending' : (app.interviewStep || app.status));
                         return (
                           <tr key={app._id} className="hover:bg-blue-50/40 transition-colors">
                             <td className="px-4 py-3 text-xs text-slate-400 font-medium">{idx + 1}</td>

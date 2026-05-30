@@ -455,7 +455,6 @@ const MyApplication = () => {
                         <ThCell col="date"    label="Applied" />
                         <ThCell col="status"  label="Status" />
                         <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Progress</th>
-                        <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Next Step</th>
                         <th className="px-5 py-3 text-left text-xs font-medium text-slate-500">Actions</th>
                       </tr>
                     </thead>
@@ -465,8 +464,11 @@ const MyApplication = () => {
                       ) : (
                         filtered.map((app, idx) => {
                           const status     = getStatus(app);
-                          const m          = smeta(status);
-                          const canWith    = ['pending','shortlisted','test'].includes(status);
+                          // FIX 9: Allow withdrawal until a terminal state or final decision
+                          const canWith =
+                            !['hired','rejected','withdrawn','expired'].includes(status) &&
+                            !(status === 'offer' && ['accepted','declined','negotiating'].includes(app.offerResponse)) &&
+                            !(status === 'interview' && app.interviewResult);
                           return (
                             <tr
                               key={app._id}
@@ -490,9 +492,6 @@ const MyApplication = () => {
                               </td>
                               <td className="px-4 py-3">
                                 <ProgressDots status={status} />
-                              </td>
-                              <td className="px-4 py-3 whitespace-nowrap">
-                                <span className="text-xs text-slate-500 italic">{m.next}</span>
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap" onClick={e => e.stopPropagation()}>
                                 <div className="flex items-center gap-1.5">

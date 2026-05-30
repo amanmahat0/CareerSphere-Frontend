@@ -30,14 +30,19 @@ const _ProjectsSection = ({ data, onChange, onNext, onBack }) => {
     setError("");
   };
 
-  // Validation: This section is completely optional
-  const isFormValid = () => {
-    return true; // Always valid - section is optional
-  };
+  const URL_RE = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/\S*)?$/i;
+  const projectLink = (proj) => (proj.technologies?.join(", ") || "").trim();
+  const linkInvalid = (proj) => Boolean(projectLink(proj)) && !URL_RE.test(projectLink(proj));
+
+  // Section is optional, but any provided project link must be a valid URL
+  const isFormValid = () => !data.some(linkInvalid);
 
   // Handle next with database save
   const handleNext = async () => {
-    // No validation needed - section is optional
+    if (data.some(linkInvalid)) {
+      setError("Project link must be a valid URL (e.g. github.com/username/project).");
+      return;
+    }
     setLoading(true);
     setError("");
 
@@ -146,7 +151,9 @@ const _ProjectsSection = ({ data, onChange, onNext, onBack }) => {
                     onChange={(e) => updateProject(project.id, "technologies", e.target.value.split(",").map(t => t.trim()))}
                     placeholder="e.g., github.com/username/project"
                     disabled={loading}
+                    className={linkInvalid(project) ? "border-red-500" : ""}
                   />
+                  {linkInvalid(project) && <p className="text-xs text-red-500 mt-1">Enter a valid URL</p>}
                 </div>
               </div>
             </Card>
@@ -160,10 +167,14 @@ const _ProjectsSection = ({ data, onChange, onNext, onBack }) => {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
-        <Button 
+        <Button
           onClick={handleNext}
-          disabled={loading}
-          className="text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+          disabled={loading || !isFormValid()}
+          className={`text-white ${
+            isFormValid() && !loading
+              ? "bg-blue-600 hover:bg-blue-700 cursor-pointer"
+              : "bg-gray-400 cursor-not-allowed"
+          } transition-colors`}
         >
           {loading ? (
             <>

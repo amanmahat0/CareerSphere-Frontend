@@ -8,6 +8,7 @@ import {
   LogOut,
   Briefcase,
   Bookmark,
+  Award,
   X,
   ChevronLeft,
   ChevronRight,
@@ -29,6 +30,7 @@ const Sidebar = ({ isOpen, onClose, onOpen = () => {}, activePage = 'dashboard' 
     { icon: Bookmark,        label: 'Saved Jobs',         id: 'saved',         path: '/applicant/saved-jobs' },
     { icon: FileText,        label: 'Resume Builder',     id: 'resume',        path: '/applicant/resume' },
     { icon: Calendar,        label: 'Interview Schedule', id: 'interviews',    path: '/applicant/interviews' },
+    { icon: Award,           label: 'My Certificates',    id: 'certificates',  path: '/applicant/certificates' },
     { icon: User,            label: 'My Profile',         id: 'profile',       path: '/applicant/profile' },
   ];
 

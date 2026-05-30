@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Building2, Briefcase, Users,
-  Calendar, Bell, LogOut, BarChart3, ChevronLeft, ChevronRight, X,
+  Calendar, Bell, Award, LogOut, ChevronLeft, ChevronRight, X,
 } from 'lucide-react';
 import Logo from '../../../Components/Logo/Logo';
 
@@ -18,7 +18,7 @@ const CompanySidebar = ({ isOpen, onClose, onOpen = () => {}, activePage = 'dash
     { icon: Briefcase,       label: 'Job Management', id: 'jobs',         path: '/company/jobs' },
     { icon: Users,           label: 'Applications',   id: 'applications', path: '/company/applications' },
     { icon: Calendar,        label: 'Interviews',     id: 'interviews',   path: '/company/interviews' },
-    { icon: BarChart3,       label: 'Analytics',      id: 'analytics',    path: '/company/analytics' },
+    { icon: Award,           label: 'Certificates',   id: 'certificates', path: '/company/certificates' },
     { icon: Bell,            label: 'Notifications',  id: 'notifications',path: '/company/notifications' },
     { icon: Building2,       label: 'Profile',        id: 'profile',      path: '/company/profile' },
   ];

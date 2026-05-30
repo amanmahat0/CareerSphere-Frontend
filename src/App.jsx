@@ -1,5 +1,5 @@
 import './App.css'
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import ChatBot from './Components/ChatBot';
 import Alert from './Pages/Alert/Alert.jsx';
 import HomePage from './Pages/Home/home.jsx';
@@ -21,11 +21,17 @@ import CompanyProfile from './Pages/Company/Profile/CompanyProfile.jsx';
 import JobManagement from './Pages/Company/Dashboard/JobManagement.jsx';
 import Applications from './Pages/Company/Applications/Applications.jsx';
 import InterviewManagement from './Pages/Company/Interview/InterviewManagement.jsx';
+import CompanyNotifications from './Pages/Company/Notifications/CompanyNotifications.jsx';
+import CompanyCertificates from './Pages/Company/Certificates/CompanyCertificates.jsx';
+import ApplicantCertificates from './Pages/Applicant/Certificates/ApplicantCertificates.jsx';
 import AdminDashboard from './Pages/Admin/Dashboard/AdminDashboard.jsx';
 import ApplicantManagement from './Pages/Admin/ApplicantManagement/ApplicantManagement.jsx';
 import CompanyManagement from './Pages/Admin/CompanyManagement/CompanyManagement.jsx';
 import AdminApplications from './Pages/Admin/ApplicationManagement/Applications.jsx';
 import AdminInterview from './Pages/Admin/Interview/AdminInterview.jsx';
+import AdminCertificates from './Pages/Admin/Certificates/AdminCertificates.jsx';
+import AdminSettings from './Pages/Admin/Settings/AdminSettings.jsx';
+import AdminNotifications from './Pages/Admin/Notifications/AdminNotifications.jsx';
 import ContactPage  from './Components/Contact.jsx';
 import { AboutPage } from './Components/About.jsx';
 import Opportunities from './Pages/Opportunities/Oppotunities.jsx';
@@ -38,6 +44,9 @@ import CookiePolicy from './Pages/Info/CookiePolicy.jsx';
 import Accessibility from './Pages/Info/Accessibility.jsx';
 
 function App() {
+  const location = useLocation();
+  const showChatbot = !location.pathname.startsWith('/company') && !location.pathname.startsWith('/admin');
+
   return (
     <>
     <Routes>
@@ -57,6 +66,7 @@ function App() {
       <Route path="/applicant/notifications" element={<ApplicantNotification />} />
       <Route path="/applicant/interviews" element={<InterviewSchedule />} />
       <Route path="/applicant/saved-jobs" element={<SavedJobs />} />
+      <Route path="/applicant/certificates" element={<ApplicantCertificates />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/about" element={<AboutPage />} />
 
@@ -72,6 +82,8 @@ function App() {
       <Route path="/company/jobs" element={<JobManagement />} />
       <Route path="/company/applications" element={<Applications />} />
       <Route path="/company/interviews" element={<InterviewManagement />} />
+      <Route path="/company/notifications" element={<CompanyNotifications />} />
+      <Route path="/company/certificates" element={<CompanyCertificates />} />
 
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminDashboard />} />
@@ -80,6 +92,9 @@ function App() {
       <Route path="/admin/companies" element={<CompanyManagement />} />
       <Route path="/admin/applications" element={<AdminApplications />} />
       <Route path="/admin/interviews" element={<AdminInterview />} />
+      <Route path="/admin/certificates" element={<AdminCertificates />} />
+      <Route path="/admin/settings" element={<AdminSettings />} />
+      <Route path="/admin/notifications" element={<AdminNotifications />} />
 
       {/* Info / Legal Routes */}
       <Route path="/how-it-works" element={<HowItWorks />} />
@@ -90,7 +105,7 @@ function App() {
       <Route path="/accessibility" element={<Accessibility />} />
     </Routes>
     <Alert />
-    <ChatBot />
+    {showChatbot && <ChatBot />}
     </>
   );
 }

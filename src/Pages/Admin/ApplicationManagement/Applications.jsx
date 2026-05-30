@@ -31,7 +31,7 @@ const Applications = () => {
     setError(null);
     try {
       const [appsResponse, companiesResponse] = await Promise.all([
-        api.getAllApplications(),
+        api.getAdminApplications(),
         api.getAllCompanies()
       ]);
       
@@ -49,7 +49,7 @@ const Applications = () => {
   const filteredApplications = applications.filter((app) => {
     const term = searchTerm.toLowerCase();
     const companyName = app.jobId?.company || 'N/A';
-    const applicantName = app.userId?.name || app.applicantName || '';
+    const applicantName = app.userId?.fullname || app.userId?.name || app.applicantName || '';
     const applicantEmail = app.userId?.email || app.email || '';
     const jobTitle = app.jobId?.title || '';
     
@@ -66,7 +66,7 @@ const Applications = () => {
     if (selectedCompany && companyName !== selectedCompany) return false;
 
     // Status filter
-    if (selectedStatus && app.status !== selectedStatus) return false;
+    if (selectedStatus && getDisplayStatus(app) !== selectedStatus) return false;
 
     return true;
   }).sort((a, b) => {
@@ -81,27 +81,35 @@ const Applications = () => {
   });
 
 
-  const getStatusBadge = (status) => {
+  const getDisplayStatus = (app) => {
+    if (app.status === 'pending')   return 'pending';
+    if (app.status === 'withdrawn') return 'withdrawn';
+    if (app.status === 'rejected')  return 'rejected';
+    return app.interviewStep || app.status || 'pending';
+  };
+
+  const getStatusBadge = (key) => {
     const statusMap = {
-      'applied': { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Applied' },
+      'pending':     { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Applied' },
       'shortlisted': { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Shortlisted' },
-      'test': { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Test' },
-      'interview': { bg: 'bg-cyan-100', text: 'text-cyan-700', label: 'Interview' },
-      'offer': { bg: 'bg-green-100', text: 'text-green-700', label: 'Offer' },
-      'rejected': { bg: 'bg-red-100', text: 'text-red-700', label: 'Rejected' },
-      'completed': { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Completed' }
+      'test':        { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Test' },
+      'interview':   { bg: 'bg-cyan-100',   text: 'text-cyan-700',   label: 'Interview' },
+      'offer':       { bg: 'bg-green-100',  text: 'text-green-700',  label: 'Offer' },
+      'hired':       { bg: 'bg-emerald-100',text: 'text-emerald-700',label: 'Hired' },
+      'rejected':    { bg: 'bg-red-100',    text: 'text-red-700',    label: 'Rejected' },
+      'withdrawn':   { bg: 'bg-slate-100',  text: 'text-slate-600',  label: 'Withdrawn' },
     };
-    return statusMap[status] || { bg: 'bg-gray-100', text: 'text-gray-700', label: status };
+    return statusMap[key] || { bg: 'bg-gray-100', text: 'text-gray-700', label: key };
   };
 
   const stats = {
     total: applications.length,
-    applied: applications.filter(a => a.status === 'applied').length,
+    applied: applications.filter(a => a.status === 'pending').length,
     shortlisted: applications.filter(a => a.status === 'shortlisted').length,
     companies: [...new Set(applications.map(a => a.jobId?.company))].length
   };
 
-  const statusOptions = ['applied', 'shortlisted', 'test', 'interview', 'offer', 'rejected', 'completed'];
+  const statusOptions = ['pending', 'shortlisted', 'test', 'interview', 'offer', 'hired', 'rejected', 'withdrawn'];
 
   if (loading) {
     return (
@@ -296,7 +304,7 @@ const Applications = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
                               <User size={16} className="text-slate-400" />
-                              <span className="text-slate-900">{app.userId?.name || app.applicantName || 'Unknown'}</span>
+                              <span className="text-slate-900">{app.userId?.fullname || app.userId?.name || app.applicantName || 'Unknown'}</span>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -309,8 +317,8 @@ const Applications = () => {
                             <span className="text-slate-900">{app.jobId?.title || 'N/A'}</span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(app.status).bg} ${getStatusBadge(app.status).text}`}>
-                              {getStatusBadge(app.status).label}
+                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(getDisplayStatus(app)).bg} ${getStatusBadge(getDisplayStatus(app)).text}`}>
+                              {getStatusBadge(getDisplayStatus(app)).label}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">

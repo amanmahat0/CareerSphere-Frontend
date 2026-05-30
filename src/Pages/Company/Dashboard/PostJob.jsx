@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { X, AlertCircle } from 'lucide-react';
 import { api } from '../../../utils/api';
+
+const today = () => new Date().toISOString().split('T')[0];
+
+const REQUIRED = ['title', 'type', 'location', 'duration', 'description', 'salary'];
 
 const PostJob = ({ isOpen, onClose, onSuccess, editJob = null }) => {
   const isEditMode = !!editJob;
-  
+
   const getInitialFormData = () => ({
     title: '',
     type: 'Internship',
@@ -22,8 +26,8 @@ const PostJob = ({ isOpen, onClose, onSuccess, editJob = null }) => {
   const [formData, setFormData] = useState(getInitialFormData());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [submitted, setSubmitted] = useState(false);
 
-  // Populate form when editing
   useEffect(() => {
     if (editJob) {
       setFormData({
@@ -42,7 +46,37 @@ const PostJob = ({ isOpen, onClose, onSuccess, editJob = null }) => {
     } else {
       setFormData(getInitialFormData());
     }
+    setSubmitted(false);
+    setError('');
   }, [editJob, isOpen]);
+
+  // Per-field validation
+  const fieldErrors = useMemo(() => {
+    const e = {};
+    if (!formData.title.trim())       e.title       = 'Job title is required';
+    if (!formData.location.trim())    e.location    = 'Location is required';
+    if (!formData.duration.trim())    e.duration    = 'Duration is required';
+    if (!formData.description.trim()) e.description = 'Job description is required';
+    else if (formData.description.trim().length < 20)
+      e.description = 'Description must be at least 20 characters';
+    if (!formData.salary.trim())      e.salary      = 'Salary / compensation is required';
+    if (formData.deadline) {
+      if (formData.deadline < today()) e.deadline = 'Deadline cannot be a past date';
+    }
+    return e;
+  }, [formData]);
+
+  const isFormValid = () => Object.keys(fieldErrors).length === 0;
+
+  const showErr = (field) => {
+    const err = fieldErrors[field];
+    if (!err) return null;
+    // Show required errors only after first submit attempt; show format errors live
+    if (submitted) return err;
+    const hasValue = formData[field]?.toString().trim();
+    if (hasValue && !err.toLowerCase().includes('required')) return err;
+    return null;
+  };
 
   if (!isOpen) return null;
 
@@ -54,41 +88,39 @@ const PostJob = ({ isOpen, onClose, onSuccess, editJob = null }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitted(true);
+
+    if (!isFormValid()) {
+      setError('Please fix the errors above before submitting.');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
     try {
-      // Prepare data - convert comma-separated strings to arrays
       const jobData = {
-        title: formData.title,
+        title: formData.title.trim(),
         type: formData.type,
-        location: formData.location,
-        duration: formData.duration,
-        description: formData.description,
-        salary: formData.salary,
+        location: formData.location.trim(),
+        duration: formData.duration.trim(),
+        description: formData.description.trim(),
+        salary: formData.salary.trim(),
         skills: formData.skills ? formData.skills.split(',').map(s => s.trim()).filter(Boolean) : [],
         requirements: formData.requirements ? formData.requirements.split('\n').map(s => s.trim()).filter(Boolean) : [],
         responsibilities: formData.responsibilities ? formData.responsibilities.split('\n').map(s => s.trim()).filter(Boolean) : [],
         benefits: formData.benefits ? formData.benefits.split('\n').map(s => s.trim()).filter(Boolean) : [],
       };
-      
-      // Add deadline only if provided
-      if (formData.deadline) {
-        jobData.deadline = formData.deadline;
-      }
-      
+      if (formData.deadline) jobData.deadline = formData.deadline;
+
       let response;
       if (isEditMode) {
         response = await api.updateJob(editJob._id, jobData);
-        console.log("Job Updated!", response);
       } else {
         response = await api.createJob(jobData);
-        console.log("Job Posted!", response);
       }
-      
-      // Reset form
+
       setFormData(getInitialFormData());
-      
       if (onSuccess) onSuccess(response.job);
       onClose();
     } catch (err) {
@@ -98,185 +130,206 @@ const PostJob = ({ isOpen, onClose, onSuccess, editJob = null }) => {
     }
   };
 
+  const Field = ({ label, required, error: err, children }) => (
+    <div>
+      <label className="block text-xs font-bold text-slate-700 mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      {children}
+      {err && (
+        <p className="flex items-center gap-1 text-xs text-red-500 mt-1">
+          <AlertCircle size={11} /> {err}
+        </p>
+      )}
+    </div>
+  );
+
+  const inputCls = (field) =>
+    `w-full border rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${
+      showErr(field)
+        ? 'border-red-400 focus:border-red-400 bg-red-50/30'
+        : 'border-slate-200 focus:border-blue-500 bg-white'
+    }`;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-white w-full max-w-xl rounded-xl shadow-2xl overflow-hidden">
+
         {/* Header */}
-        <div className="p-6 pb-2 flex justify-between items-start">
+        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-start">
           <div>
-            <h2 className="text-xl font-bold text-slate-800">{isEditMode ? 'Edit Opportunity' : 'Post New Opportunity'}</h2>
-            <p className="text-sm text-slate-500">{isEditMode ? 'Update the details for this job or internship' : 'Fill in the details for the job or internship posting'}</p>
+            <h2 className="text-lg font-bold text-slate-800">
+              {isEditMode ? 'Edit Opportunity' : 'Post New Opportunity'}
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {isEditMode ? 'Update the details for this posting' : 'Fill in the details for the job or internship'}
+            </p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors ml-4">
             <X size={20} />
           </button>
         </div>
 
-        {/* Error Message */}
+        {/* Global error */}
         {error && (
-          <div className="mx-6 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
-            {error}
+          <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm flex items-center gap-2">
+            <AlertCircle size={15} className="shrink-0" /> {error}
           </div>
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Job Title *</label>
-            <input 
-              type="text" 
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[72vh] overflow-y-auto">
+
+          <Field label="Job Title" required error={showErr('title')}>
+            <input
+              type="text"
               name="title"
               value={formData.title}
               onChange={handleChange}
-              placeholder="e.g., Frontend Developer Intern" 
-              className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" 
-              required 
+              placeholder="e.g., Frontend Developer Intern"
+              className={inputCls('title')}
             />
-          </div>
+          </Field>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Type *</label>
-              <select 
+              <label className="block text-xs font-bold text-slate-700 mb-1">Type <span className="text-red-500">*</span></label>
+              <select
                 name="type"
                 value={formData.type}
                 onChange={handleChange}
-                className="w-full border border-slate-200 rounded-lg p-2.5 text-sm bg-slate-50 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                className="w-full border border-slate-200 rounded-lg p-2.5 text-sm bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
               >
                 <option value="Internship">Internship</option>
                 <option value="Job">Job</option>
                 <option value="Traineeship">Traineeship</option>
               </select>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Location *</label>
-              <input 
-                type="text" 
+            <Field label="Location" required error={showErr('location')}>
+              <input
+                type="text"
                 name="location"
                 value={formData.location}
                 onChange={handleChange}
-                className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" 
-                required
+                placeholder="e.g., Kathmandu"
+                className={inputCls('location')}
               />
-            </div>
+            </Field>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Duration *</label>
-              <input 
-                type="text" 
+            <Field label="Duration" required error={showErr('duration')}>
+              <input
+                type="text"
                 name="duration"
                 value={formData.duration}
                 onChange={handleChange}
-                placeholder="e.g., 3 months, Full-time" 
-                className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" 
-                required
+                placeholder="e.g., 3 months, Full-time"
+                className={inputCls('duration')}
               />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Application Deadline</label>
-              <input 
-                type="date" 
+            </Field>
+            <Field label="Application Deadline" error={showErr('deadline')}>
+              <input
+                type="date"
                 name="deadline"
                 value={formData.deadline}
                 onChange={handleChange}
-                className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" 
+                min={today()}
+                className={inputCls('deadline')}
               />
-            </div>
+            </Field>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Job Description *</label>
-            <textarea 
+          <Field label="Job Description" required error={showErr('description')}>
+            <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
               placeholder="Describe the role, responsibilities, and what the candidate will be working on..."
               rows={4}
-              className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none" 
-              required
+              className={inputCls('description') + ' resize-none'}
             />
-          </div>
+            <p className="text-xs text-slate-400 mt-1">{formData.description.trim().length} / 20+ chars</p>
+          </Field>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Skills</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 name="skills"
                 value={formData.skills}
                 onChange={handleChange}
-                placeholder="React, JavaScript, Node.js (comma separated)" 
-                className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" 
+                placeholder="React, Node.js (comma-separated)"
+                className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
               />
             </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Salary *</label>
-              <input 
-                type="text" 
+            <Field label="Salary / Compensation" required error={showErr('salary')}>
+              <input
+                type="text"
                 name="salary"
                 value={formData.salary}
                 onChange={handleChange}
-                placeholder="e.g., NPR 6-8 Lakhs/year or Negotiable"
-                className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" 
-                required
+                placeholder="e.g., NPR 6–8 Lakhs or Negotiable"
+                className={inputCls('salary')}
               />
-            </div>
+            </Field>
           </div>
 
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">Requirements</label>
-            <textarea 
+            <textarea
               name="requirements"
               value={formData.requirements}
               onChange={handleChange}
-              placeholder="Enter each requirement on a new line..."
+              placeholder="Enter each requirement on a new line…"
               rows={3}
-              className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none" 
+              className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"
             />
           </div>
 
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">Responsibilities</label>
-            <textarea 
+            <textarea
               name="responsibilities"
               value={formData.responsibilities}
               onChange={handleChange}
-              placeholder="Enter each responsibility on a new line..."
+              placeholder="Enter each responsibility on a new line…"
               rows={3}
-              className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none" 
+              className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"
             />
           </div>
 
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">Benefits</label>
-            <textarea 
+            <textarea
               name="benefits"
               value={formData.benefits}
               onChange={handleChange}
-              placeholder="Enter each benefit on a new line..."
+              placeholder="Enter each benefit on a new line…"
               rows={3}
-              className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none" 
+              className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"
             />
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
-            <button 
-              type="button" 
+          {/* Actions */}
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
               onClick={onClose}
               disabled={isLoading}
               className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
-            <button 
+            <button
               type="submit"
               disabled={isLoading}
-              className="flex-1 px-4 py-2.5 bg-blue-900 text-white rounded-lg text-sm font-semibold hover:bg-blue-950 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2.5 bg-blue-900 text-white rounded-lg text-sm font-semibold hover:bg-blue-950 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? (isEditMode ? 'Updating...' : 'Posting...') : (isEditMode ? 'Update Opportunity' : 'Post Opportunity')}
+              {isLoading
+                ? (isEditMode ? 'Updating…' : 'Posting…')
+                : (isEditMode ? 'Update Opportunity' : 'Post Opportunity')}
             </button>
           </div>
         </form>

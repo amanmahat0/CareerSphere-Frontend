@@ -18,6 +18,7 @@ import {
   Share2,
   Bookmark,
   CheckCircle2,
+  BadgeCheck,
   Globe,
   Mail,
   Phone,
@@ -269,7 +270,12 @@ const OpportunityDetails = () => {
                       {job.type}
                     </span>
                   </div>
-                  <p className="text-base text-gray-600 mb-3">{job.company}</p>
+                  <p className="text-base text-gray-600 mb-3 flex items-center gap-1.5">
+                    {job.company}
+                    {(job.companyIsVerified || job.companyInfo?.isVerified) && (
+                      <BadgeCheck className="w-4 h-4 text-blue-500 shrink-0" title="Verified Company" />
+                    )}
+                  </p>
                   <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-gray-500">
                     {job.location && (
                       <span className="flex items-center gap-1.5">
@@ -380,7 +386,6 @@ const OpportunityDetails = () => {
                 {[
                   { Icon: Calendar, label: "Posted", value: job.postedDate || "Recently" },
                   { Icon: Calendar, label: "Deadline", value: job.deadline || "Open" },
-                  { Icon: Users,    label: "Applicants", value: job.applicants ?? 0 },
                   { Icon: Briefcase, label: "Type", value: job.type },
                 ].map(({ Icon, label, value }) => (
                   <div key={label} className="flex items-center justify-between">
@@ -405,7 +410,12 @@ const OpportunityDetails = () => {
                   )}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900 text-sm">{job.company}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="font-semibold text-gray-900 text-sm">{job.company}</p>
+                    {(job.companyIsVerified || job.companyInfo?.isVerified) && (
+                      <BadgeCheck className="w-4 h-4 text-blue-500 shrink-0" title="Verified Company" />
+                    )}
+                  </div>
                   {job.companyInfo?.industry && (
                     <p className="text-xs text-gray-500 mt-0.5">{job.companyInfo.industry}</p>
                   )}

@@ -40,13 +40,25 @@ const _EducationSection = ({ data, onChange, onNext, onBack }) => {
     setError("");
   };
 
-  // Validation: At least one education entry with degree and institution
+  // CGPA is optional, but if provided must be a number (e.g. 3.65) or percentage (e.g. 85%)
+  const CGPA_RE = /^\d+(\.\d+)?%?$/;
+  const cgpaInvalid = (edu) => Boolean((edu.cgpa || "").trim()) && !CGPA_RE.test((edu.cgpa || "").trim());
+
+  // Validation: At least one education entry with degree and institution, and no invalid CGPA values
   const isFormValid = () => {
-    return data.length > 0 && data.some((edu) => (edu.degree || "").trim() && (edu.institution || "").trim());
+    return (
+      data.length > 0 &&
+      data.some((edu) => (edu.degree || "").trim() && (edu.institution || "").trim()) &&
+      !data.some(cgpaInvalid)
+    );
   };
 
   // Handle next with database save
   const handleNext = async () => {
+    if (data.some(cgpaInvalid)) {
+      setError("CGPA/Percentage must be a number (e.g. 3.65) or a percentage (e.g. 85%).");
+      return;
+    }
     if (!isFormValid()) {
       setError("Please fill in at least one education entry with both degree and institution before proceeding.");
       return;
@@ -170,7 +182,9 @@ const _EducationSection = ({ data, onChange, onNext, onBack }) => {
                     onChange={(e) => updateEducation(edu.id, "cgpa", e.target.value)}
                     placeholder="e.g., 3.65"
                     disabled={loading}
+                    className={cgpaInvalid(edu) ? "border-red-500" : ""}
                   />
+                  {cgpaInvalid(edu) && <p className="text-xs text-red-500 mt-1">Enter a number (3.65) or percentage (85%)</p>}
                 </div>
               </div>
             </div>

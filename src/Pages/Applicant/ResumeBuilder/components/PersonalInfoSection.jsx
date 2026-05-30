@@ -1,13 +1,18 @@
-import React, { useState, memo } from "react";
+import React, { useState, memo, useMemo } from "react";
 import { Input } from "../../../../ui/input";
 import { Label } from "../../../../ui/label";
 import { Button } from "../../../../ui/button";
 import { ArrowRight, RefreshCw, AlertCircle } from "lucide-react";
 import { api } from "../../../../utils/api";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_RE = /^[+]?[\d][\d\s\-()]{6,18}$/;
+const URL_RE = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/\S*)?$/i;
+
 const _PersonalInfoSection = ({ data, onChange, onNext }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [submitted, setSubmitted] = useState(false);
 
   const handleChange = (field, value) => {
     onChange({
@@ -25,24 +30,42 @@ const _PersonalInfoSection = ({ data, onChange, onNext }) => {
   const wordCount = countWords(data.summary || "");
   const maxWords = 50;
 
-  // Validation function
-  const isFormValid = () => {
-    return (
-      data.name &&
-      data.name.trim() !== "" &&
-      data.email &&
-      data.email.trim() !== "" &&
-      data.phone &&
-      data.phone.trim() !== "" &&
-      data.summary &&
-      data.summary.trim() !== "" &&
-      wordCount > 0 &&
-      wordCount <= maxWords
-    );
+  // Per-field validation with format checks
+  const fieldErrors = useMemo(() => {
+    const e = {};
+    if (!data.name?.trim()) e.name = "Full name is required";
+
+    if (!data.email?.trim()) e.email = "Email is required";
+    else if (!EMAIL_RE.test(data.email.trim())) e.email = "Enter a valid email address";
+
+    if (!data.phone?.trim()) e.phone = "Phone is required";
+    else if (!PHONE_RE.test(data.phone.trim())) e.phone = "Enter a valid phone number";
+
+    if (data.linkedin?.trim() && !URL_RE.test(data.linkedin.trim()))
+      e.linkedin = "Enter a valid URL (e.g. linkedin.com/in/you)";
+    if (data.website?.trim() && !URL_RE.test(data.website.trim()))
+      e.website = "Enter a valid URL";
+
+    if (!data.summary?.trim()) e.summary = "Professional summary is required";
+    else if (wordCount > maxWords) e.summary = `Summary exceeds ${maxWords} words (currently ${wordCount})`;
+
+    return e;
+  }, [data, wordCount]);
+
+  const isFormValid = () => Object.keys(fieldErrors).length === 0;
+
+  // Show format errors live (when the field has a value); show "required" errors only after a submit attempt.
+  const showErr = (field) => {
+    const err = fieldErrors[field];
+    if (!err) return null;
+    if (submitted) return err;
+    if (data[field]?.toString().trim() && !err.toLowerCase().includes("required")) return err;
+    return null;
   };
 
   // Handle next with database save
   const handleNext = async () => {
+    setSubmitted(true);
     if (!isFormValid()) {
       setError("Please fill all required fields with valid data.");
       return;
@@ -93,9 +116,9 @@ const _PersonalInfoSection = ({ data, onChange, onNext }) => {
               onChange={(e) => handleChange("name", e.target.value)}
               placeholder="Enter your full name"
               disabled={loading}
-              className={!data.name && error ? "border-red-500" : ""}
+              className={showErr("name") ? "border-red-500" : ""}
             />
-            {!data.name && error && <p className="text-xs text-red-500 mt-1">Required</p>}
+            {showErr("name") && <p className="text-xs text-red-500 mt-1">{showErr("name")}</p>}
           </div>
           <div>
             <Label htmlFor="email" className="required">
@@ -108,9 +131,9 @@ const _PersonalInfoSection = ({ data, onChange, onNext }) => {
               onChange={(e) => handleChange("email", e.target.value)}
               placeholder="your.email@example.com"
               disabled={loading}
-              className={!data.email && error ? "border-red-500" : ""}
+              className={showErr("email") ? "border-red-500" : ""}
             />
-            {!data.email && error && <p className="text-xs text-red-500 mt-1">Required</p>}
+            {showErr("email") && <p className="text-xs text-red-500 mt-1">{showErr("email")}</p>}
           </div>
         </div>
 
@@ -125,9 +148,9 @@ const _PersonalInfoSection = ({ data, onChange, onNext }) => {
               onChange={(e) => handleChange("phone", e.target.value)}
               placeholder="+977 98XXXXXXXX"
               disabled={loading}
-              className={!data.phone && error ? "border-red-500" : ""}
+              className={showErr("phone") ? "border-red-500" : ""}
             />
-            {!data.phone && error && <p className="text-xs text-red-500 mt-1">Required</p>}
+            {showErr("phone") && <p className="text-xs text-red-500 mt-1">{showErr("phone")}</p>}
           </div>
           <div>
             <Label htmlFor="location">Location</Label>
@@ -150,7 +173,9 @@ const _PersonalInfoSection = ({ data, onChange, onNext }) => {
               onChange={(e) => handleChange("linkedin", e.target.value)}
               placeholder="linkedin.com/in/yourprofile"
               disabled={loading}
+              className={showErr("linkedin") ? "border-red-500" : ""}
             />
+            {showErr("linkedin") && <p className="text-xs text-red-500 mt-1">{showErr("linkedin")}</p>}
           </div>
           <div>
             <Label htmlFor="website">Website/Portfolio</Label>
@@ -160,7 +185,9 @@ const _PersonalInfoSection = ({ data, onChange, onNext }) => {
               onChange={(e) => handleChange("website", e.target.value)}
               placeholder="yourportfolio.com"
               disabled={loading}
+              className={showErr("website") ? "border-red-500" : ""}
             />
+            {showErr("website") && <p className="text-xs text-red-500 mt-1">{showErr("website")}</p>}
           </div>
         </div>
 
@@ -181,25 +208,14 @@ const _PersonalInfoSection = ({ data, onChange, onNext }) => {
             placeholder="Write a brief professional summary (max 50 words)."
             disabled={loading}
             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent resize-none transition-colors ${
-              wordCount > maxWords
+              showErr("summary")
                 ? "border-red-500 focus:ring-red-500"
-                : !data.summary && error
-                ? "border-red-300 focus:ring-red-500"
                 : "border-slate-300 focus:ring-blue-500"
             } disabled:bg-slate-100 disabled:cursor-not-allowed`}
           />
           <div className="mt-2 space-y-1">
-            {!data.summary && error && (
-              <p className="text-xs text-red-600 font-medium">✗ Professional summary is required</p>
-            )}
-            {data.summary && wordCount === 0 && (
-              <p className="text-xs text-yellow-600">✗ Please add some summary text</p>
-            )}
-            {wordCount > maxWords && (
-              <p className="text-xs text-red-600 font-medium"> Summary exceeds {maxWords} words. Current: {wordCount}</p>
-            )}
-            {data.summary && wordCount > 0 && wordCount <= maxWords && (
-              <p className="text-xs text-green-600 font-medium"></p>
+            {showErr("summary") && (
+              <p className="text-xs text-red-600 font-medium">{showErr("summary")}</p>
             )}
           </div>
         </div>

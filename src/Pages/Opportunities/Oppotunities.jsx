@@ -14,6 +14,7 @@ import {
   Clock,
   AlertCircle,
   Building2,
+  BadgeCheck,
   Loader2,
   ArrowRight,
   DollarSign,
@@ -301,7 +302,12 @@ const OpportunityCard = ({ opp, user, resumeCompleted, onApply, onViewDetails })
         <h3 className="font-semibold text-gray-900 text-base leading-snug truncate group-hover:text-blue-700 transition-colors">
           {opp.title}
         </h3>
-        <p className="text-sm text-gray-500 truncate mt-0.5">{opp.company}</p>
+        <p className="text-sm text-gray-500 truncate mt-0.5 flex items-center gap-1">
+          {opp.company}
+          {opp.companyIsVerified && (
+            <BadgeCheck className="w-3.5 h-3.5 text-blue-500 shrink-0" title="Verified Company" />
+          )}
+        </p>
       </div>
       <span className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full border ${typeBadge(opp.type)}`}>
         {opp.type}

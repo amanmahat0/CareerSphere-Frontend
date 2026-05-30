@@ -101,6 +101,48 @@ const EmptyRow = ({ cols, msg = 'No data found' }) => (
   <tr><td colSpan={cols} className="px-4 py-12 text-center text-slate-400 text-sm">{msg}</td></tr>
 );
 
+const ChartCard = ({ title, sub, children }) => (
+  <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+    <div className="px-5 py-4 border-b border-slate-100">
+      <h2 className="text-lg font-bold text-slate-800">{title}</h2>
+      {sub && <p className="text-xs text-slate-400 mt-0.5">{sub}</p>}
+    </div>
+    <div className="p-4">{children}</div>
+  </div>
+);
+
+const TipBox = ({ label, value, color }) => (
+  <div className="bg-white border border-slate-200 rounded-lg shadow-lg px-2.5 py-1.5 text-xs">
+    <p className="font-semibold text-slate-700">{label}</p>
+    <p style={{ color }} className="font-bold">{value}</p>
+  </div>
+);
+
+const DonutLegend = ({ items, total }) => (
+  <div className="w-full space-y-2">
+    {items.map((e) => {
+      const pct = total ? Math.round((e.value / total) * 100) : 0;
+      return (
+        <div key={e.name} className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: e.fill }} />
+          <span className="text-xs text-slate-600 font-medium flex-1 truncate">{e.name}</span>
+          <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: e.fill }} />
+          </div>
+          <span className="text-xs font-bold w-6 text-right" style={{ color: e.fill }}>{e.value}</span>
+        </div>
+      );
+    })}
+  </div>
+);
+
+const ChartEmpty = ({ msg = 'No data yet' }) => (
+  <div className="flex flex-col items-center justify-center py-8 text-slate-400">
+    <BarChart2 size={24} className="mb-1 opacity-40" />
+    <p className="text-xs">{msg}</p>
+  </div>
+);
+
 /* ─── main component ─────────────────────────────────────── */
 const AdminDashboard = () => {
   const navigate    = useNavigate();
@@ -127,7 +169,7 @@ const AdminDashboard = () => {
         const auth = { Authorization: `Bearer ${localStorage.getItem('token')}` };
         const [jobsRes, appsRes, companiesRes, applicantsRes] = await Promise.allSettled([
           api.getAllJobs(),
-          api.request('/applications', { method: 'GET', headers: auth }),
+          api.getAdminApplications(),
           api.getAllCompanies(),
           api.getAllApplicants(),
         ]);
@@ -142,7 +184,7 @@ const AdminDashboard = () => {
 
   /* ── derived stats ── */
   const stats = useMemo(() => {
-    const get = (...keys) => applications.filter(a => keys.includes(a.interviewStep || a.status)).length;
+    const get = (...keys) => applications.filter(a => a.status !== 'pending' && keys.includes(a.interviewStep || a.status)).length;
     return {
       jobs:        jobs.length,
       companies:   companies.filter(c => c.verificationStatus === 'approved').length,
@@ -165,26 +207,74 @@ const AdminDashboard = () => {
   }, [applications]);
 
   const pipelineBar = useMemo(() => {
-    const get = (...keys) => applications.filter(a => keys.includes(a.interviewStep || a.status)).length;
+    const get = (...keys) => applications.filter(a => a.status !== 'pending' && keys.includes(a.interviewStep || a.status)).length;
     return [
-      { label: 'Applied',     value: applications.length, fill: '#3B82F6' },
-      { label: 'Shortlisted', value: get('shortlisted'),  fill: '#8B5CF6' },
-      { label: 'Test',        value: get('test'),         fill: '#06B6D4' },
-      { label: 'Interview',   value: get('interview'),    fill: '#F59E0B' },
-      { label: 'Offer',       value: get('offer'),        fill: '#22C55E' },
-      { label: 'Hired',       value: get('hired'),        fill: '#10B981' },
+      { label: 'Applied',     value: applications.length,  fill: '#3B82F6' },
+      { label: 'Shortlisted', value: get('shortlisted'),   fill: '#8B5CF6' },
+      { label: 'Test',        value: get('test'),          fill: '#06B6D4' },
+      { label: 'Interview',   value: get('interview'),     fill: '#F59E0B' },
+      { label: 'Offer',       value: get('offer'),         fill: '#22C55E' },
+      { label: 'Hired',       value: get('hired'),         fill: '#10B981' },
     ];
   }, [applications]);
 
   const appsTrend = useMemo(() => {
     const counts = {};
+    const latest = {};
     applications.forEach(a => {
       const d = new Date(a.appliedDate || a.createdAt);
       const key = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       counts[key] = (counts[key] || 0) + 1;
+      if (!latest[key] || d > latest[key]) latest[key] = d;
     });
-    return Object.entries(counts).slice(-14).map(([date, count]) => ({ date, count }));
+    return Object.entries(counts)
+      .sort((a, b) => latest[a[0]] - latest[b[0]])
+      .slice(-14)
+      .map(([date, count]) => ({ date, count }));
   }, [applications]);
+
+  const statusDonut = useMemo(() => {
+    const counts = {};
+    applications.forEach(a => {
+      const s = a.status === 'pending' ? 'pending' : (a.interviewStep || a.status || 'pending');
+      counts[s] = (counts[s] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, value]) => ({
+      name,
+      value,
+      fill:  APP_STATUS[name]?.color || '#94A3B8',
+      label: APP_STATUS[name]?.label || name,
+    }));
+  }, [applications]);
+
+  const userRoleDonut = useMemo(() => [
+    { name: 'Applicants', value: applicants.length, fill: '#3B82F6' },
+    { name: 'Companies',  value: companies.length,  fill: '#8B5CF6' },
+  ], [applicants.length, companies.length]);
+
+  const verifyDonut = useMemo(() => [
+    { name: 'Verified', value: companies.filter(c => c.verificationStatus === 'approved').length, fill: '#10B981' },
+    { name: 'Pending',  value: companies.filter(c => c.verificationStatus === 'pending').length,  fill: '#F59E0B' },
+    { name: 'Rejected', value: companies.filter(c => c.verificationStatus === 'rejected').length, fill: '#EF4444' },
+  ], [companies]);
+
+  const topCompanies = useMemo(() => {
+    const counts = {};
+    jobs.forEach(j => { if (j.company) counts[j.company] = (counts[j.company] || 0) + 1; });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([name, count]) => ({ name, count }));
+  }, [jobs]);
+
+  const topSkills = useMemo(() => {
+    const counts = {};
+    jobs.forEach(j => (j.skills || []).forEach(s => { if (s) counts[s] = (counts[s] || 0) + 1; }));
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([skill, count]) => ({ skill, count }));
+  }, [jobs]);
 
   /* ── table helpers ── */
   const handleSort = useCallback((key) => {
@@ -205,11 +295,11 @@ const AdminDashboard = () => {
       a.jobId?.company?.toLowerCase().includes(q)
     );
     if (statusFilter.applications !== 'all')
-      list = list.filter(a => (a.interviewStep || a.status) === statusFilter.applications);
+      list = list.filter(a => (a.status === 'pending' ? 'pending' : (a.interviewStep || a.status)) === statusFilter.applications);
     list.sort((a, b) => {
       let va, vb;
       if (sortCfg.key === 'date') { va = new Date(a.appliedDate||a.createdAt); vb = new Date(b.appliedDate||b.createdAt); }
-      else if (sortCfg.key === 'status') { va = a.interviewStep||a.status||''; vb = b.interviewStep||b.status||''; }
+      else if (sortCfg.key === 'status') { va = a.status === 'pending' ? 'pending' : (a.interviewStep||a.status||''); vb = b.status === 'pending' ? 'pending' : (b.interviewStep||b.status||''); }
       else { va = a.userId?.fullname||''; vb = b.userId?.fullname||''; }
       return (va < vb ? -1 : va > vb ? 1 : 0) * (sortCfg.dir === 'asc' ? 1 : -1);
     });
@@ -513,6 +603,185 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
+                {/* ── Row 2: Status Breakdown · User Roles · Verification ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+                  {/* Application Status Breakdown */}
+                  <ChartCard title="Application Status" sub="Distribution across all stages">
+                    {statusDonut.length === 0 ? <ChartEmpty /> : (
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="relative w-36 h-36">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie data={statusDonut} cx="50%" cy="50%" innerRadius={44} outerRadius={68} paddingAngle={3} dataKey="value" strokeWidth={0}>
+                                {statusDonut.map((e, i) => <Cell key={i} fill={e.fill} />)}
+                              </Pie>
+                              <Tooltip content={({ active, payload }) => {
+                                if (!active || !payload?.length) return null;
+                                const d = payload[0].payload;
+                                const pct = applications.length ? Math.round((d.value / applications.length) * 100) : 0;
+                                return <TipBox label={d.label} value={`${d.value} (${pct}%)`} color={d.fill} />;
+                              }} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span className="text-xl font-extrabold text-slate-900">{applications.length}</span>
+                            <span className="text-xs text-slate-400">Total</span>
+                          </div>
+                        </div>
+                        <DonutLegend items={statusDonut.map(e => ({ ...e, name: e.label }))} total={applications.length} />
+                      </div>
+                    )}
+                  </ChartCard>
+
+                  {/* Users by Role */}
+                  <ChartCard title="Users by Role" sub="Applicants vs Companies on platform">
+                    {userRoleDonut.every(d => d.value === 0) ? <ChartEmpty /> : (
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="relative w-36 h-36">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie data={userRoleDonut} cx="50%" cy="50%" innerRadius={44} outerRadius={68} paddingAngle={3} dataKey="value" strokeWidth={0}>
+                                {userRoleDonut.map((e, i) => <Cell key={i} fill={e.fill} />)}
+                              </Pie>
+                              <Tooltip content={({ active, payload }) => {
+                                if (!active || !payload?.length) return null;
+                                const d = payload[0].payload;
+                                const total = userRoleDonut.reduce((s, x) => s + x.value, 0);
+                                const pct = total ? Math.round((d.value / total) * 100) : 0;
+                                return <TipBox label={d.name} value={`${d.value} (${pct}%)`} color={d.fill} />;
+                              }} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span className="text-xl font-extrabold text-slate-900">{userRoleDonut.reduce((s, x) => s + x.value, 0)}</span>
+                            <span className="text-xs text-slate-400">Users</span>
+                          </div>
+                        </div>
+                        <DonutLegend items={userRoleDonut} total={userRoleDonut.reduce((s, x) => s + x.value, 0)} />
+                      </div>
+                    )}
+                  </ChartCard>
+
+                  {/* Company Verification Status */}
+                  <ChartCard title="Verification Status" sub="Institution approval breakdown">
+                    {companies.length === 0 ? <ChartEmpty /> : (
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="relative w-36 h-36">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie data={verifyDonut} cx="50%" cy="50%" innerRadius={44} outerRadius={68} paddingAngle={3} dataKey="value" strokeWidth={0}>
+                                {verifyDonut.map((e, i) => <Cell key={i} fill={e.fill} />)}
+                              </Pie>
+                              <Tooltip content={({ active, payload }) => {
+                                if (!active || !payload?.length) return null;
+                                const d = payload[0].payload;
+                                const pct = companies.length ? Math.round((d.value / companies.length) * 100) : 0;
+                                return <TipBox label={d.name} value={`${d.value} (${pct}%)`} color={d.fill} />;
+                              }} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span className="text-xl font-extrabold text-slate-900">{companies.length}</span>
+                            <span className="text-xs text-slate-400">Total</span>
+                          </div>
+                        </div>
+                        <DonutLegend items={verifyDonut} total={companies.length} />
+                      </div>
+                    )}
+                  </ChartCard>
+                </div>
+
+                {/* ── Row 3: Placement Funnel (full width visual) ── */}
+                <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                  <div className="px-5 py-4 border-b border-slate-100">
+                    <h2 className="text-lg font-bold text-slate-800">Placement Funnel</h2>
+                    <p className="text-xs text-slate-400 mt-0.5">Drop-off at each hiring stage</p>
+                  </div>
+                  <div className="p-5">
+                    {applications.length === 0 ? <ChartEmpty /> : (
+                      <div className="flex flex-col gap-2">
+                        {pipelineBar.map(({ label, value, fill }, i) => {
+                          const maxVal = pipelineBar[0].value || 1;
+                          const pct = Math.round((value / maxVal) * 100);
+                          const dropPct = i > 0 && pipelineBar[i-1].value > 0
+                            ? Math.round(((pipelineBar[i-1].value - value) / pipelineBar[i-1].value) * 100)
+                            : null;
+                          return (
+                            <div key={label} className="flex items-center gap-3">
+                              <span className="w-20 shrink-0 text-xs font-semibold text-slate-600 text-right">{label}</span>
+                              <div className="flex-1 h-7 bg-slate-100 rounded-md overflow-hidden">
+                                <div
+                                  className="h-full rounded-md flex items-center justify-end pr-2 transition-all duration-500"
+                                  style={{ width: `${Math.max(pct, 2)}%`, backgroundColor: fill }}
+                                >
+                                  <span className="text-white text-xs font-bold">{value}</span>
+                                </div>
+                              </div>
+                              <div className="w-16 shrink-0 text-right">
+                                {dropPct !== null && dropPct > 0 ? (
+                                  <span className="text-xs text-red-500 font-semibold">−{dropPct}%</span>
+                                ) : (
+                                  <span className="text-xs text-slate-400">{pct}%</span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                        <p className="text-xs text-slate-400 mt-2 text-center">
+                          Overall placement rate: <strong className="text-emerald-600">
+                            {pipelineBar[0].value > 0 ? `${Math.round((pipelineBar[pipelineBar.length-1].value / pipelineBar[0].value) * 100)}%` : '0%'}
+                          </strong>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* ── Row 4: Top Institutions · Top Skills ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+                  {/* Top Recruiting Institutions */}
+                  <ChartCard title="Top Recruiting Institutions" sub="Companies by number of job postings">
+                    {topCompanies.length === 0 ? <ChartEmpty msg="No job postings yet" /> : (
+                      <div className="h-56">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={topCompanies} layout="vertical" margin={{ top: 0, right: 24, left: 0, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" horizontal={false} />
+                            <XAxis type="number" allowDecimals={false} tick={{ fontSize: 9, fill: '#94A3B8' }} tickLine={false} axisLine={false} />
+                            <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 9, fill: '#64748B' }} tickLine={false} axisLine={false} />
+                            <Tooltip content={({ active, payload }) => {
+                              if (!active || !payload?.length) return null;
+                              return <TipBox label={payload[0].payload.name} value={`${payload[0].value} posting${payload[0].value !== 1 ? 's' : ''}`} color="#3B82F6" />;
+                            }} />
+                            <Bar dataKey="count" fill="#3B82F6" radius={[0, 3, 3, 0]} maxBarSize={16} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+                  </ChartCard>
+
+                  {/* Top Skills in Demand */}
+                  <ChartCard title="Top Skills in Demand" sub="Most requested skills across all postings">
+                    {topSkills.length === 0 ? <ChartEmpty msg="No skills data yet" /> : (
+                      <div className="h-56">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={topSkills} layout="vertical" margin={{ top: 0, right: 24, left: 0, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" horizontal={false} />
+                            <XAxis type="number" allowDecimals={false} tick={{ fontSize: 9, fill: '#94A3B8' }} tickLine={false} axisLine={false} />
+                            <YAxis type="category" dataKey="skill" width={100} tick={{ fontSize: 9, fill: '#64748B' }} tickLine={false} axisLine={false} />
+                            <Tooltip content={({ active, payload }) => {
+                              if (!active || !payload?.length) return null;
+                              return <TipBox label={payload[0].payload.skill} value={`${payload[0].value} posting${payload[0].value !== 1 ? 's' : ''}`} color="#8B5CF6" />;
+                            }} />
+                            <Bar dataKey="count" fill="#8B5CF6" radius={[0, 3, 3, 0]} maxBarSize={16} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+                  </ChartCard>
+                </div>
+
                 {/* ── Pending Approvals Alert ── */}
                 {stats.pending > 0 && (
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
@@ -621,7 +890,7 @@ const AdminDashboard = () => {
                           <tbody className="divide-y divide-slate-100">
                             {paginate(filteredApps, 'applications').length === 0 ? <EmptyRow cols={8} msg="No applications found" /> :
                               paginate(filteredApps, 'applications').map((app, idx) => {
-                                const m = smeta(app.interviewStep || app.status);
+                                const m = smeta(app.status === 'pending' ? 'pending' : (app.interviewStep || app.status));
                                 return (
                                   <tr key={app._id} className="hover:bg-blue-50/30 transition-colors">
                                     <td className="px-3 py-2.5 text-xs text-slate-400">{(page.applications - 1) * PAGE_SIZE + idx + 1}</td>

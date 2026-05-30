@@ -162,16 +162,22 @@ const ResumeBuilder = () => {
     loadResumeData();
   }, []);
 
-  const handleSave = async () => {
-    // Validation
-    const isComplete =
-      resumeData.personalInfo.name &&
-      resumeData.personalInfo.email &&
-      resumeData.personalInfo.phone &&
-      resumeData.education.some((e) => e.degree && e.institution) &&
-      resumeData.experience.some((e) => e.title && e.company) &&
-      resumeData.skills.length > 0;
+  // Resume is "complete" when all required sections are filled.
+  // Experience, projects and certifications are optional (e.g. for freshers).
+  const isComplete = useMemo(
+    () =>
+      Boolean(
+        resumeData.personalInfo.name?.trim() &&
+          resumeData.personalInfo.email?.trim() &&
+          resumeData.personalInfo.phone?.trim() &&
+          resumeData.personalInfo.summary?.trim() &&
+          resumeData.education.some((e) => e.degree?.trim() && e.institution?.trim()) &&
+          resumeData.skills.length > 0
+      ),
+    [resumeData]
+  );
 
+  const handleSave = async () => {
     // Prepare data for saving - include all components even if empty
     const dataToSave = {
       personalInfo: {
@@ -315,28 +321,6 @@ const ResumeBuilder = () => {
             onFinish={handleFinish}
           />
         );
-      case 7:
-        return (
-          <div className="space-y-4">
-            {/* Resume Status */}
-            <div className={`p-4 rounded-lg border-2 flex items-center gap-3 ${isComplete ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
-              <div className={`w-3 h-3 rounded-full ${isComplete ? 'bg-green-600' : 'bg-yellow-600'}`}></div>
-              <div>
-                <p className={`font-semibold ${isComplete ? 'text-green-900' : 'text-yellow-900'}`}>
-                  {isComplete ? 'Resume Completed' : 'Resume Incomplete'}
-                </p>
-                <p className={`text-sm ${isComplete ? 'text-green-800' : 'text-yellow-800'}`}>
-                  {isComplete ? 'Your resume is ready to be used for applications.' : 'Please complete all required sections to finalize your resume.'}
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Resume Preview</h3>
-              <p className="text-sm text-slate-500">Your complete resume</p>
-            </div>
-          </div>
-        );
       default:
         return null;
     }
@@ -367,7 +351,24 @@ const ResumeBuilder = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div>
-                  <h1 className="text-xl font-semibold text-slate-900">Resume Builder</h1>
+                  <div className="flex items-center gap-2.5">
+                    <h1 className="text-xl font-semibold text-slate-900">Resume Builder</h1>
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                        isComplete
+                          ? "bg-green-50 text-green-700 border-green-200"
+                          : "bg-yellow-50 text-yellow-700 border-yellow-200"
+                      }`}
+                      title={
+                        isComplete
+                          ? "All required sections are filled."
+                          : "Complete Personal Info, Education and Skills to finalize your resume."
+                      }
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${isComplete ? "bg-green-600" : "bg-yellow-500"}`} />
+                      {isComplete ? "Completed" : "Incomplete"}
+                    </span>
+                  </div>
                   <p className="text-sm text-slate-500">
                     Step {currentStep} of {STEPS.length}: {STEPS[currentStep - 1].name}
                   </p>
@@ -455,10 +456,27 @@ const ResumeBuilder = () => {
                 </div>
               </div>
             ) : (
-              // Form Sections - Full Width
-              <div className="w-full overflow-y-auto p-6 bg-white">
-                <div className="max-w-2xl mx-auto">{renderCurrentSection()}</div>
-              </div>
+              // Form Sections (left) + Live Preview (right)
+              <>
+                <div className="w-full lg:w-1/2 overflow-y-auto p-6 bg-white">
+                  <div className="max-w-2xl mx-auto">{renderCurrentSection()}</div>
+                </div>
+                <div className="hidden lg:flex lg:w-1/2 flex-col overflow-y-auto p-6 bg-slate-100 border-l border-slate-200">
+                  <div className="max-w-2xl mx-auto w-full">
+                    <div className="mb-3 flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-slate-500" />
+                      <div>
+                        <h2 className="text-sm font-semibold text-slate-700">Live Preview</h2>
+                        <p className="text-xs text-slate-500">Updates as you type</p>
+                      </div>
+                    </div>
+                    <div className="origin-top scale-[0.92]">
+                      <ResumePreview data={memoizedResumeData} />
+                    </div>
+                    <div className="h-8"></div>
+                  </div>
+                </div>
+              </>
             )}
           </div>
         </main>
