@@ -11,6 +11,7 @@ import {
 import PostJob from './PostJob';
 import { api } from '../../../utils/api';
 import { toast } from '../../../utils/toast';
+import ConfirmDialog from '../../../Components/ConfirmDialog';
 import CompanySidebar from '../Components/CompanySidebar';
 import DashboardHeader from '../../../Components/DashboardHeader';
 
@@ -19,12 +20,14 @@ const TYPE_COLORS = { Job: '#1E3A8A', Internship: '#EA580C', Traineeship: '#0596
 const JobManagement = () => {
   const [activeTab, setActiveTab] = useState('All');
   const [isPostJobOpen, setIsPostJobOpen] = useState(false);
-  const [editingJob, setEditingJob] = useState(null);
-  const [jobs, setJobs] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [editingJob, setEditingJob]       = useState(null);
+  const [jobs, setJobs]                   = useState([]);
+  const [isLoading, setIsLoading]         = useState(true);
+  const [error, setError]                 = useState('');
+  const [searchQuery, setSearchQuery]     = useState('');
+  const [sidebarOpen, setSidebarOpen]     = useState(false);
+  const [isVerified, setIsVerified]       = useState(null);
+  const [confirm, setConfirm]             = useState(null);
   const navigate = useNavigate();
 
   const fetchJobs = async () => {
@@ -42,17 +45,30 @@ const JobManagement = () => {
 
   useEffect(() => {
     fetchJobs();
+    api.getCompanyVerificationStatus()
+      .then(res => setIsVerified(res.data?.isVerified ?? false))
+      .catch(() => setIsVerified(false));
   }, []);
 
-  const handleDeleteJob = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this job?')) return;
-    try {
-      await api.deleteJob(id);
-      setJobs(jobs.filter(job => job._id !== id));
-      toast.success('Job deleted successfully');
-    } catch (err) {
-      toast.error(err.message || 'Failed to delete job');
+  const handleDeleteJob = (id) => {
+    setConfirm({
+      title: 'Delete Job Posting',
+      message: 'This will permanently remove the job listing and all associated applications. This cannot be undone.',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        await api.deleteJob(id);
+        setJobs(prev => prev.filter(job => job._id !== id));
+        toast.success('Job deleted successfully');
+      },
+    });
+  };
+
+  const handleOpenPostJob = () => {
+    if (isVerified === false) {
+      toast.error('Your company must be verified before you can post jobs. Please upload your documents from the Profile page.');
+      return;
     }
+    setIsPostJobOpen(true);
   };
 
   const handleJobPostSuccess = () => {
@@ -121,6 +137,7 @@ const JobManagement = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <ConfirmDialog config={confirm} onClose={() => setConfirm(null)} />
       <CompanySidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="jobs" />
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
@@ -138,6 +155,17 @@ const JobManagement = () => {
           <div className="p-4 lg:p-8">
             <div className="max-w-7xl mx-auto space-y-6">
 
+              {/* Unverified warning banner */}
+              {isVerified === false && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                  <svg className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+                  <div>
+                    <p className="text-sm font-semibold text-amber-900">Company not verified</p>
+                    <p className="text-xs text-amber-700 mt-0.5">Your company account must be verified by an admin before you can post jobs. Go to <strong>Profile → Verification Documents</strong> to upload your documents.</p>
+                  </div>
+                </div>
+              )}
+
               {/* Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
@@ -146,7 +174,7 @@ const JobManagement = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={() => { setEditingJob(null); setIsPostJobOpen(true); }}
+                  onClick={() => { setEditingJob(null); handleOpenPostJob(); }}
                   className="bg-blue-900 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 hover:bg-blue-950 transition-colors text-sm font-semibold shadow-sm shrink-0"
                 >
                   <Plus size={16} /> Post New Opportunity

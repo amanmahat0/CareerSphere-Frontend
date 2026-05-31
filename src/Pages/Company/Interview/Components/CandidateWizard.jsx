@@ -343,6 +343,7 @@ function StepTest({ candidate, onUpdate, loading, setLoading, setError }) {
           type="date"
           value={assignForm.testDeadline}
           onChange={e => setAssignForm(p => ({ ...p, testDeadline: e.target.value }))}
+          min={new Date().toISOString().split('T')[0]}
           className={inputCls(!assignForm.testDeadline)}
         />
       </div>
@@ -722,6 +723,7 @@ function StepInterview({ candidate, onUpdate, loading, setLoading, setError }) {
           <Label required>Date</Label>
           <input type="date" value={schedForm.interviewDate}
             onChange={e => setSchedForm(p => ({ ...p, interviewDate: e.target.value }))}
+            min={new Date().toISOString().split('T')[0]}
             className={inputCls(!schedForm.interviewDate)} />
         </div>
         <div>
@@ -950,6 +952,7 @@ function StepOffer({ candidate, onUpdate, loading, setLoading, setError }) {
                   <Label>Joining Date</Label>
                   <input type="date" value={reviseForm.joiningDate}
                     onChange={e => setReviseForm(p => ({ ...p, joiningDate: e.target.value }))}
+                    min={new Date().toISOString().split('T')[0]}
                     className={inputCls(false)} />
                 </div>
               </div>
@@ -1078,6 +1081,7 @@ function StepOffer({ candidate, onUpdate, loading, setLoading, setError }) {
         <Label required>Joining Date</Label>
         <input type="date" value={offerForm.joiningDate}
           onChange={e => setOfferForm(p => ({ ...p, joiningDate: e.target.value }))}
+          min={new Date().toISOString().split('T')[0]}
           className={inputCls(!offerForm.joiningDate)} />
       </div>
 
@@ -1094,6 +1098,7 @@ function StepOffer({ candidate, onUpdate, loading, setLoading, setError }) {
           <Label>Offer Expiry</Label>
           <input type="date" value={offerForm.offerExpiryDate}
             onChange={e => setOfferForm(p => ({ ...p, offerExpiryDate: e.target.value }))}
+            min={new Date().toISOString().split('T')[0]}
             className={inputCls(false)} />
         </div>
         <div>
@@ -1163,6 +1168,7 @@ function StepHired({ candidate, onUpdate, loading, setLoading, setError }) {
       <div>
         <Label required>Start Date</Label>
         <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
+          min={new Date().toISOString().split('T')[0]}
           className={inputCls(!startDate)} />
       </div>
 

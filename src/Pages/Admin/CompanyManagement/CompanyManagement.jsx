@@ -7,6 +7,7 @@ import {
 import AdminSidebar from '../Components/AdminSidebar';
 import DashboardHeader from '../../../Components/DashboardHeader';
 import CompanyDetailsModal from '../Components/CompanyDetailsModal';
+import ConfirmDialog from '../../../Components/ConfirmDialog';
 import { api } from '../../../utils/api';
 import { toast } from '../../../utils/toast';
 
@@ -23,6 +24,7 @@ const CompanyManagement = () => {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', password: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [confirm, setConfirm]       = useState(null);
 
   // Fetch companies from API
   useEffect(() => {
@@ -138,15 +140,17 @@ const CompanyManagement = () => {
     setShowDetailsModal(false);
   };
 
-  const handleDeleteCompany = async (companyId) => {
-    if (window.confirm('Are you sure you want to delete this company?')) {
-      try {
+  const handleDeleteCompany = (companyId) => {
+    setConfirm({
+      title: 'Delete Company',
+      message: 'This will permanently delete the company account, all their job postings, and associated data. This cannot be undone.',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
         await api.deleteCompanyAdmin(companyId);
         setCompanies(prev => prev.filter(c => c.id !== companyId));
-      } catch (err) {
-        toast.error('Error deleting company: ' + err.message);
-      }
-    }
+        toast.success('Company deleted');
+      },
+    });
   };
 
   // Filter companies based on search
@@ -185,6 +189,7 @@ const CompanyManagement = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <ConfirmDialog config={confirm} onClose={() => setConfirm(null)} />
       <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="companies" />
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
@@ -225,27 +230,21 @@ const CompanyManagement = () => {
                 </div>
               )}
 
-              {/* Stats Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 mb-8">
-                <MetricCard label="Total Companies" value={stats.total} />
-                <MetricCard label="Verified" value={stats.verified} color="text-emerald-600" />
-                <MetricCard label="Pending Review" value={stats.pending} color="text-amber-600" />
-              </div>
-
               {/* Table Section */}
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 {/* Table Filters */}
-                <div className="p-4 border-b border-slate-100 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                  <div className="relative flex-1 w-full lg:max-w-sm">
+                <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="relative w-full sm:max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                    <input 
-                      type="text" 
-                      placeholder="Search by name, email, industry, or location..." 
+                    <input
+                      type="text"
+                      placeholder="Search by name, email, industry, or location..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
+                      className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
                     />
                   </div>
+                  <span className="text-xs text-slate-400 shrink-0">{filteredCompanies.length} of {companies.length} companies</span>
                 </div>
 
                 {/* Actual Table */}
@@ -268,9 +267,17 @@ const CompanyManagement = () => {
                           <tr key={company.id} className="hover:bg-slate-50/50 transition-colors text-sm">
                             <td className="px-4 py-4 text-slate-600 text-xs font-medium">{index + 1}</td>
                             <td className="px-4 lg:px-6 py-4">
-                              <p className="font-semibold text-slate-700">{company.companyName}</p>
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-900 font-bold text-xs shrink-0">
+                                  {company.companyName?.charAt(0)?.toUpperCase() || '?'}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-semibold text-slate-800 truncate">{company.companyName}</p>
+                                  <p className="text-xs text-slate-400 truncate hidden sm:block">{company.email}</p>
+                                </div>
+                              </div>
                             </td>
-                            <td className="px-4 py-4 text-slate-600 text-xs">{company.email}</td>
+                            <td className="px-4 py-4 text-slate-600 text-xs hidden sm:table-cell">{company.email}</td>
                             <td className="px-4 py-4 text-slate-600 hidden lg:table-cell text-xs">{company.companySize || '-'}</td>
                             <td className="px-4 py-4">
                               <div className="flex justify-center">
@@ -437,14 +444,5 @@ const CompanyManagement = () => {
     </div>
   );
 };
-
-// --- SUB-COMPONENTS ---
-
-const MetricCard = ({ label, value, color = "text-slate-800" }) => (
-  <div className="bg-white p-4 lg:p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 lg:mb-4">{label}</p>
-    <p className={`text-2xl lg:text-3xl font-bold ${color}`}>{value}</p>
-  </div>
-);
 
 export default CompanyManagement;

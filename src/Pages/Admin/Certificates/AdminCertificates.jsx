@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import AdminSidebar from '../Components/AdminSidebar';
 import DashboardHeader from '../../../Components/DashboardHeader';
+import ConfirmDialog from '../../../Components/ConfirmDialog';
 import { api } from '../../../utils/api';
 import { toast } from '../../../utils/toast';
 
@@ -24,7 +25,8 @@ const AdminCertificates = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [form, setForm] = useState({ recipientId: '', title: '', description: '', file: null });
   const [userSearch, setUserSearch] = useState('');
-  const [error, setError] = useState(null);
+  const [error, setError]     = useState(null);
+  const [confirm, setConfirm] = useState(null);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -69,15 +71,17 @@ const AdminCertificates = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this certificate?')) return;
-    try {
-      await api.deleteCertificate(id);
-      setCertificates((prev) => prev.filter((c) => c._id !== id));
-      toast.success('Certificate deleted');
-    } catch (err) {
-      toast.error('Failed to delete: ' + err.message);
-    }
+  const handleDelete = (id) => {
+    setConfirm({
+      title: 'Delete Certificate',
+      message: 'This will permanently remove the certificate. This action cannot be undone.',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        await api.deleteCertificate(id);
+        setCertificates(prev => prev.filter(c => c._id !== id));
+        toast.success('Certificate deleted');
+      },
+    });
   };
 
   const handleCloseModal = () => {
@@ -112,6 +116,7 @@ const AdminCertificates = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <ConfirmDialog config={confirm} onClose={() => setConfirm(null)} />
       <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="certificates" />
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
@@ -142,13 +147,6 @@ const AdminCertificates = () => {
                     <Plus size={16} /> Issue Certificate
                   </button>
                 </div>
-              </div>
-
-              {/* Stats Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 mb-8">
-                <MetricCard label="Total Certificates" value={loading ? '...' : stats.total} />
-                <MetricCard label="Issued to Applicants" value={loading ? '...' : stats.applicants} color="text-blue-700" />
-                <MetricCard label="Issued to Companies" value={loading ? '...' : stats.companies} color="text-purple-700" />
               </div>
 
               {/* Error Alert */}

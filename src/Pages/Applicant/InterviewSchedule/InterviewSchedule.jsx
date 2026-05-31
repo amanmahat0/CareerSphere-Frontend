@@ -10,6 +10,7 @@ import {
   Tooltip, Cell, ResponsiveContainer,
 } from 'recharts';
 import { toast } from '../../../utils/toast';
+import ConfirmDialog from '../../../Components/ConfirmDialog';
 import Sidebar from '../Components/ApplicantSidebar';
 import DashboardHeader from '../../../Components/DashboardHeader';
 import { api } from '../../../utils/api';
@@ -34,6 +35,7 @@ const InterviewDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [markingSubmitted, setMarkingSubmitted] = useState(null);
+  const [confirm, setConfirm]                   = useState(null);
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -122,18 +124,24 @@ const InterviewDashboard = () => {
     toast.success('Link copied to clipboard!');
   };
 
-  const handleMarkSubmitted = async (id) => {
-    if (!window.confirm('Mark your test as submitted?')) return;
-    setMarkingSubmitted(id);
-    try {
-      const res = await api.markTestSubmitted(id);
-      if (res.success) {
-        setApplications(prev => prev.map(a =>
-          a._id === id ? { ...a, testSubmittedAt: new Date().toISOString() } : a
-        ));
-      }
-    } catch (err) { toast.error(err.message || 'Failed to mark as submitted'); }
-    finally { setMarkingSubmitted(null); }
+  const handleMarkSubmitted = (id) => {
+    setConfirm({
+      title: 'Mark Test as Submitted',
+      message: 'Confirm that you have completed and submitted your test. This action cannot be undone.',
+      confirmLabel: 'Mark Submitted',
+      danger: false,
+      onConfirm: async () => {
+        setMarkingSubmitted(id);
+        const res = await api.markTestSubmitted(id);
+        if (res.success) {
+          setApplications(prev => prev.map(a =>
+            a._id === id ? { ...a, testSubmittedAt: new Date().toISOString() } : a
+          ));
+          toast.success('Test marked as submitted');
+        }
+        setMarkingSubmitted(null);
+      },
+    });
   };
 
   if (loading) {
@@ -149,6 +157,7 @@ const InterviewDashboard = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <ConfirmDialog config={confirm} onClose={() => setConfirm(null)} />
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="interviews" />
 
       {sidebarOpen && (

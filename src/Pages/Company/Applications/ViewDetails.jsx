@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Mail, Phone, MapPin, CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
 import { api } from '../../../utils/api';
 import { toast } from '../../../utils/toast';
+import ConfirmDialog from '../../../Components/ConfirmDialog';
 
 const getStatusBadgeClass = (status) => {
   switch (status?.toLowerCase()) {
@@ -24,6 +25,7 @@ const ViewDetails = ({ application, isOpen, onClose, onStatusUpdate }) => {
   const [loading, setLoading]         = useState(false);
   const [updating, setUpdating]       = useState(false);
   const [error, setError]             = useState('');
+  const [confirm, setConfirm]         = useState(null);
 
   useEffect(() => {
     if (isOpen && application) {
@@ -53,28 +55,30 @@ const ViewDetails = ({ application, isOpen, onClose, onStatusUpdate }) => {
     }
   };
 
-  const handleReject = async () => {
-    if (!window.confirm('Are you sure you want to reject this application?')) return;
-    try {
-      setUpdating(true);
-      setError('');
-      const response = await api.rejectApplication(application._id);
-      if (response.success) {
-        if (onStatusUpdate) onStatusUpdate(application._id, 'rejected');
-        toast.success('Application rejected.');
-        onClose();
-      }
-    } catch (err) {
-      setError('Failed to reject applicant');
-    } finally {
-      setUpdating(false);
-    }
+  const handleReject = () => {
+    setConfirm({
+      title: 'Reject Application',
+      message: `Reject this application from ${application?.userId?.fullname || 'this applicant'}? They will be notified.`,
+      confirmLabel: 'Reject',
+      onConfirm: async () => {
+        setUpdating(true);
+        setError('');
+        const response = await api.rejectApplication(application._id);
+        if (response.success) {
+          if (onStatusUpdate) onStatusUpdate(application._id, 'rejected');
+          toast.success('Application rejected.');
+          onClose();
+        }
+        setUpdating(false);
+      },
+    });
   };
 
   if (!isOpen || !application) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <ConfirmDialog config={confirm} onClose={() => setConfirm(null)} />
       <div className="bg-white w-full max-w-6xl rounded-xl shadow-2xl overflow-hidden max-h-[95vh] flex flex-col">
 
         {/* Header */}

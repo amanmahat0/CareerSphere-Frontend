@@ -14,6 +14,7 @@ import AdminSidebar from '../Components/AdminSidebar';
 import DashboardHeader from '../../../Components/DashboardHeader';
 import { api } from '../../../utils/api';
 import { toast } from '../../../utils/toast';
+import ConfirmDialog from '../../../Components/ConfirmDialog';
 
 /* ─── palette ───────────────────────────────────────────── */
 const TYPE_COLORS = { Job: '#3B82F6', Internship: '#8B5CF6', Traineeship: '#06B6D4', Other: '#94A3B8' };
@@ -153,6 +154,8 @@ const AdminDashboard = () => {
   const [companies, setCompanies]     = useState([]);
   const [applicants, setApplicants]   = useState([]);
   const [verifying, setVerifying]     = useState(null);
+  const [confirm, setConfirm]         = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
 
   /* table state */
   const [activeTab,    setActiveTab]    = useState('applications');
@@ -202,7 +205,11 @@ const AdminDashboard = () => {
   /* ── charts ── */
   const typeDonut = useMemo(() => {
     const c = {};
-    applications.forEach(a => { const t = a.jobId?.type || 'Other'; c[t] = (c[t]||0)+1; });
+    applications.forEach(a => {
+      const raw = a.jobId?.type;
+      const t = raw ? raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase() : 'Other';
+      c[t] = (c[t] || 0) + 1;
+    });
     return Object.entries(c).map(([name, value]) => ({ name, value, fill: TYPE_COLORS[name] || '#94A3B8' }));
   }, [applications]);
 
@@ -347,29 +354,38 @@ const AdminDashboard = () => {
     finally { setVerifying(null); }
   };
 
-  const handleReject = async (id) => {
-    const reason = window.prompt('Rejection reason:');
-    if (!reason) return;
-    setVerifying(id + '_reject');
-    try {
-      const res = await api.rejectCompany(id, reason, '');
-      if (res.success) {
-        setCompanies(prev => prev.map(c => c._id === id ? { ...c, verificationStatus: 'rejected', rejectionReason: reason } : c));
-        toast.success('Company rejected');
-      }
-    } catch { toast.error('Failed to reject company'); }
-    finally { setVerifying(null); }
+  const handleReject = (id) => {
+    setRejectReason('');
+    setConfirm({
+      title: 'Reject Company',
+      message: 'Provide a rejection reason. The company will be notified.',
+      confirmLabel: 'Reject',
+      onConfirm: async () => {
+        if (!rejectReason.trim()) throw new Error('Rejection reason is required');
+        setVerifying(id + '_reject');
+        const res = await api.rejectCompany(id, rejectReason.trim(), '');
+        if (res.success) {
+          setCompanies(prev => prev.map(c => c._id === id ? { ...c, verificationStatus: 'rejected', rejectionReason: rejectReason.trim() } : c));
+          toast.success('Company rejected');
+        }
+        setVerifying(null);
+      },
+    });
   };
 
-  const handleDeleteJob = async (id) => {
-    if (!window.confirm('Delete this job posting?')) return;
-    try {
-      const res = await api.deleteJob(id);
-      if (res.success) {
-        setJobs(prev => prev.filter(j => j._id !== id));
-        toast.success('Job deleted');
-      }
-    } catch { toast.error('Failed to delete job'); }
+  const handleDeleteJob = (id) => {
+    setConfirm({
+      title: 'Delete Job Posting',
+      message: 'This will permanently remove the job and all its applications. This cannot be undone.',
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        const res = await api.deleteJob(id);
+        if (res.success) {
+          setJobs(prev => prev.filter(j => j._id !== id));
+          toast.success('Job deleted');
+        }
+      },
+    });
   };
 
   /* ── activity feed ── */
@@ -404,6 +420,17 @@ const AdminDashboard = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <ConfirmDialog config={confirm} onClose={() => setConfirm(null)}>
+        {confirm?.title === 'Reject Company' && (
+          <textarea
+            value={rejectReason}
+            onChange={e => setRejectReason(e.target.value)}
+            placeholder="Enter rejection reason (required)..."
+            rows={3}
+            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-red-400 resize-none"
+          />
+        )}
+      </ConfirmDialog>
       <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="dashboard" />
       {sidebarOpen && <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />}
 
@@ -425,15 +452,7 @@ const AdminDashboard = () => {
                 <p className="text-slate-500 text-xs mt-0.5">Platform-wide placement & internship management.</p>
               </div>
               <div className="flex items-center gap-2">
-                {stats.pending > 0 && (
-                  <span className="flex items-center gap-1.5 text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200 px-3 py-1.5 rounded-lg">
-                    <AlertTriangle size={12} /> {stats.pending} pending approval{stats.pending > 1 ? 's' : ''}
-                  </span>
-                )}
-                <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg">
-                  <TrendingUp size={12} />
-                  Hire rate: {loading ? '…' : stats.applications > 0 ? `${((stats.hired / stats.applications) * 100).toFixed(1)}%` : '0%'}
-                </span>
+
               </div>
             </div>
 
@@ -445,19 +464,6 @@ const AdminDashboard = () => {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                  <StatPill label="Total Jobs"        value={stats.jobs}         icon={Briefcase}    accent="bg-blue-600"    sub="Active listings" />
-                  <StatPill label="Verified Companies" value={stats.companies}   icon={Building2}    accent="bg-indigo-600"  sub={`${stats.pending} pending`} alert={stats.pending > 0} />
-                  <StatPill label="Applicants"         value={stats.applicants}  icon={Users}        accent="bg-purple-600"  sub="Registered users" />
-                  <StatPill label="Applications"       value={stats.applications} icon={BarChart2}   accent="bg-cyan-600"    sub="All time" />
-                  <StatPill label="Pending Approvals"  value={stats.pending}     icon={AlertTriangle} accent={stats.pending > 0 ? 'bg-amber-500' : 'bg-slate-400'} alert={stats.pending > 0} />
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <StatPill label="Shortlisted"  value={stats.shortlisted} icon={UserCheck}    accent="bg-purple-500" />
-                  <StatPill label="Interviews"   value={stats.interviews}  icon={Calendar}     accent="bg-amber-500" />
-                  <StatPill label="Offers Sent"  value={stats.offers}      icon={CheckCircle2} accent="bg-green-600" />
-                  <StatPill label="Hired"        value={stats.hired}       icon={BadgeCheck}   accent="bg-emerald-600" />
-                </div>
 
                 {/* ── Charts ── */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -692,52 +698,6 @@ const AdminDashboard = () => {
                   </ChartCard>
                 </div>
 
-                {/* ── Row 3: Placement Funnel (full width visual) ── */}
-                <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                  <div className="px-5 py-4 border-b border-slate-100">
-                    <h2 className="text-lg font-bold text-slate-800">Placement Funnel</h2>
-                    <p className="text-xs text-slate-400 mt-0.5">Drop-off at each hiring stage</p>
-                  </div>
-                  <div className="p-5">
-                    {applications.length === 0 ? <ChartEmpty /> : (
-                      <div className="flex flex-col gap-2">
-                        {pipelineBar.map(({ label, value, fill }, i) => {
-                          const maxVal = pipelineBar[0].value || 1;
-                          const pct = Math.round((value / maxVal) * 100);
-                          const dropPct = i > 0 && pipelineBar[i-1].value > 0
-                            ? Math.round(((pipelineBar[i-1].value - value) / pipelineBar[i-1].value) * 100)
-                            : null;
-                          return (
-                            <div key={label} className="flex items-center gap-3">
-                              <span className="w-20 shrink-0 text-xs font-semibold text-slate-600 text-right">{label}</span>
-                              <div className="flex-1 h-7 bg-slate-100 rounded-md overflow-hidden">
-                                <div
-                                  className="h-full rounded-md flex items-center justify-end pr-2 transition-all duration-500"
-                                  style={{ width: `${Math.max(pct, 2)}%`, backgroundColor: fill }}
-                                >
-                                  <span className="text-white text-xs font-bold">{value}</span>
-                                </div>
-                              </div>
-                              <div className="w-16 shrink-0 text-right">
-                                {dropPct !== null && dropPct > 0 ? (
-                                  <span className="text-xs text-red-500 font-semibold">−{dropPct}%</span>
-                                ) : (
-                                  <span className="text-xs text-slate-400">{pct}%</span>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                        <p className="text-xs text-slate-400 mt-2 text-center">
-                          Overall placement rate: <strong className="text-emerald-600">
-                            {pipelineBar[0].value > 0 ? `${Math.round((pipelineBar[pipelineBar.length-1].value / pipelineBar[0].value) * 100)}%` : '0%'}
-                          </strong>
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
                 {/* ── Row 4: Top Institutions · Top Skills ── */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
@@ -781,25 +741,6 @@ const AdminDashboard = () => {
                     )}
                   </ChartCard>
                 </div>
-
-                {/* ── Pending Approvals Alert ── */}
-                {stats.pending > 0 && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-                    <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-amber-900">
-                        {stats.pending} company verification{stats.pending > 1 ? 's' : ''} pending
-                      </p>
-                      <p className="text-xs text-amber-700 mt-0.5">Review and approve or reject company registrations.</p>
-                    </div>
-                    <button
-                      onClick={() => { setActiveTab('companies'); setTabFilter('companies', 'pending'); }}
-                      className="shrink-0 text-xs font-semibold text-amber-900 border border-amber-300 px-3 py-1.5 rounded-lg hover:bg-amber-100 transition flex items-center gap-1"
-                    >
-                      Review <ArrowRight size={11} />
-                    </button>
-                  </div>
-                )}
 
                 {/* ── Management Tables ── */}
                 <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">

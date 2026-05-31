@@ -10,6 +10,7 @@ import DashboardHeader from '../../../Components/DashboardHeader';
 import ApplicationDetailsModal from './ApplicationDetails';
 import { api } from '../../../utils/api';
 import { toast } from '../../../utils/toast';
+import ConfirmDialog from '../../../Components/ConfirmDialog';
 
 /* ─── constants ─────────────────────────────────────────── */
 const STATUS_META = {
@@ -153,6 +154,7 @@ const MyApplication = () => {
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState(null);
   const [selected, setSelected]         = useState(null);
+  const [confirm, setConfirm]           = useState(null);
 
   /* filters */
   const [search,     setSearch]     = useState('');
@@ -226,17 +228,23 @@ const MyApplication = () => {
     setSortKey(key);
   }, [sortKey]);
 
-  const handleWithdraw = async (id) => {
-    if (!window.confirm('Withdraw this application? This cannot be undone.')) return;
-    try {
-      const res = await api.withdrawApplication(id, 'User initiated withdrawal');
-      if (res.success) {
-        setApplications(prev => prev.map(a =>
-          a._id === id ? { ...a, status: 'withdrawn', interviewStep: 'withdrawn' } : a
-        ));
-        toast.success('Application withdrawn successfully');
-      } else toast.error(res.message || 'Failed to withdraw');
-    } catch (err) { toast.error(err.message || 'Failed to withdraw'); }
+  const handleWithdraw = (id) => {
+    setConfirm({
+      title: 'Withdraw Application',
+      message: 'Are you sure you want to withdraw this application? This cannot be undone and the company will be notified.',
+      confirmLabel: 'Withdraw',
+      onConfirm: async () => {
+        const res = await api.withdrawApplication(id, 'User initiated withdrawal');
+        if (res.success) {
+          setApplications(prev => prev.map(a =>
+            a._id === id ? { ...a, status: 'withdrawn', interviewStep: 'withdrawn' } : a
+          ));
+          toast.success('Application withdrawn successfully');
+        } else {
+          throw new Error(res.message || 'Failed to withdraw');
+        }
+      },
+    });
   };
 
   const clearFilters = () => { setSearch(''); setActiveTab('all'); };
@@ -255,6 +263,7 @@ const MyApplication = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <ConfirmDialog config={confirm} onClose={() => setConfirm(null)} />
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="applications" />
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
@@ -279,12 +288,6 @@ const MyApplication = () => {
                   {loading ? 'Loading…' : `${applications.length} application${applications.length !== 1 ? 's' : ''} tracked`}
                 </p>
               </div>
-              <a
-                href="/opportunities"
-                className="shrink-0 hidden sm:inline-flex items-center gap-1.5 bg-blue-900 text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-blue-950 transition"
-              >
-                Browse Jobs <ArrowUpRight size={12} />
-              </a>
             </div>
 
             {error && (

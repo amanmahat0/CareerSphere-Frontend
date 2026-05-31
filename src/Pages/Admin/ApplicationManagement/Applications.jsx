@@ -150,28 +150,6 @@ const Applications = () => {
               <p className="text-slate-500 text-xs mt-0.5">View and manage all applications from applicants</p>
             </div>
 
-            {/* Statistics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-slate-600 text-sm font-medium">Total Applications</p>
-                    <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
-                  </div>
-                  <FileText size={28} className="text-blue-500" />
-                </div>
-              </div>
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-slate-600 text-sm font-medium">Applied</p>
-                    <p className="text-2xl font-bold text-slate-900">{stats.applied}</p>
-                  </div>
-                </div>
-              </div>
-              <div>
-              </div>
-            </div>
 
             {/* Search and Filters */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
@@ -191,70 +169,9 @@ const Applications = () => {
                   </div>
                 </div>
 
-                {/* Filter by Company */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Company</label>
-                  <select
-                    value={selectedCompany}
-                    onChange={(e) => setSelectedCompany(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">All Companies</option>
-                    {[...new Set(applications.map(a => a.jobId?.company))].map((company) => (
-                      <option key={company} value={company}>{company}</option>
-                    ))}
-                  </select>
-                </div>
 
-                {/* Filter by Status */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Status</label>
-                  <select
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">All Status</option>
-                    {statusOptions.map((status) => (
-                      <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
-              {/* Sort */}
-              <div className="mt-4 flex gap-2">
-                <button
-                  onClick={() => setSortBy('date')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                    sortBy === 'date'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  Sort by Date
-                </button>
-                <button
-                  onClick={() => setSortBy('company')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                    sortBy === 'company'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  Sort by Company
-                </button>
-                <button
-                  onClick={() => setSortBy('status')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                    sortBy === 'status'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  Sort by Status
-                </button>
-              </div>
             </div>
 
             {/* Error Message */}

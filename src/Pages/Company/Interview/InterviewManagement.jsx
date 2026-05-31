@@ -111,7 +111,7 @@ export default function InterviewManagement() {
         <main className="flex flex-1 overflow-hidden">
 
           {/* ── Left panel: candidate list ── */}
-          <div className={`flex flex-col w-full lg:w-100 border-r border-slate-200 bg-white overflow-hidden shrink-0 ${selectedCandidate ? 'hidden lg:flex' : 'flex'}`}>
+          <div className={`flex flex-col w-full lg:w-110 border-r border-slate-200 bg-white overflow-hidden shrink-0 ${selectedCandidate ? 'hidden lg:flex' : 'flex'}`}>
 
             <div className="p-4 border-b border-slate-100 shrink-0">
               <h1 className="text-base font-bold text-slate-900">Interview Management</h1>

@@ -256,53 +256,6 @@ const AdminNotifications = () => {
                   </div>
                 </div>
 
-                {/* Right panel — recipient summary */}
-                <div className="space-y-4">
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
-                      <Users size={15} className="text-slate-500" />
-                      <h2 className="text-sm font-bold text-slate-800">Recipients Overview</h2>
-                    </div>
-                    <div className="p-4 space-y-3">
-                      <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                        <div className="w-9 h-9 bg-blue-900 rounded-lg flex items-center justify-center shrink-0">
-                          <GraduationCap size={16} className="text-white" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-500 font-medium">Applicants</p>
-                          <p className="text-xl font-bold text-slate-900">{stats.applicants}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-purple-50 border border-purple-100 rounded-lg">
-                        <div className="w-9 h-9 bg-purple-700 rounded-lg flex items-center justify-center shrink-0">
-                          <Building2 size={16} className="text-white" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-500 font-medium">Companies</p>
-                          <p className="text-xl font-bold text-slate-900">{stats.companies}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
-                        <div className="w-9 h-9 bg-slate-600 rounded-lg flex items-center justify-center shrink-0">
-                          <Users size={16} className="text-white" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-500 font-medium">Total Users</p>
-                          <p className="text-xl font-bold text-slate-900">{users.length}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                    <p className="text-xs font-semibold text-amber-800 mb-1">Tips</p>
-                    <ul className="text-xs text-amber-700 space-y-1 list-disc list-inside">
-                      <li>Use the filter tabs to narrow down recipients by type</li>
-                      <li>Notifications appear in the recipient's bell icon</li>
-                      <li>Keep messages concise and action-oriented</li>
-                    </ul>
-                  </div>
-                </div>
 
               </div>
             </div>

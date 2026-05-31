@@ -7,6 +7,7 @@ import AdminSidebar from '../Components/AdminSidebar';
 import DashboardHeader from '../../../Components/DashboardHeader';
 import { api } from '../../../utils/api';
 import { toast } from '../../../utils/toast';
+import ConfirmDialog from '../../../Components/ConfirmDialog';
 import CandidateWizard from '../../Company/Interview/Components/CandidateWizard';
 
 const STEP_TABS = [
@@ -67,6 +68,8 @@ export default function AdminInterview() {
   // Bulk reject
   const [selectedIds, setSelectedIds]             = useState(new Set());
   const [bulkLoading, setBulkLoading]             = useState(false);
+  const [confirm, setConfirm]                     = useState(null);
+  const [bulkReason, setBulkReason]               = useState('');
 
   useEffect(() => {
     fetchCandidates();
@@ -121,23 +124,25 @@ export default function AdminInterview() {
       ? new Set()
       : new Set(filteredCandidates.map(c => c._id)));
 
-  const handleBulkReject = async () => {
+  const handleBulkReject = () => {
     if (!selectedIds.size) return;
-    if (!window.confirm(`Reject ${selectedIds.size} selected candidate(s)?`)) return;
-    const reason = prompt('Enter optional rejection reason:', '') || '';
-    setBulkLoading(true);
-    try {
-      for (const id of selectedIds) {
-        await api.updateInterviewStep(id, { interviewStep: 'rejected', status: 'rejected', interviewFeedback: reason });
-      }
-      toast.success(`${selectedIds.size} candidate(s) rejected`);
-      setSelectedIds(new Set());
-      fetchCandidates();
-    } catch (e) {
-      toast.error('Failed to reject some candidates: ' + e.message);
-    } finally {
-      setBulkLoading(false);
-    }
+    setBulkReason('');
+    setConfirm({
+      title: `Reject ${selectedIds.size} Candidate${selectedIds.size > 1 ? 's' : ''}`,
+      message: 'All selected candidates will be rejected and notified. You can optionally provide a reason.',
+      confirmLabel: 'Reject All',
+      onConfirm: async () => {
+        setBulkLoading(true);
+        const reason = bulkReason.trim();
+        for (const id of selectedIds) {
+          await api.updateInterviewStep(id, { interviewStep: 'rejected', status: 'rejected', interviewFeedback: reason });
+        }
+        toast.success(`${selectedIds.size} candidate(s) rejected`);
+        setSelectedIds(new Set());
+        fetchCandidates();
+        setBulkLoading(false);
+      },
+    });
   };
 
   if (loading) {
@@ -156,6 +161,17 @@ export default function AdminInterview() {
 
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+      <ConfirmDialog config={confirm} onClose={() => setConfirm(null)}>
+        {confirm?.title?.startsWith('Reject') && (
+          <textarea
+            value={bulkReason}
+            onChange={e => setBulkReason(e.target.value)}
+            placeholder="Rejection reason (optional)..."
+            rows={3}
+            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-red-400 resize-none"
+          />
+        )}
+      </ConfirmDialog>
       <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onOpen={() => setSidebarOpen(true)} activePage="interviews" />
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/50 lg:hidden z-30" onClick={() => setSidebarOpen(false)} />
@@ -172,7 +188,7 @@ export default function AdminInterview() {
         <main className="flex flex-1 overflow-hidden">
 
           {/* ── Left panel: candidate list ── */}
-          <div className={`flex flex-col w-full lg:w-105 border-r border-slate-200 bg-white overflow-hidden shrink-0 ${selectedCandidate ? 'hidden lg:flex' : 'flex'}`}>
+          <div className={`flex flex-col w-full lg:w-120 border-r border-slate-200 bg-white overflow-hidden shrink-0 ${selectedCandidate ? 'hidden lg:flex' : 'flex'}`}>
 
             {/* Stats */}
             <div className="p-4 border-b border-slate-100 shrink-0 space-y-3">
@@ -180,13 +196,6 @@ export default function AdminInterview() {
                 <h1 className="text-base font-bold text-slate-900">Interview Management</h1>
                 <p className="text-xs text-slate-400 mt-0.5">{candidates.length} candidates across all companies</p>
               </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <StatCard label="Shortlisted" value={candidates.filter(c => c.status !== 'pending' && c.interviewStep === 'shortlisted').length} icon={<UserCheck size={14} className="text-blue-600" />} />
-                <StatCard label="Interview"   value={candidates.filter(c => c.status !== 'pending' && c.interviewStep === 'interview').length}   icon={<Calendar size={14} className="text-orange-600" />} />
-                <StatCard label="Hired"        value={candidates.filter(c => c.status !== 'pending' && c.interviewStep === 'hired').length}        icon={<CheckCircle size={14} className="text-green-600" />} />
-              </div>
-
               {/* Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
