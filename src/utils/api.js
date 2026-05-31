@@ -554,6 +554,17 @@ export const api = {
     });
   },
 
+  async sendOfferContract(applicationId, file) {
+    const token = localStorage.getItem("token");
+    const formData = new FormData();
+    formData.append("contract", file);
+    return this.request(`/applications/${applicationId}/offer-contract`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+  },
+
   async sendOffer(applicationId, offerData) {
     const token = localStorage.getItem("token");
     return this.request(`/applications/${applicationId}/interview/offer`, {

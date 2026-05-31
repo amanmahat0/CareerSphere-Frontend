@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import {
   ArrowLeft, Check, CheckCircle, XCircle, Loader2, AlertTriangle,
-  Clock, User, Plus, Trash2, ChevronLeft, ChevronRight, Send, MessageSquare, RotateCcw, Bell,
+  Clock, User, Plus, Trash2, ChevronLeft, ChevronRight, Send, MessageSquare, RotateCcw, Bell, Download,
 } from 'lucide-react';
 import { api } from '../../../../utils/api';
 import { toast } from '../../../../utils/toast';
@@ -461,9 +461,6 @@ function StepInterview({ candidate, onUpdate, loading, setLoading, setError }) {
 
   // FIX 7: Validate before showing round choice
   const handleResult = () => {
-    if (!resultForm.feedback.trim()) { setError('Please provide overall feedback'); return; }
-    const validInterviewers = resultForm.interviewers.filter(iv => iv.name && iv.feedback);
-    if (!validInterviewers.length) { setError('Please add at least one interviewer with feedback'); return; }
     if (resultForm.result === 'selected') {
       setShowRoundChoice(true);
     } else {
@@ -770,225 +767,41 @@ function StepInterview({ candidate, onUpdate, loading, setLoading, setError }) {
 }
 
 // ─────────────────────────────────────────────
-// STEP 4: Offer
+// STEP 4: Offer — contract upload only
 // ─────────────────────────────────────────────
+const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+const resolveContract = (url) => !url ? null : url.startsWith('/uploads') ? `${BACKEND_URL}${url}` : url;
+
 function StepOffer({ candidate, onUpdate, loading, setLoading, setError }) {
-  const hasSent  = !!candidate.salary;
+  const hasSent     = !!candidate.contractFile && candidate.interviewStatus === 'offer_sent';
   const offerStatus = candidate.offerStatus || 'pending';
 
-  const [offerForm, setOfferForm] = useState({
-    salary:          candidate.salary          || '',
-    currency:        candidate.currency        || 'NPR',
-    joiningDate:     candidate.joiningDate     ? new Date(candidate.joiningDate).toISOString().split('T')[0] : '',
-    benefits:        candidate.benefits        || '',
-    offerExpiryDate: candidate.offerExpiryDate ? new Date(candidate.offerExpiryDate).toISOString().split('T')[0] : '',
-    contractFile:    candidate.contractFile    || '',
-  });
+  const [contractFile, setContractFile] = useState(null);
+  const [nudgeSending, setNudgeSending] = useState(false);
+  const fileRef = React.useRef(null);
 
-  const [reviseForm, setReviseForm] = useState({
-    salary:      candidate.salary || '',
-    joiningDate: candidate.joiningDate ? new Date(candidate.joiningDate).toISOString().split('T')[0] : '',
-    benefits:    candidate.benefits || '',
-    notes:       '',
-  });
-  const [showReviseForm, setShowReviseForm] = useState(false);
-  const [nudgeSending, setNudgeSending]     = useState(false);
-  const [extendDate, setExtendDate]         = useState('');
-  const [showExtend, setShowExtend]         = useState(false);
+  const contractUrl = resolveContract(candidate.contractFile);
 
-  const handleSendOffer = async () => {
-    if (!String(offerForm.salary).trim()) { setError('Please enter the salary'); return; }
-    if (!offerForm.joiningDate) { setError('Please select a joining date'); return; }
+  const handleUploadAndSend = async () => {
+    if (!contractFile) { setError('Please select a contract PDF to upload'); return; }
     setLoading(true);
     try {
-      const res = await api.sendOffer(candidate._id, {
-        salary:          offerForm.salary,
-        currency:        offerForm.currency,
-        joiningDate:     offerForm.joiningDate,
-        benefits:        offerForm.benefits,
-        contractFile:    offerForm.contractFile,
-        offerExpiryDate: offerForm.offerExpiryDate || null,
-      });
-      if (res.success) { onUpdate(res.data); toast.success('Offer sent! Awaiting applicant response.'); }
+      const res = await api.sendOfferContract(candidate._id, contractFile);
+      if (res.success) { onUpdate(res.data); toast.success('Contract uploaded and offer sent!'); setContractFile(null); }
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
   };
 
-  const handleReviseOffer = async () => {
-    if (!reviseForm.salary) { setError('Please enter the revised salary'); return; }
-    setLoading(true);
-    try {
-      const res = await api.reviseOffer(candidate._id, {
-        salary:      reviseForm.salary,
-        joiningDate: reviseForm.joiningDate || null,
-        benefits:    reviseForm.benefits,
-        notes:       reviseForm.notes,
-      });
-      if (res.success) { onUpdate(res.data); toast.success('Revised offer sent!'); setShowReviseForm(false); }
-    } catch (e) { setError(e.message); }
-    finally { setLoading(false); }
-  };
-
-  // FIX 10: Nudge — send reminder to applicant
   const handleNudge = async () => {
     setNudgeSending(true);
     try {
       await api.nudgeOffer(candidate._id);
       toast.success('Reminder sent to applicant.');
-    } catch (e) {
-      toast.error(e.message || 'Failed to send reminder');
-    } finally {
-      setNudgeSending(false);
-    }
+    } catch (e) { toast.error(e.message || 'Failed to send reminder'); }
+    finally { setNudgeSending(false); }
   };
 
-  // FIX 6: Extend offer expiry
-  const handleExtend = async () => {
-    if (!extendDate) { setError('Please pick a new expiry date'); return; }
-    setLoading(true);
-    try {
-      const res = await api.updateInterviewStep(candidate._id, {
-        offerExpiryDate:  extendDate,
-        offerStatus:      'pending',
-        offerResponse:    'pending',
-        interviewStep:    'offer',
-        interviewStatus:  'offer_sent',
-      });
-      if (res.success) { onUpdate(res.data); toast.success('Offer deadline extended!'); setShowExtend(false); }
-    } catch (e) { setError(e.message); }
-    finally { setLoading(false); }
-  };
-
-  // FIX 6: Expired terminal state
-  if (offerStatus === 'expired') {
-    return (
-      <div className="space-y-4">
-        <h3 className="text-base font-bold text-slate-800">Offer Expired</h3>
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
-          <XCircle size={20} className="text-red-600 shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-sm text-red-800">Offer expired without response</p>
-            <p className="text-xs text-slate-500 mt-1">The applicant did not respond before the offer deadline.</p>
-          </div>
-        </div>
-        {showExtend ? (
-          <div className="space-y-3">
-            <Label required>New Expiry Date</Label>
-            <input type="date" value={extendDate} onChange={e => setExtendDate(e.target.value)}
-              min={new Date().toISOString().split('T')[0]}
-              className={inputCls(!extendDate)} />
-            <div className="flex gap-3">
-              <button onClick={() => setShowExtend(false)} className="flex-1 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>
-              <button onClick={handleExtend} disabled={loading}
-                className="flex-1 py-2 bg-blue-900 hover:bg-blue-950 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50">
-                {loading && <Loader2 size={13} className="animate-spin" />} Extend
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button onClick={() => setShowExtend(true)}
-            className="w-full py-2.5 border border-blue-200 text-blue-800 rounded-xl text-sm font-semibold hover:bg-blue-50 transition-colors">
-            Extend Deadline &amp; Resend
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  // FIX 8: Negotiation thread — applicant sent counter-offer
-  if (offerStatus === 'negotiation' || offerStatus === 'revised') {
-    const thread = candidate.offerNegotiation || [];
-    return (
-      <div className="space-y-4">
-        <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-          <MessageSquare size={16} className="text-blue-600" />
-          Offer Negotiation
-        </h3>
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
-          {offerStatus === 'negotiation'
-            ? 'The applicant has sent a counter-offer. Review and respond below.'
-            : 'Your revised offer has been sent. Awaiting the applicant\'s final response.'}
-        </div>
-
-        {/* Offer summary */}
-        <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-1 text-xs">
-          <p className="font-semibold text-slate-700 mb-1">Current Terms</p>
-          <p>Salary: <span className="font-medium">{candidate.salary} {candidate.currency}</span></p>
-          <p>Joining: <span className="font-medium">{formatDate(candidate.joiningDate)}</span></p>
-          {candidate.benefits && <p>Benefits: <span className="font-medium">{candidate.benefits}</span></p>}
-        </div>
-
-        {/* Negotiation thread */}
-        {thread.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-xs font-bold text-slate-600">Negotiation Thread</p>
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-              {thread.map((entry, i) => (
-                <div key={i} className={`rounded-lg p-3 text-xs ${entry.from === 'company' ? 'bg-blue-50 border border-blue-200 ml-4' : 'bg-slate-50 border border-slate-200 mr-4'}`}>
-                  <p className="font-semibold text-slate-700 mb-0.5">{entry.from === 'company' ? 'You' : candidate.userId?.fullname}</p>
-                  {entry.proposedSalary && <p>Proposed salary: <span className="font-medium">{entry.proposedSalary} {candidate.currency}</span></p>}
-                  {entry.proposedJoiningDate && <p>Proposed joining: <span className="font-medium">{formatDate(entry.proposedJoiningDate)}</span></p>}
-                  {entry.notes && <p className="mt-1 text-slate-600 italic">"{entry.notes}"</p>}
-                  <p className="text-slate-400 mt-1">{formatDate(entry.date)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Revise offer form */}
-        {offerStatus === 'negotiation' && (
-          showReviseForm ? (
-            <div className="space-y-3 border border-slate-200 rounded-xl p-4">
-              <p className="text-xs font-bold text-slate-700">Revise Your Offer</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label required>Salary</Label>
-                  <input type="number" value={reviseForm.salary} min="0"
-                    onChange={e => setReviseForm(p => ({ ...p, salary: e.target.value }))}
-                    className={inputCls(!reviseForm.salary)} />
-                </div>
-                <div>
-                  <Label>Joining Date</Label>
-                  <input type="date" value={reviseForm.joiningDate}
-                    onChange={e => setReviseForm(p => ({ ...p, joiningDate: e.target.value }))}
-                    min={new Date().toISOString().split('T')[0]}
-                    className={inputCls(false)} />
-                </div>
-              </div>
-              <div>
-                <Label>Benefits</Label>
-                <input type="text" value={reviseForm.benefits}
-                  onChange={e => setReviseForm(p => ({ ...p, benefits: e.target.value }))}
-                  className={inputCls(false)} />
-              </div>
-              <div>
-                <Label>Note to Applicant</Label>
-                <textarea value={reviseForm.notes}
-                  onChange={e => setReviseForm(p => ({ ...p, notes: e.target.value }))}
-                  rows={2} className={inputCls(false) + ' resize-none'}
-                  placeholder="Explain the revision..." />
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => setShowReviseForm(false)} className="flex-1 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>
-                <button onClick={handleReviseOffer} disabled={loading}
-                  className="flex-1 py-2 bg-blue-900 hover:bg-blue-950 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50">
-                  {loading && <Loader2 size={13} className="animate-spin" />} Send Revision
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button onClick={() => setShowReviseForm(true)}
-              className="w-full py-2.5 bg-blue-900 hover:bg-blue-950 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
-              <RotateCcw size={14} /> Revise &amp; Counter
-            </button>
-          )
-        )}
-      </div>
-    );
-  }
-
-  // Offer accepted summary
+  // Offer accepted
   if (candidate.offerResponse === 'accepted') {
     return (
       <div className="space-y-4">
@@ -997,15 +810,20 @@ function StepOffer({ candidate, onUpdate, loading, setLoading, setError }) {
           <CheckCircle size={20} className="text-green-600 shrink-0 mt-0.5" />
           <div>
             <p className="font-semibold text-sm text-green-800">{candidate.userId?.fullname} accepted the offer</p>
-            <p className="text-xs text-slate-600 mt-1">Salary: {candidate.salary} {candidate.currency} · Joining: {formatDate(candidate.joiningDate)}</p>
+            <p className="text-xs text-slate-500 mt-1">Proceed to Step 5 to confirm the hire.</p>
           </div>
         </div>
-        <p className="text-sm text-slate-500">Proceed to Step 5 to confirm the hire.</p>
+        {contractUrl && (
+          <a href={contractUrl} target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-900 border border-blue-200 rounded-xl px-4 py-2.5 hover:bg-blue-50 transition">
+            <Download size={14} /> View / Download Contract
+          </a>
+        )}
       </div>
     );
   }
 
-  // Offer declined summary
+  // Offer declined
   if (candidate.offerResponse === 'rejected') {
     return (
       <div className="space-y-4">
@@ -1021,7 +839,7 @@ function StepOffer({ candidate, onUpdate, loading, setLoading, setError }) {
     );
   }
 
-  // FIX 10: Waiting for response — nudge button instead of "Record Manually"
+  // Awaiting response (offer already sent)
   if (hasSent) {
     return (
       <div className="space-y-4">
@@ -1031,21 +849,18 @@ function StepOffer({ candidate, onUpdate, loading, setLoading, setError }) {
           <div>
             <p className="font-semibold text-sm text-amber-800">Awaiting applicant response</p>
             <p className="text-xs text-amber-700 mt-1">
-              Offer sent to <span className="font-semibold">{candidate.userId?.fullname}</span>.
-              Salary: {candidate.salary} {candidate.currency} · Joining: {formatDate(candidate.joiningDate)}
+              The contract has been shared with <strong>{candidate.userId?.fullname}</strong>. They can view it and respond from their dashboard.
             </p>
-            {candidate.offerExpiryDate && (
-              <p className="text-xs text-amber-700 mt-0.5">Expires: {formatDate(candidate.offerExpiryDate)}</p>
-            )}
-            <p className="text-xs text-amber-700 mt-1">The applicant will respond from their dashboard. This page updates automatically.</p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={handleNudge}
-          disabled={nudgeSending}
-          className="w-full py-2.5 border border-blue-200 rounded-xl text-sm font-semibold text-blue-800 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-        >
+        {contractUrl && (
+          <a href={contractUrl} target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-900 border border-blue-200 rounded-xl px-4 py-2.5 hover:bg-blue-50 transition">
+            <Download size={14} /> View / Download Contract
+          </a>
+        )}
+        <button type="button" onClick={handleNudge} disabled={nudgeSending}
+          className="w-full py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition flex items-center justify-center gap-2 disabled:opacity-50">
           {nudgeSending ? <Loader2 size={14} className="animate-spin" /> : <Bell size={14} />}
           Send Reminder to Applicant
         </button>
@@ -1053,67 +868,43 @@ function StepOffer({ candidate, onUpdate, loading, setLoading, setError }) {
     );
   }
 
-  // Send offer form
+  // Upload contract form
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-base font-bold text-slate-800 mb-1">Send Job Offer</h3>
-        <p className="text-sm text-slate-500">Prepare the offer for {candidate.userId?.fullname}.</p>
+        <h3 className="text-base font-bold text-slate-800 mb-1">Upload Job Offer Contract</h3>
+        <p className="text-sm text-slate-500">Upload the signed offer letter / contract as a PDF. The applicant will be able to view it and respond.</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        <div className="col-span-2">
-          <Label required>Salary</Label>
-          <input type="number" value={offerForm.salary} min="0"
-            onChange={e => setOfferForm(p => ({ ...p, salary: e.target.value }))}
-            placeholder="e.g. 50000" className={inputCls(!offerForm.salary)} />
-        </div>
-        <div>
-          <Label>Currency</Label>
-          <select value={offerForm.currency} onChange={e => setOfferForm(p => ({ ...p, currency: e.target.value }))}
-            className={inputCls(false)}>
-            {CURRENCIES.map(c => <option key={c}>{c}</option>)}
-          </select>
-        </div>
+      <div
+        onClick={() => fileRef.current?.click()}
+        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${contractFile ? 'border-blue-400 bg-blue-50' : 'border-slate-200 hover:border-blue-300 hover:bg-slate-50'}`}
+      >
+        <Download size={28} className={`mx-auto mb-2 ${contractFile ? 'text-blue-600' : 'text-slate-300'}`} />
+        {contractFile ? (
+          <>
+            <p className="text-sm font-semibold text-blue-800">{contractFile.name}</p>
+            <p className="text-xs text-slate-400 mt-1">{(contractFile.size / 1024).toFixed(0)} KB — click to change</p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm font-semibold text-slate-600">Click to select contract PDF</p>
+            <p className="text-xs text-slate-400 mt-1">PDF only · max 20 MB</p>
+          </>
+        )}
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".pdf,application/pdf"
+          className="hidden"
+          onChange={e => { if (e.target.files?.[0]) setContractFile(e.target.files[0]); }}
+        />
       </div>
 
-      <div>
-        <Label required>Joining Date</Label>
-        <input type="date" value={offerForm.joiningDate}
-          onChange={e => setOfferForm(p => ({ ...p, joiningDate: e.target.value }))}
-          min={new Date().toISOString().split('T')[0]}
-          className={inputCls(!offerForm.joiningDate)} />
-      </div>
-
-      <div>
-        <Label>Benefits</Label>
-        <input type="text" value={offerForm.benefits}
-          onChange={e => setOfferForm(p => ({ ...p, benefits: e.target.value }))}
-          placeholder="e.g. Health insurance, PF, Bonus"
-          className={inputCls(false)} />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label>Offer Expiry</Label>
-          <input type="date" value={offerForm.offerExpiryDate}
-            onChange={e => setOfferForm(p => ({ ...p, offerExpiryDate: e.target.value }))}
-            min={new Date().toISOString().split('T')[0]}
-            className={inputCls(false)} />
-        </div>
-        <div>
-          <Label>Contract URL</Label>
-          <input type="text" value={offerForm.contractFile}
-            onChange={e => setOfferForm(p => ({ ...p, contractFile: e.target.value }))}
-            placeholder="Paste PDF URL (optional)"
-            className={inputCls(false)} />
-        </div>
-      </div>
-
-      <button onClick={handleSendOffer} disabled={loading}
+      <button onClick={handleUploadAndSend} disabled={loading || !contractFile}
         className="w-full py-2.5 bg-blue-900 hover:bg-blue-950 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
         {loading && <Loader2 size={14} className="animate-spin" />}
-        Send Offer
+        Upload Contract &amp; Send Offer
       </button>
     </div>
   );
@@ -1161,8 +952,12 @@ function StepHired({ candidate, onUpdate, loading, setLoading, setError }) {
 
       <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 space-y-1.5 text-sm">
         <div><span className="font-semibold text-slate-600">Position: </span>{candidate.jobId?.title}</div>
-        {candidate.salary && <div><span className="font-semibold text-slate-600">Salary: </span>{candidate.salary} {candidate.currency}</div>}
-        {candidate.joiningDate && <div><span className="font-semibold text-slate-600">Joining: </span>{formatDate(candidate.joiningDate)}</div>}
+        {candidate.contractFile && (
+          <a href={resolveContract(candidate.contractFile)} target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-blue-700 hover:text-blue-900 text-xs font-semibold">
+            <Download size={12} /> View Contract
+          </a>
+        )}
       </div>
 
       <div>

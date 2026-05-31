@@ -249,41 +249,35 @@ export const buildGoogleCalendarUrl = (application) => {
  * Get step status based on current interview step
  * @param {string} stepName - The step name (pending, shortlisted, test, interview, offer, hired)
  * @param {string} currentInterviewStep - The current interview step from company side
- * @param {string} testResult - The test result (for skipped detection)
+ * @param {string} testResult - The test result (for legacy skip detection)
+ * @param {Array}  skippedSteps - The skippedSteps array from the application document
  * @returns {string} Status: "completed" | "active" | "pending" | "skipped" | "withdrawn" | "rejected"
  */
-export const getStepStatus = (stepName, currentInterviewStep, testResult = null) => {
+export const getStepStatus = (stepName, currentInterviewStep, testResult = null, skippedSteps = [], application = null) => {
   const stepOrder = ["pending", "shortlisted", "test", "interview", "offer", "hired"];
   const currentIndex = stepOrder.indexOf(currentInterviewStep);
   const stepIndex = stepOrder.indexOf(stepName);
 
-  // Handle withdrawn applications
-  if (currentInterviewStep === "withdrawn") {
-    return "withdrawn";
-  }
+  if (currentInterviewStep === "withdrawn") return "withdrawn";
+  if (currentInterviewStep === "rejected")  return "rejected";
 
-  // Handle rejected applications
-  if (currentInterviewStep === "rejected") {
-    return "rejected";
-  }
-
-  // Check if test was skipped
-  if (stepName === "test" && testResult === "skip") {
+  // Check skippedSteps array (primary mechanism)
+  if (Array.isArray(skippedSteps) && skippedSteps.some(s => s.step === stepName)) {
     return "skipped";
   }
 
-  // If currentInterviewStep is not found in stepOrder (e.g., invalid status)
-  if (currentIndex === -1) {
-    return "pending";
-  }
+  // Legacy: test explicitly marked as skip via testResult field
+  if (stepName === "test" && testResult === "skip") return "skipped";
 
-  if (stepIndex < currentIndex) {
-    return "completed";
-  } else if (stepIndex === currentIndex) {
-    return "active";
-  } else {
-    return "pending";
-  }
+  // Don't mark 'test' or 'interview' as active until company has actually assigned them
+  if (stepName === "test"      && currentInterviewStep === "test"      && application && !application.testDeadline)  return "pending";
+  if (stepName === "interview" && currentInterviewStep === "interview" && application && !application.interviewDate) return "pending";
+
+  if (currentIndex === -1) return "pending";
+
+  if (stepIndex < currentIndex) return "completed";
+  if (stepIndex === currentIndex) return "active";
+  return "pending";
 };
 
 /**

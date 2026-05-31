@@ -57,7 +57,7 @@ const InterviewProgressTimeline = ({ application, onUpdate }) => {
   };
 
   const getStepColor = (step) => {
-    const status = getStepStatus(step.name, currentStep, application?.testResult);
+    const status = getStepStatus(step.name, currentStep, application?.testResult, application?.skippedSteps, application);
     if (status === "completed") return "green";
     if (status === "active") return statusMap[step.name] || "blue";
     if (status === "skipped") return "gray";
@@ -113,7 +113,7 @@ const InterviewProgressTimeline = ({ application, onUpdate }) => {
 
   // Render step card
   const renderStepCard = (step) => {
-    const status = getStepStatus(step.name, currentStep, application?.testResult);
+    const status = getStepStatus(step.name, currentStep, application?.testResult, application?.skippedSteps, application);
     const showContent = shouldShowStepContent(step.name, currentStep);
 
     // Hide pending step if applicant has moved beyond pending
@@ -142,11 +142,15 @@ const InterviewProgressTimeline = ({ application, onUpdate }) => {
                   ? "bg-green-600"
                   : status === "active"
                   ? `bg-${getStepColor(step)}-600`
+                  : status === "skipped"
+                  ? "bg-slate-400"
                   : "bg-gray-300"
               }`}
             >
               {status === "completed" ? (
                 <Check size={20} />
+              ) : status === "skipped" ? (
+                <AlertCircle size={18} />
               ) : (
                 steps.indexOf(step) + 1
               )}
@@ -159,10 +163,25 @@ const InterviewProgressTimeline = ({ application, onUpdate }) => {
                 <span className="text-sm text-blue-600 font-medium">Active</span>
               )}
               {status === "skipped" && (
-                <span className="text-sm text-gray-500 font-medium">Skipped</span>
+                <span className="text-sm text-slate-500 font-medium">Skipped by company</span>
               )}
             </div>
           </div>
+
+          {/* Skipped step card */}
+          {status === "skipped" && (
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 flex items-start gap-3">
+              <AlertCircle size={16} className="text-slate-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-slate-600">
+                  This step was skipped
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  The company moved you directly to the next stage without completing this step.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Step content */}
           {showContent && status !== "pending" && (
@@ -275,10 +294,15 @@ const InterviewProgressTimeline = ({ application, onUpdate }) => {
                                   <Check size={14} />
                                   Passed
                                 </span>
-                              ) : (
+                              ) : application?.testResult === "fail" ? (
                                 <span className="px-3 py-1 bg-red-100 text-red-700 text-sm font-medium rounded-full flex items-center gap-1">
                                   <XCircle size={14} />
                                   Did not pass
+                                </span>
+                              ) : (
+                                <span className="px-3 py-1 bg-slate-100 text-slate-600 text-sm font-medium rounded-full flex items-center gap-1">
+                                  <AlertCircle size={14} />
+                                  Step was skipped
                                 </span>
                               )}
                             </div>
@@ -409,145 +433,99 @@ const InterviewProgressTimeline = ({ application, onUpdate }) => {
                 </div>
               )}
 
-              {step.name === "offer" && (
-                <div className="space-y-4">
-                  {/* Offer details card */}
-                  <div className="bg-yellow-50 border-2 border-yellow-300 p-6 rounded-lg">
-                    <h4 className="text-lg font-bold text-gray-900 mb-4">
-                      {application?.offerStatus === 'revised' ? 'Revised Job Offer' : 'Job Offer'}
-                    </h4>
+              {step.name === "offer" && (() => {
+                const BURL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+                const contractUrl = application?.contractFile
+                  ? (application.contractFile.startsWith('/uploads') ? `${BURL}${application.contractFile}` : application.contractFile)
+                  : null;
 
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Salary</label>
-                        <p className="text-2xl font-bold text-gray-900">
-                          {formatSalary(application?.salary, application?.currency)}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Joining Date</label>
-                        <p className="text-gray-900">{formatDate(application?.joiningDate, "long")}</p>
-                      </div>
-                      {application?.benefits && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-700 mb-2">Benefits</label>
-                          <div className="flex flex-wrap gap-2">
-                            {application.benefits.split(",").map((benefit, idx) => (
-                              <span key={idx} className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
-                                {benefit.trim()}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {application?.offerExpiryDate && (
-                        <p className="text-xs text-amber-600 font-medium">
-                          Offer expires: {formatDate(application.offerExpiryDate, "short")}
-                        </p>
-                      )}
-                    </div>
+                return (
+                  <div className="space-y-4">
+                    <h4 className="text-base font-bold text-gray-900">Job Offer Contract</h4>
 
-                    {/* FIX 8: Negotiation thread */}
-                    {(application?.offerNegotiation?.length > 0) && (
-                      <div className="mt-4 border-t pt-4">
-                        <p className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
-                          <MessageSquare size={14} /> Negotiation History
-                        </p>
-                        <div className="space-y-2 max-h-40 overflow-y-auto">
-                          {application.offerNegotiation.map((entry, i) => (
-                            <div key={i} className={`rounded-lg p-3 text-xs ${entry.from === 'applicant' ? 'bg-blue-50 border border-blue-200' : 'bg-slate-50 border border-slate-200'}`}>
-                              <p className="font-semibold text-gray-700 mb-0.5">{entry.from === 'applicant' ? 'You' : 'Company'}</p>
-                              {entry.proposedSalary && <p>Proposed: {formatSalary(entry.proposedSalary, application?.currency)}</p>}
-                              {entry.proposedJoiningDate && <p>Joining: {formatDate(entry.proposedJoiningDate, 'short')}</p>}
-                              {entry.notes && <p className="italic text-gray-600 mt-0.5">"{entry.notes}"</p>}
-                              <p className="text-gray-400 mt-0.5">{formatDate(entry.date, 'short')}</p>
-                            </div>
-                          ))}
+                    {/* Contract viewer */}
+                    {contractUrl ? (
+                      <div className="space-y-3">
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg overflow-hidden">
+                          <iframe
+                            src={contractUrl}
+                            title="Offer Contract"
+                            className="w-full"
+                            style={{ height: '360px' }}
+                          />
                         </div>
+                        <a
+                          href={contractUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-900 border border-blue-200 rounded-lg px-4 py-2 hover:bg-blue-50 transition"
+                        >
+                          <LinkIcon size={14} /> Open / Download Contract
+                        </a>
+                      </div>
+                    ) : (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-center gap-3">
+                        <Clock size={18} className="text-amber-600 shrink-0" />
+                        <p className="text-sm text-amber-800">The company hasn't uploaded the contract yet. You'll be notified once it's ready.</p>
                       </div>
                     )}
 
-                    {/* Actions based on offerStatus */}
-                    {(application?.offerResponse === "pending" || application?.offerStatus === 'revised') && (
-                      <div className="mt-6 space-y-4 border-t pt-4">
+                    {/* Actions */}
+                    {application?.offerResponse === "pending" && contractUrl && (
+                      <div className="space-y-3 border-t pt-4">
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Add a note (optional)</label>
+                          <label className="text-sm font-medium text-gray-700">Note (optional)</label>
                           <textarea
                             value={offerNotes}
                             onChange={(e) => setOfferNotes(e.target.value)}
-                            placeholder="Share any questions or notes..."
+                            placeholder="Add any questions or notes..."
                             maxLength={500}
-                            rows={3}
-                            className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                            rows={2}
+                            className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
                           />
-                          <p className="text-xs text-gray-500 mt-1">{offerNotes.length}/500</p>
                         </div>
                         <div className="flex gap-2">
                           <button
                             onClick={() => setModalState("accept")}
                             disabled={loadingAction}
-                            className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm"
+                            className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 text-sm"
                           >
                             {loadingAction && modalState === "accept" && <Loader2 size={14} className="animate-spin" />}
-                            Accept
-                          </button>
-                          {/* FIX 8: Negotiate button */}
-                          <button
-                            onClick={() => setModalState("negotiate")}
-                            disabled={loadingAction}
-                            className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm"
-                          >
-                            <MessageSquare size={14} /> Negotiate
+                            Accept Offer
                           </button>
                           <button
                             onClick={() => setModalState("reject")}
                             disabled={loadingAction}
-                            className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm"
+                            className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 text-sm"
                           >
                             {loadingAction && modalState === "reject" && <Loader2 size={14} className="animate-spin" />}
-                            Decline
+                            Decline Offer
                           </button>
                         </div>
                       </div>
                     )}
 
-                    {/* Negotiation pending state */}
-                    {application?.offerStatus === 'negotiation' && application?.offerResponse === 'negotiating' && (
-                      <div className="mt-4 flex items-center gap-2 text-amber-700 bg-amber-50 p-3 rounded border border-amber-200">
-                        <Clock size={16} />
-                        <span className="font-medium text-sm">Counter-offer sent. Awaiting company response.</span>
-                      </div>
-                    )}
-
-                    {/* Expired */}
-                    {application?.offerStatus === 'expired' && (
-                      <div className="mt-4 flex items-center gap-2 text-red-700 bg-red-50 p-3 rounded">
-                        <XCircle size={16} />
-                        <span className="font-medium">Offer expired</span>
-                      </div>
-                    )}
-
                     {application?.offerResponse === "accepted" && (
-                      <div className="mt-4 flex items-center gap-2 text-green-700 bg-green-100 p-3 rounded">
-                        <CheckCircle2 size={18} /><span className="font-medium">Offer accepted</span>
+                      <div className="flex items-center gap-2 text-green-700 bg-green-50 p-3 rounded-lg border border-green-200">
+                        <CheckCircle2 size={18} /><span className="font-semibold text-sm">You accepted this offer</span>
                       </div>
                     )}
 
                     {application?.offerResponse === "rejected" && (
-                      <div className="mt-4 flex items-center gap-2 text-gray-700 bg-gray-100 p-3 rounded">
-                        <XCircle size={18} /><span className="font-medium">Offer declined</span>
+                      <div className="flex items-center gap-2 text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <XCircle size={18} /><span className="font-semibold text-sm">You declined this offer</span>
                       </div>
                     )}
 
                     {application?.offerResponseNotes && (
-                      <div className="mt-4 bg-white p-3 rounded border border-gray-200">
-                        <p className="text-sm text-gray-600 mb-1">Your note:</p>
+                      <div className="bg-white p-3 rounded border border-gray-200 text-sm">
+                        <p className="text-gray-500 mb-1">Your note:</p>
                         <p className="text-gray-800">{application.offerResponseNotes}</p>
                       </div>
                     )}
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {step.name === "hired" && (
                 <div className="space-y-4">

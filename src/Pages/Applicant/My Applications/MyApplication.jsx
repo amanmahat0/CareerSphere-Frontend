@@ -44,6 +44,9 @@ const getStatus   = (a) => {
   if (a.status === 'pending') return 'pending';
   if (a.interviewStep === 'withdrawn' || a.status === 'withdrawn') return 'withdrawn';
   if (a.interviewStep === 'rejected'  || a.status === 'rejected')  return 'rejected';
+  // Don't expose 'test' or 'interview' stages until the company has actually assigned them
+  if (a.interviewStep === 'test'      && !a.testDeadline)          return 'shortlisted';
+  if (a.interviewStep === 'interview' && !a.interviewDate)         return 'shortlisted';
   return a.interviewStep || a.status || 'pending';
 };
 const fmtDate     = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
