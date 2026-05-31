@@ -191,7 +191,6 @@ function StepTest({ candidate, onUpdate, loading, setLoading, setError }) {
   };
 
   const handleEvaluate = async () => {
-    if (!evalForm.testFeedback.trim()) { setError('Please provide feedback'); return; }
     setLoading(true);
     try {
       const res = await api.updateInterviewStep(candidate._id, {
@@ -602,7 +601,7 @@ function StepInterview({ candidate, onUpdate, loading, setLoading, setError }) {
         </div>
 
         <div>
-          <Label required>Overall Feedback</Label>
+          <Label>Overall Feedback <span className="text-slate-400 font-normal">(optional)</span></Label>
           <textarea value={resultForm.feedback} onChange={e => setResultForm(p => ({ ...p, feedback: e.target.value }))}
             placeholder="Overall interview feedback..." rows={3}
             className={inputCls(false) + ' resize-none'} />
@@ -610,7 +609,7 @@ function StepInterview({ candidate, onUpdate, loading, setLoading, setError }) {
 
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2"><User size={14} /> Interviewer Feedback</h4>
+            <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2"><User size={14} /> Interviewer Feedback <span className="text-xs font-normal text-slate-400">(optional)</span></h4>
             <button type="button" onClick={addInterviewer}
               className="text-xs font-medium text-blue-700 hover:text-blue-800 flex items-center gap-1 px-2 py-1 hover:bg-blue-100 rounded-lg">
               <Plus size={12} /> Add

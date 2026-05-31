@@ -8,11 +8,8 @@ import {
   CheckCircle2,
   XCircle,
   Calendar,
-  DollarSign,
-  Gift,
   Trophy,
   Loader2,
-  MessageSquare,
 } from "lucide-react";
 import { api } from "../../utils/api";
 import { toast } from "../../utils/toast";
@@ -20,23 +17,17 @@ import {
   formatTestType,
   formatDeadlineCountdown,
   formatInterviewCountdown,
-  formatSalary,
   formatDate,
   formatTime,
   buildGoogleCalendarUrl,
   getStepStatus,
   shouldShowStepContent,
-  formatWithdrawnStatus,
-  formatRejectedStatus,
-  getStatusSectionName,
 } from "../../utils/interviewFormatters";
 
 const InterviewProgressTimeline = ({ application, onUpdate }) => {
   const [offerNotes, setOfferNotes] = useState("");
   const [loadingAction, setLoadingAction] = useState(false);
-  const [modalState, setModalState] = useState(null); // "accept" | "reject" | "negotiate" | null
-  // FIX 8: Negotiation form state
-  const [negotiateForm, setNegotiateForm] = useState({ salary: '', joiningDate: '', notes: '' });
+  const [modalState, setModalState] = useState(null); // "accept" | "reject" | null
 
   const steps = [
     { name: "pending", label: "Pending", icon: "" },
@@ -84,32 +75,6 @@ const InterviewProgressTimeline = ({ application, onUpdate }) => {
     }
   };
 
-  // FIX 8: Handle negotiation submission
-  const handleNegotiate = async () => {
-    if (!negotiateForm.notes.trim() && !negotiateForm.salary) {
-      toast.error("Please enter a proposed salary or note.");
-      return;
-    }
-    setLoadingAction(true);
-    try {
-      const result = await api.negotiateOffer(application._id, {
-        offerResponseNotes:     negotiateForm.notes,
-        counterOfferSalary:     negotiateForm.salary ? Number(negotiateForm.salary) : undefined,
-        counterOfferJoiningDate: negotiateForm.joiningDate || undefined,
-        counterOfferMessage:    negotiateForm.notes,
-      });
-      if (result.success) {
-        setModalState(null);
-        setNegotiateForm({ salary: '', joiningDate: '', notes: '' });
-        if (onUpdate) onUpdate(result.data);
-        toast.success("Counter-offer sent!");
-      }
-    } catch (error) {
-      toast.error("Error: " + error.message);
-    } finally {
-      setLoadingAction(false);
-    }
-  };
 
   // Render step card
   const renderStepCard = (step) => {
@@ -645,28 +610,27 @@ const InterviewProgressTimeline = ({ application, onUpdate }) => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Accept Offer</h3>
-            <p className="text-gray-700 mb-6">
-              By accepting this offer, you confirm you will join on{" "}
-              <span className="font-semibold">
-                {formatDate(application?.joiningDate, "long")}
-              </span>
-              . Is this correct?
+            <p className="text-gray-700 mb-4">
+              By accepting this offer, you confirm that you have reviewed the contract and agree to its terms.
             </p>
+            {offerNotes !== undefined && (
+              <textarea
+                value={offerNotes}
+                onChange={(e) => setOfferNotes(e.target.value)}
+                placeholder="Add a note (optional)..."
+                rows={2}
+                className="w-full mb-4 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+              />
+            )}
             <div className="flex gap-3">
-              <button
-                onClick={() => setModalState(null)}
-                disabled={loadingAction}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-              >
+              <button onClick={() => setModalState(null)} disabled={loadingAction}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                 Cancel
               </button>
-              <button
-                onClick={() => handleOfferResponse("accepted")}
-                disabled={loadingAction}
-                className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-              >
+              <button onClick={() => handleOfferResponse("accepted")} disabled={loadingAction}
+                className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
                 {loadingAction ? <Loader2 size={16} className="animate-spin" /> : null}
-                Confirm
+                Accept Offer
               </button>
             </div>
           </div>
@@ -678,6 +642,13 @@ const InterviewProgressTimeline = ({ application, onUpdate }) => {
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Decline Offer</h3>
             <p className="text-gray-700 mb-4">Are you sure you want to decline this offer?</p>
+            <textarea
+              value={offerNotes}
+              onChange={(e) => setOfferNotes(e.target.value)}
+              placeholder="Reason for declining (optional)..."
+              rows={2}
+              className="w-full mb-4 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"
+            />
             <div className="flex gap-3">
               <button onClick={() => setModalState(null)} disabled={loadingAction}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors">
@@ -686,63 +657,7 @@ const InterviewProgressTimeline = ({ application, onUpdate }) => {
               <button onClick={() => handleOfferResponse("rejected")} disabled={loadingAction}
                 className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
                 {loadingAction && <Loader2 size={16} className="animate-spin" />}
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* FIX 8: Negotiate modal */}
-      {modalState === "negotiate" && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-              <MessageSquare size={18} className="text-amber-500" /> Counter-Offer
-            </h3>
-            <p className="text-sm text-gray-500 mb-4">Propose your preferred terms. The company will review and respond.</p>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700">Proposed Salary ({application?.currency || 'NPR'})</label>
-                <input
-                  type="number"
-                  value={negotiateForm.salary}
-                  onChange={e => setNegotiateForm(p => ({ ...p, salary: e.target.value }))}
-                  placeholder={`e.g. ${application?.salary || ''}`}
-                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700">Preferred Joining Date</label>
-                <input
-                  type="date"
-                  value={negotiateForm.joiningDate}
-                  onChange={e => setNegotiateForm(p => ({ ...p, joiningDate: e.target.value }))}
-                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700">Note to Company *</label>
-                <textarea
-                  value={negotiateForm.notes}
-                  onChange={e => setNegotiateForm(p => ({ ...p, notes: e.target.value }))}
-                  placeholder="Explain your counter-offer..."
-                  rows={3}
-                  maxLength={500}
-                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none text-sm"
-                />
-                <p className="text-xs text-gray-400 mt-0.5">{negotiateForm.notes.length}/500</p>
-              </div>
-            </div>
-            <div className="flex gap-3 mt-4">
-              <button onClick={() => setModalState(null)} disabled={loadingAction}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                Cancel
-              </button>
-              <button onClick={handleNegotiate} disabled={loadingAction || (!negotiateForm.salary && !negotiateForm.notes.trim())}
-                className="flex-1 px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
-                {loadingAction && <Loader2 size={16} className="animate-spin" />}
-                Send Counter-Offer
+                Decline Offer
               </button>
             </div>
           </div>
